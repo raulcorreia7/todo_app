@@ -141,13 +141,15 @@ class AchievementsUI {
     
     return `
       <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}" data-achievement="${achievement.id}">
-        <div class="achievement-icon">${achievement.icon}</div>
+        <div class="achievement-icon-container">
+          <div class="achievement-icon">${achievement.icon}</div>
+        </div>
         <div class="achievement-info">
           <h5>${achievement.name}</h5>
           <p>${achievement.description}</p>
           <div class="achievement-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${progressPercent}%"></div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" style="width: ${progressPercent}%"></div>
             </div>
             <span class="progress-text">${achievement.progress}/${achievement.max}</span>
           </div>

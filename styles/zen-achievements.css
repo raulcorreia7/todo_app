@@ -1,74 +1,84 @@
-/* Zen Achievements - Mindful Recognition System */
+/* Premium Zen Achievements - Luxurious Recognition System */
 
-/* Zen Achievement Notification - Subtle & Mindful */
+/* Enhanced Achievement Notification - Premium & Mindful */
 .zen-achievement-notification {
   position: fixed;
-  top: 32px;
-  right: 32px;
+  top: 2rem;
+  right: 2rem;
   background: var(--glass-color);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px 24px;
-  min-width: 220px;
-  max-width: 280px;
+  border-radius: var(--radius-xl);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 8px 32px var(--shadow-color);
   z-index: 1000;
   opacity: 0;
-  transform: translateX(30px) scale(0.95);
+  transform: translateY(-20px) scale(0.95);
   transition: all 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 4px 20px var(--shadow-color);
+  max-width: 320px;
   pointer-events: none;
 }
 
 .zen-achievement-notification.show {
   opacity: 1;
-  transform: translateX(0) scale(1);
+  transform: translateY(0) scale(1);
 }
 
 .zen-achievement-notification.exit {
   opacity: 0;
-  transform: translateX(30px) scale(0.95);
+  transform: translateY(-20px) scale(0.95);
 }
 
 .zen-achievement-content {
   text-align: center;
+  position: relative;
 }
 
 .zen-achievement-text {
-  font-size: 11px;
+  font-size: 0.7rem;
   font-weight: 300;
   color: var(--text-color);
-  opacity: 0.7;
+  opacity: 0.6;
   letter-spacing: 1px;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .zen-achievement-name {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 1.1rem;
+  font-weight: 500;
   color: var(--text-color);
   letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Subtle glow effect on unlock */
+/* Premium Glow Effect */
 .zen-achievement-notification::before {
   content: '';
   position: absolute;
-  inset: -1px;
-  border-radius: 12px;
+  inset: -2px;
+  border-radius: var(--radius-xl);
   background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
   opacity: 0;
   z-index: -1;
   transition: opacity 600ms ease;
+  filter: blur(10px);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: subtract;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: subtract;
 }
 
 .zen-achievement-notification.show::before {
-  opacity: 0.3;
-  animation: zenGlow 2s ease-in-out;
+  opacity: 0.4;
+  animation: premiumGlow 3s ease-in-out infinite;
 }
 
-@keyframes zenGlow {
+@keyframes premiumGlow {
   0%, 100% {
     opacity: 0.3;
   }
@@ -76,6 +86,7 @@
     opacity: 0.6;
   }
 }
+
 
 /* Responsive Zen Design */
 @media (max-width: 768px) {

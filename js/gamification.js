@@ -115,7 +115,29 @@ class GamificationManager {
       unlockedAt: new Date().toISOString()
     });
     
+    // Show premium notification
     this.showZenAchievementNotification(achievement);
+    
+    // Trigger premium particle effect if animation manager is available
+    if (typeof animationManager !== 'undefined' && settingsManager.getSettings().animations) {
+      // Position effect in top right where notification appears
+      const x = window.innerWidth - 200;
+      const y = 100;
+      
+      // Get theme color for particles
+      const theme = document.documentElement.getAttribute('data-theme') || 'midnight';
+      const themeColors = {
+        midnight: '#e94560',
+        ivory: '#6c757d',
+        champagne: '#daa520',
+        graphite: '#999999',
+        aurora: '#00ff88',
+        sakura: '#ff69b4'
+      };
+      
+      const color = themeColors[theme] || themeColors.midnight;
+      animationManager.createAchievementUnlockEffect(x, y, color);
+    }
   }
 
   checkDailyCompletion() {
@@ -128,7 +150,7 @@ class GamificationManager {
   }
 
   showZenAchievementNotification(achievement) {
-    // Create subtle zen notification
+    // Create premium zen notification
     const notification = document.createElement('div');
     notification.className = 'zen-achievement-notification';
     notification.innerHTML = `
@@ -140,16 +162,27 @@ class GamificationManager {
     
     document.body.appendChild(notification);
     
-    // Gentle fade in
+    // Premium fade in with animation
     setTimeout(() => {
       notification.classList.add('show');
     }, 100);
     
-    // Gentle fade out
+    // Premium fade out with delay for full effect
     setTimeout(() => {
       notification.classList.add('exit');
       setTimeout(() => notification.remove(), 600);
-    }, 2500);
+    }, 3000);
+    
+    // Trigger achievement unlock animation in UI if visible
+    if (typeof achievementsUI !== 'undefined') {
+      const achievementCard = document.querySelector(`.achievement-card[data-achievement="${achievement.id}"]`);
+      if (achievementCard) {
+        achievementCard.classList.add('unlocking');
+        setTimeout(() => {
+          achievementCard.classList.remove('unlocking');
+        }, 600);
+      }
+    }
   }
 
   celebrateVictory() {

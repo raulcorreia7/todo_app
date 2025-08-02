@@ -380,6 +380,188 @@ class AnimationManager {
     }
 
     /**
+     * Create premium achievement unlock effect
+     * @param {number} x - Center x coordinate
+     * @param {number} y - Center y coordinate
+     * @param {string} color - Theme color for particles
+     */
+    createAchievementUnlockEffect(x, y, color = '#e94560') {
+        if (!settingsManager.getSettings().animations) return;
+
+        // Show canvas
+        this.canvas.style.opacity = '1';
+        
+        // Create premium particle burst
+        const particles = [];
+        const particleCount = 24;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (i / particleCount) * Math.PI * 2;
+            const velocity = 3 + Math.random() * 4;
+            const size = 3 + Math.random() * 5;
+            
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * velocity,
+                vy: Math.sin(angle) * velocity,
+                size: size,
+                life: 1,
+                decay: 0.015 + Math.random() * 0.01,
+                color: color,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.2,
+                shape: Math.random() > 0.5 ? 'star' : 'circle'
+            });
+        }
+        
+        // Create floating light orbs
+        const orbs = [];
+        const orbCount = 6;
+        
+        for (let i = 0; i < orbCount; i++) {
+            const angle = (i / orbCount) * Math.PI * 2;
+            const radius = 40 + Math.random() * 30;
+            
+            orbs.push({
+                x: x,
+                y: y,
+                targetX: x + Math.cos(angle) * radius,
+                targetY: y + Math.sin(angle) * radius,
+                size: 8 + Math.random() * 12,
+                opacity: 0.6,
+                fadeSpeed: 0.008,
+                color: color,
+                pulsePhase: Math.random() * Math.PI * 2
+            });
+        }
+        
+        this.animateAchievementParticles(particles, orbs);
+        
+        // Hide canvas after animation
+        setTimeout(() => {
+            this.canvas.style.opacity = '0';
+        }, 2500);
+    }
+
+    /**
+     * Animate achievement particles and orbs
+     * @param {Array} particles - Array of particle objects
+     * @param {Array} orbs - Array of orb objects
+     */
+    animateAchievementParticles(particles, orbs) {
+        const animate = () => {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            let activeParticles = 0;
+            let activeOrbs = 0;
+            
+            // Animate particles
+            particles.forEach(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.08; // gravity
+                particle.life -= particle.decay;
+                particle.rotation += particle.rotationSpeed;
+                
+                if (particle.life > 0) {
+                    activeParticles++;
+                    
+                    this.ctx.save();
+                    this.ctx.globalAlpha = particle.life;
+                    this.ctx.translate(particle.x, particle.y);
+                    this.ctx.rotate(particle.rotation);
+                    
+                    if (particle.shape === 'star') {
+                        this.drawStar(0, 0, particle.size);
+                    } else {
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.beginPath();
+                        this.ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                    
+                    // Add glow effect
+                    this.ctx.shadowBlur = 15;
+                    this.ctx.shadowColor = particle.color;
+                    this.ctx.fill();
+                    
+                    this.ctx.restore();
+                }
+            });
+            
+            // Animate orbs
+            orbs.forEach(orb => {
+                // Move towards target
+                orb.x += (orb.targetX - orb.x) * 0.05;
+                orb.y += (orb.targetY - orb.y) * 0.05;
+                
+                // Pulse
+                orb.pulsePhase += 0.05;
+                const pulseScale = 1 + Math.sin(orb.pulsePhase) * 0.1;
+                
+                // Fade
+                orb.opacity -= orb.fadeSpeed;
+                
+                if (orb.opacity > 0) {
+                    activeOrbs++;
+                    
+                    this.ctx.save();
+                    this.ctx.globalAlpha = orb.opacity;
+                    this.ctx.translate(orb.x, orb.y);
+                    this.ctx.scale(pulseScale, pulseScale);
+                    
+                    // Draw orb with gradient
+                    const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, orb.size);
+                    gradient.addColorStop(0, orb.color);
+                    gradient.addColorStop(0.7, orb.color + '80');
+                    gradient.addColorStop(1, 'transparent');
+                    
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, orb.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    this.ctx.restore();
+                }
+            });
+            
+            if (activeParticles > 0 || activeOrbs > 0) {
+                requestAnimationFrame(animate);
+            }
+        };
+        
+        animate();
+    }
+
+    /**
+     * Draw a star shape
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @param {number} size - Star size
+     */
+    drawStar(x, y, size) {
+        this.ctx.fillStyle = this.ctx.strokeStyle = this.ctx.shadowColor = '#FFD700';
+        this.ctx.beginPath();
+        
+        for (let i = 0; i < 5; i++) {
+            const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+            const innerAngle = angle + Math.PI / 5;
+            
+            if (i === 0) {
+                this.ctx.moveTo(x + Math.cos(angle) * size, y + Math.sin(angle) * size);
+            } else {
+                this.ctx.lineTo(x + Math.cos(angle) * size, y + Math.sin(angle) * size);
+            }
+            
+            this.ctx.lineTo(x + Math.cos(innerAngle) * (size * 0.5), y + Math.sin(innerAngle) * (size * 0.5));
+        }
+        
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
+
+    /**
      * Create loading shimmer effect
      * @param {HTMLElement} element - Element to apply shimmer to
      */
