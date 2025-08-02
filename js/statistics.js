@@ -22,17 +22,14 @@ class StatisticsManager {
     // Update on task changes
     if (typeof bus !== 'undefined') {
       bus.addEventListener('tasksUpdated', () => {
-        if (this.isOpen) {
-          this.updateStatistics();
-        }
+        this.updateStatistics();
       });
     }
   }
 
   toggleStatistics() {
     if (this.isOpen) {
-      // Panel is already open, do nothing
-      return;
+      this.closeStatistics();
     } else {
       this.openStatistics();
     }

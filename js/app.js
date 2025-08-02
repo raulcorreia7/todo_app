@@ -251,6 +251,11 @@ class TodoApp {
   saveTasks() {
     storageManager.setTasks(this.tasks);
     this.markDirty('save');
+    
+    // Dispatch tasksUpdated event to notify other components
+    if (typeof bus !== 'undefined') {
+      bus.dispatchEvent(new CustomEvent('tasksUpdated'));
+    }
   }
 
   /**

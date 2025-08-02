@@ -149,6 +149,7 @@ body {
   min-height: 80px;
   transition: all var(--transition-normal);
   letter-spacing: 0.01em;
+  margin-top: 0.75rem;
 }
 
 .task-description-input:focus {
