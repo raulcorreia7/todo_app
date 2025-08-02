@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luxury Todo - Premium Task Management</title>
+  
+  <!-- Meta tags -->
+  <meta name="description" content="Ultra-premium todo app with glass-morphism design and premium audio">
+  <meta name="theme-color" content="#1a1a2e">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/%3E%3C/svg%3E">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/design-system.css">
+  <link rel="stylesheet" href="styles/luxury-base.css">
+  <link rel="stylesheet" href="styles/luxury-components.css">
+  <link rel="stylesheet" href="styles/luxury-responsive.css">
+  <link rel="stylesheet" href="styles/animations.css">
+  <link rel="stylesheet" href="styles/zen-achievements.css">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="font-inter">
+  <!-- Background -->
+  <div class="background-container">
+    <div class="nebula-bg"></div>
+    <div class="grain-overlay"></div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <h1 class="app-title">Luxury Todo</h1>
+        <p class="daily-quote">"Excellence is never an accident"</p>
+      </div>
+    </header>
+
+    <!-- Add Task Section -->
+    <section class="add-task-section">
+      <form id="addTaskForm" class="add-task-form">
+        <div class="input-container">
+          <input 
+            type="text" 
+            id="newTaskInput" 
+            class="task-input" 
+            placeholder="Add a new task..." 
+            maxlength="500"
+            autocomplete="off"
+          >
+          <button type="submit" class="btn btn--primary btn--large" aria-label="Add task">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+        <textarea 
+          id="newTaskDescription" 
+          class="task-description-input" 
+          placeholder="Add description (optional)..." 
+          maxlength="500"
+          rows="3"
+          style="width: 100%; margin-top: var(--spacing-sm); padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md) var(--spacing-lg); background: var(--glass-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); color: var(--text-color); backdrop-filter: blur(var(--glass-blur)); resize: vertical; line-height: 1.6; letter-spacing: 0.01em; padding-left: 1.25rem;"
+        ></textarea>
+        <div class="char-counter" style="text-align: right; font-size: 0.75rem; opacity: 0.6;">
+          <span id="descCounter">0/500</span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Filters -->
+    <nav class="filter-group">
+      <button class="btn btn--ghost active" data-filter="all">All</button>
+      <button class="btn btn--ghost" data-filter="active">Active</button>
+      <button class="btn btn--ghost" data-filter="completed">Completed</button>
+    </nav>
+
+    <!-- Task List -->
+    <main class="task-list-container">
+      <div id="taskList" class="task-list"></div>
+      
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z"></path>
+            <path d="M19 11h-4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z"></path>
+            <path d="M5 11V7a7 7 0 0 1 14 0v4"></path>
+            <path d="M12 5V2"></path>
+          </svg>
+        </div>
+        <h3>No tasks yet</h3>
+        <p>Add your first task to get started</p>
+      </div>
+    </main>
+
+    <!-- Task Count -->
+    <footer class="task-footer">
+      <span id="taskCount">0 tasks remaining</span>
+      <div class="footer-actions">
+        <button id="testDataBtn" class="btn btn--subtle" data-action="test-data" title="Add test tasks">Test</button>
+        <button id="clearCompleted" class="btn" data-action="clear-completed">Clear Completed</button>
+        <button id="deleteAllBtn" class="btn" data-action="delete-all">Delete All</button>
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- Settings Panel -->
+  <div id="settingsPanel" class="settings-panel">
+    <div class="settings-header">
+      <h3>Settings</h3>
+      <button class="close-btn" onclick="settingsManager.closeSettings()">×</button>
+    </div>
+    
+    <div class="settings-content">
+      <!-- Theme Toggle -->
+      <!--<div class="settings-section">
+        <h4>Theme</h4>
+        <div class="theme-toggle">
+          <button class="theme-option active" data-theme="light">Light</button>
+          <button class="theme-option" data-theme="dark">Dark</button>
+        </div>
+      </div>
+      -->
+      
+      <!-- Palette Selection -->
+      <div class="settings-section">
+        <h4>Color Palette</h4>
+        <div id="paletteSelector" class="palette-selector"></div>
+      </div>
+      
+      <!-- Font Selection -->
+      <div class="settings-section">
+        <h4>Font</h4>
+        <div class="font-selector">
+          <button class="font-option active" data-font="inter">Inter</button>
+          <button class="font-option" data-font="playfair">Playfair</button>
+          <button class="font-option" data-font="sf">SF Pro</button>
+        </div>
+      </div>
+      
+      <!-- Sound Controls -->
+      <div class="settings-section">
+        <h4>Sound</h4>
+        <div class="volume-control">
+          <label>
+            <input type="checkbox" id="soundToggle" checked>
+            Enable Sounds
+          </label>
+          <div class="volume-slider-container">
+            <div class="volume-slider" id="volumeSlider">
+              <div class="volume-fill" id="volumeFill"></div>
+              <div class="volume-handle" id="volumeHandle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Controls -->
+  <div class="floating-controls">
+    <button id="statisticsBtn" class="btn btn--floating" title="Statistics">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+    </button>
+    
+    <button id="settingsBtn" class="btn btn--floating" onclick="settingsManager.toggleSettings()" title="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Statistics Panel -->
+  <div id="statisticsPanel" class="statistics-panel">
+    <div class="statistics-header">
+      <h3>Statistics</h3>
+      <button class="close-btn" onclick="statisticsManager.closeStatistics()">×</button>
+    </div>
+    
+    <div class="statistics-content">
+      <div class="stats-progress-ring">
+        <svg class="stats-progress-svg" viewBox="0 0 140 140">
+          <circle class="stats-progress-bg" cx="70" cy="70" r="60"></circle>
+          <circle id="statsProgressRing" class="stats-progress-fill" cx="70" cy="70" r="60"></circle>
+        </svg>
+        <div class="stats-percentage">
+          <span id="statsPercentage">0%</span>
+        </div>
+      </div>
+      
+      <div class="stats-info">
+        <div class="stat-item">
+          <span class="stat-value" id="statsTotal">0</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="statsCompleted">0</span>
+          <span class="stat-label">Done</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="statsKarma">0</span>
+          <span class="stat-label">Karma</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Footer -->
+  <div class="app-footer">
+    <p class="footer-text">
+      Vibe Coded by Raúl Correia 
+      <span class="heart-emoji">❤️</span>
+      with <span class="llm-name">Cline</span>
+    </p>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/bus.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/themes.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/gamification.js"></script>
+  <script src="js/statistics.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/settings-loader.js"></script>
+  <script src="js/quotes.js"></script>
+  <script src="js/affirmations.js"></script>
+  <script src="js/daily-summary.js"></script>
+  <script src="js/swipe-gestures.js"></script>
+  <script src="js/nebula-parallax.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+/**
+ * Base Styles - Premium Architecture
+ * Foundation styles for the luxury todo app with refined spacing and typography
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-inter);
+  background: var(--primary-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Background Effects */
+.background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.nebula-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at top, var(--glow-color) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom right, var(--accent-color) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom left, var(--secondary-color) 0%, transparent 50%);
+  opacity: 0.3;
+  animation: nebula-drift 20s ease-in-out infinite;
+}
+
+.grain-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('data:image/svg+xml,%3Csvg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.03"/%3E%3C/svg%3E');
+  pointer-events: none;
+}
+
+@keyframes nebula-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-20px, -20px) scale(1.1); }
+  66% { transform: translate(20px, -10px) scale(0.9); }
+}
+
+/* Premium App Container */
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Premium Header */
+.app-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.app-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--text-color), var(--glow-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.daily-quote {
+  font-size: 1.25rem;
+  opacity: 0.8;
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+}
+
+/* Premium Add Task Section */
+.add-task-section {
+  margin-bottom: 0.5rem;
+}
+
+.add-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.input-container {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.task-input {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  background: var(--glass-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  color: var(--text-color);
+  font-size: 1.125rem;
+  backdrop-filter: blur(var(--glass-blur));
+  transition: all var(--transition-normal);
+  letter-spacing: 0.01em;
+}
+
+.task-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--glow-color);
+}
+
+.task-description-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: var(--glass-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  color: var(--text-color);
+  font-size: 1rem;
+  font-family: inherit;
+  backdrop-filter: blur(var(--glass-blur));
+  resize: vertical;
+  min-height: 80px;
+  transition: all var(--transition-normal);
+  letter-spacing: 0.01em;
+}
+
+.task-description-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px var(--glow-color);
+}
+
+/* Premium Task List */
+.task-list-container {
+  flex: 1;
+  margin-bottom: 2.5rem;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Premium Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  opacity: 0.7;
+}
+
+.empty-icon {
+  margin-bottom: 2rem;
+  opacity: 0.6;
+}
+
+.empty-state h3 {
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  font-size: 1.125rem;
+  opacity: 0.8;
+}
+
+/* Responsive Luxury */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 2rem 1.5rem;
+  }
+  
+  .app-title {
+    font-size: 2.5rem;
+  }
+  
+  .daily-quote {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .app-title {
+    font-size: 2rem;
+  }
+  
+  .daily-quote {
+    font-size: 1rem;
+  }
+}

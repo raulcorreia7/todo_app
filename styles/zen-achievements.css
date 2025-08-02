@@ -1,0 +1,160 @@
+/* Zen Achievements - Mindful Recognition System */
+
+/* Zen Achievement Notification - Subtle & Mindful */
+.zen-achievement-notification {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  background: var(--glass-color);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 24px;
+  min-width: 220px;
+  max-width: 280px;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateX(30px) scale(0.95);
+  transition: all 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 20px var(--shadow-color);
+  pointer-events: none;
+}
+
+.zen-achievement-notification.show {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.zen-achievement-notification.exit {
+  opacity: 0;
+  transform: translateX(30px) scale(0.95);
+}
+
+.zen-achievement-content {
+  text-align: center;
+}
+
+.zen-achievement-text {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--text-color);
+  opacity: 0.7;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.zen-achievement-name {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-color);
+  letter-spacing: 0.5px;
+}
+
+/* Subtle glow effect on unlock */
+.zen-achievement-notification::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 600ms ease;
+}
+
+.zen-achievement-notification.show::before {
+  opacity: 0.3;
+  animation: zenGlow 2s ease-in-out;
+}
+
+@keyframes zenGlow {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Responsive Zen Design */
+@media (max-width: 768px) {
+  .zen-achievement-notification {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .zen-achievement-notification {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    padding: 14px 20px;
+  }
+}
+
+/* Theme Harmony - Adapts to current theme */
+[data-theme="midnight"] .zen-achievement-notification {
+  background: rgba(26, 26, 46, 0.8);
+}
+
+[data-theme="ivory"] .zen-achievement-notification {
+  background: rgba(248, 249, 250, 0.8);
+}
+
+[data-theme="champagne"] .zen-achievement-notification {
+  background: rgba(255, 248, 231, 0.8);
+}
+
+[data-theme="graphite"] .zen-achievement-notification {
+  background: rgba(44, 44, 44, 0.8);
+}
+
+[data-theme="aurora"] .zen-achievement-notification {
+  background: rgba(10, 10, 10, 0.8);
+}
+
+[data-theme="sakura"] .zen-achievement-notification {
+  background: rgba(255, 245, 245, 0.8);
+}
+
+/* Accessibility - Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .zen-achievement-notification {
+    transition: opacity 200ms ease;
+    transform: none;
+  }
+  
+  .zen-achievement-notification.show {
+    transform: none;
+  }
+  
+  .zen-achievement-notification.exit {
+    transform: none;
+  }
+  
+  .zen-achievement-notification::before {
+    animation: none;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .zen-achievement-notification {
+    border-width: 2px;
+    background: var(--glass-color);
+  }
+  
+  .zen-achievement-text {
+    opacity: 1;
+  }
+}
+
+/* Legacy Support - Hide old notifications */
+.achievement-notification {
+  display: none;
+}

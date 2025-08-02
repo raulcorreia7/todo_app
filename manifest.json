@@ -1,0 +1,31 @@
+{
+    "name": "Luxury Todo - Premium Task Management",
+    "short_name": "Luxury Todo",
+    "description": "Ultra-clean luxury todo app with glass-morphism design and premium features",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#e94560",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192' fill='%23e94560'%3E%3Crect width='192' height='192' rx='96' fill='%230a0a0a'/%3E%3Cpath d='M96 48c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm-16 72l-20-20 5.66-5.66L96 108.34l34.34-34.34L136 80l-56 56z' fill='%23e94560'/%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23e94560'%3E%3Crect width='512' height='512' rx='256' fill='%230a0a0a'/%3E%3Cpath d='M256 128c-70.69 0-128 57.31-128 128s57.31 128 128 128 128-57.31 128-128-57.31-128-128-128zm-42.67 192L170.67 256l14.67-14.67L256 298.67l71.33-71.33L342.67 256 298.67 300l-42.67-42.67z' fill='%23e94560'/%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml"
+        }
+    ],
+    "categories": [
+        "productivity",
+        "utilities",
+        "lifestyle"
+    ],
+    "lang": "en",
+    "dir": "ltr",
+    "scope": "/",
+    "prefer_related_applications": false
+}

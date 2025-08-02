@@ -1,0 +1,125 @@
+/**
+ * Validation and character counter utilities
+ */
+
+class ValidationManager {
+  constructor() {
+    this.isInitialized = false;
+    this.init();
+  }
+
+  init() {
+    this.setupCharacterCounters();
+    this.isInitialized = true;
+  }
+
+  /**
+   * Setup real-time character counters
+   */
+  setupCharacterCounters() {
+    // Add event listeners for character counting
+    document.addEventListener('input', (e) => {
+      if (e.target.matches('[maxlength]')) {
+        this.updateCharCounter(e.target);
+      }
+    });
+
+    // Add event listeners for edit mode
+    document.addEventListener('focus', (e) => {
+      if (e.target.matches('.task-edit-input, .task-edit-description')) {
+        this.updateCharCounter(e.target);
+      }
+    }, true);
+  }
+
+  /**
+   * Update character counter for an input
+   */
+  updateCharCounter(input) {
+    const maxLength = parseInt(input.getAttribute('maxlength'));
+    const currentLength = input.value.length;
+    const remaining = maxLength - currentLength;
+
+    // Find the associated counter
+    let counter;
+    if (input.classList.contains('task-edit-input')) {
+      counter = input.parentElement.querySelector('.char-count');
+    } else if (input.classList.contains('task-edit-description')) {
+      counter = input.parentElement.querySelector('.desc-count');
+    }
+
+    if (counter) {
+      const type = input.classList.contains('task-edit-input') ? 'title' : 'description';
+      const max = type === 'title' ? 500 : 500;
+      
+      counter.textContent = `${currentLength}/${max}`;
+      
+      // Update counter styling based on remaining characters
+      const counterElement = counter.parentElement;
+      counterElement.classList.remove('warning', 'error');
+      
+      if (remaining <= 10) {
+        counterElement.classList.add('error');
+      } else if (remaining <= 50) {
+        counterElement.classList.add('warning');
+      }
+    }
+  }
+
+  /**
+   * Validate task input
+   */
+  validateTaskInput(text, description) {
+    const errors = [];
+    
+    if (!text || text.trim().length === 0) {
+      errors.push('Task title is required');
+    }
+    
+    if (text && text.length > 500) {
+      errors.push('Task title must be 500 characters or less');
+    }
+    
+    if (description && description.length > 500) {
+      errors.push('Task description must be 500 characters or less');
+    }
+    
+    return errors;
+  }
+
+  /**
+   * Show validation error
+   */
+  showValidationError(message) {
+    // Create temporary error notification
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'validation-error';
+    errorDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--error-color);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+    `;
+    errorDiv.textContent = message;
+    
+    document.body.appendChild(errorDiv);
+    
+    setTimeout(() => {
+      errorDiv.remove();
+    }, 3000);
+  }
+}
+
+// Create global validation manager
+const validationManager = new ValidationManager();
+
+// Export for debugging
+if (window.DEV) {
+  window.validationManager = validationManager;
+}
