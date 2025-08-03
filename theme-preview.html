@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Theme Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+            color: #333;
+        }
+        
+        .preview-container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+        
+        .theme-section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+        
+        .theme-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+            width: 280px;
+        }
+        
+        .theme-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .color-swatches {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .color-swatch {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .color-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .color-label {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .color-value {
+            font-size: 0.75rem;
+            color: #999;
+            margin-left: auto;
+        }
+        
+        .theme-preview {
+            background: var(--primary-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .task-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--glass-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--glass-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 0.75rem;
+        }
+        
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid var(--accent-color);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .task-checkbox:hover {
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        
+        .task-checkbox.checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .task-checkbox::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .task-checkbox.checked::after {
+            opacity: 1;
+        }
+        
+        .task-text {
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+        
+        .glass-card {
+            background: var(--glass-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Light Blue Themes */
+        .arctic-sky {
+            --primary-color: #e6f2ff;
+            --secondary-color: #cce5ff;
+            --accent-color: #4da6ff;
+            --text-color: #2c5282;
+            --glow-color: #4da6ff;
+            --shadow-color: rgba(77, 166, 255, 0.3);
+            --glass-color: rgba(230, 242, 255, 0.7);
+            --border-color: rgba(77, 166, 255, 0.2);
+        }
+        
+        .ocean-breeze {
+            --primary-color: #f0f8ff;
+            --secondary-color: #d1e7f5;
+            --accent-color: #5e9eff;
+            --text-color: #2c3e50;
+            --glow-color: #5e9eff;
+            --shadow-color: rgba(94, 158, 255, 0.3);
+            --glass-color: rgba(240, 248, 255, 0.7);
+            --border-color: rgba(94, 158, 255, 0.2);
+        }
+        
+        .sapphire-dream {
+            --primary-color: #e6f0ff;
+            --secondary-color: #c9e0ff;
+            --accent-color: #3b82f6;
+            --text-color: #1e3a8a;
+            --glow-color: #3b82f6;
+            --shadow-color: rgba(59, 130, 246, 0.3);
+            --glass-color: rgba(230, 240, 255, 0.7);
+            --border-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .cerulean-mist {
+            --primary-color: #f5f9ff;
+            --secondary-color: #d8e6f7;
+            --accent-color: #6ab7ff;
+            --text-color: #2d4a6b;
+            --glow-color: #6ab7ff;
+            --shadow-color: rgba(106, 183, 255, 0.3);
+            --glass-color: rgba(245, 249, 255, 0.7);
+            --border-color: rgba(106, 183, 255, 0.2);
+        }
+        
+        .azure-twilight {
+            --primary-color: #eaf2ff;
+            --secondary-color: #d0e4f7;
+            --accent-color: #4a90e2;
+            --text-color: #2c4c6e;
+            --glow-color: #4a90e2;
+            --shadow-color: rgba(74, 144, 226, 0.3);
+            --glass-color: rgba(234, 242, 255, 0.7);
+            --border-color: rgba(74, 144, 226, 0.2);
+        }
+        
+        .sky-blue {
+            --primary-color: #e0f2fe;
+            --secondary-color: #bae6fd;
+            --accent-color: #38bdf8;
+            --text-color: #0c4a6e;
+            --glow-color: #38bdf8;
+            --shadow-color: rgba(56, 189, 248, 0.3);
+            --glass-color: rgba(224, 242, 254, 0.7);
+            --border-color: rgba(56, 189, 248, 0.2);
+        }
+        
+        .ice-blue {
+            --primary-color: #f0f9ff;
+            --secondary-color: #e0f2fe;
+            --accent-color: #7dd3fc;
+            --text-color: #0c4a6e;
+            --glow-color: #7dd3fc;
+            --shadow-color: rgba(125, 211, 252, 0.3);
+            --glass-color: rgba(240, 249, 255, 0.7);
+            --border-color: rgba(125, 211, 252, 0.2);
+        }
+        
+        .powder-blue {
+            --primary-color: #e0f2fe;
+            --secondary-color: #bae6fd;
+            --accent-color: #60a5fa;
+            --text-color: #1e3a8a;
+            --glow-color: #60a5fa;
+            --shadow-color: rgba(96, 165, 250, 0.3);
+            --glass-color: rgba(224, 242, 254, 0.7);
+            --border-color: rgba(96, 165, 250, 0.2);
+        }
+        
+        .light-sky {
+            --primary-color: #f0f9ff;
+            --secondary-color: #e0f2fe;
+            --accent-color: #93c5fd;
+            --text-color: #1e3a8a;
+            --glow-color: #93c5fd;
+            --shadow-color: rgba(147, 197, 253, 0.3);
+            --glass-color: rgba(240, 249, 255, 0.7);
+            --border-color: rgba(147, 197, 253, 0.2);
+        }
+        
+        .baby-blue {
+            --primary-color: #eff6ff;
+            --secondary-color: #dbeafe;
+            --accent-color: #bfdbfe;
+            --text-color: #1e40af;
+            --glow-color: #bfdbfe;
+            --shadow-color: rgba(191, 219, 254, 0.3);
+            --glass-color: rgba(239, 246, 255, 0.7);
+            --border-color: rgba(191, 219, 254, 0.2);
+        }
+        
+        /* Dark Blue Themes */
+        .midnight-blue {
+            --primary-color: #1e293b;
+            --secondary-color: #334155;
+            --accent-color: #3b82f6;
+            --text-color: #e2e8f0;
+            --glow-color: #3b82f6;
+            --shadow-color: rgba(59, 130, 246, 0.3);
+            --glass-color: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .ocean-depth {
+            --primary-color: #0f172a;
+            --secondary-color: #1e293b;
+            --accent-color: #0ea5e9;
+            --text-color: #e0f2fe;
+            --glow-color: #0ea5e9;
+            --shadow-color: rgba(14, 165, 233, 0.3);
+            --glass-color: rgba(15, 23, 42, 0.7);
+            --border-color: rgba(14, 165, 233, 0.2);
+        }
+        
+        .deep-sapphire {
+            --primary-color: #1e3a8a;
+            --secondary-color: #1e40af;
+            --accent-color: #60a5fa;
+            --text-color: #dbeafe;
+            --glow-color: #60a5fa;
+            --shadow-color: rgba(96, 165, 250, 0.3);
+            --glass-color: rgba(30, 58, 138, 0.7);
+            --border-color: rgba(96, 165, 250, 0.2);
+        }
+        
+        .navy-night {
+            --primary-color: #0c4a6e;
+            --secondary-color: #075985;
+            --accent-color: #0284c7;
+            --text-color: #e0f2fe;
+            --glow-color: #0284c7;
+            --shadow-color: rgba(2, 132, 199, 0.3);
+            --glass-color: rgba(12, 74, 110, 0.7);
+            --border-color: rgba(2, 132, 199, 0.2);
+        }
+        
+        .royal-blue {
+            --primary-color: #1e1b4b;
+            --secondary-color: #312e81;
+            --accent-color: #4f46e5;
+            --text-color: #e0e7ff;
+            --glow-color: #4f46e5;
+            --shadow-color: rgba(79, 70, 229, 0.3);
+            --glass-color: rgba(30, 27, 75, 0.7);
+            --border-color: rgba(79, 70, 229, 0.2);
+        }
+        
+        .dark-cyan {
+            --primary-color: #082f49;
+            --secondary-color: #0e7490;
+            --accent-color: #06b6d4;
+            --text-color: #e0f2fe;
+            --glow-color: #06b6d4;
+            --shadow-color: rgba(6, 182, 212, 0.3);
+            --glass-color: rgba(8, 47, 73, 0.7);
+            --border-color: rgba(6, 182, 212, 0.2);
+        }
+        
+        .twilight-blue {
+            --primary-color: #1e293b;
+            --secondary-color: #334155;
+            --accent-color: #818cf8;
+            --text-color: #e2e8f0;
+            --glow-color: #818cf8;
+            --shadow-color: rgba(129, 140, 248, 0.3);
+            --glass-color: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(129, 140, 248, 0.2);
+        }
+        
+        .midnight-navy {
+            --primary-color: #0f172a;
+            --secondary-color: #1e293b;
+            --accent-color: #1d4ed8;
+            --text-color: #e0e7ff;
+            --glow-color: #1d4ed8;
+            --shadow-color: rgba(29, 78, 216, 0.3);
+            --glass-color: rgba(15, 23, 42, 0.7);
+            --border-color: rgba(29, 78, 216, 0.2);
+        }
+        
+        .ocean-night {
+            --primary-color: #0c4a6e;
+            --secondary-color: #075985;
+            --accent-color: #0284c7;
+            --text-color: #e0f2fe;
+            --glow-color: #0284c7;
+            --shadow-color: rgba(2, 132, 199, 0.3);
+            --glass-color: rgba(12, 74, 110, 0.7);
+            --border-color: rgba(2, 132, 199, 0.2);
+        }
+        
+        .deep-blue {
+            --primary-color: #1e3a8a;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --text-color: #dbeafe;
+            --glow-color: #3b82f6;
+            --shadow-color: rgba(59, 130, 246, 0.3);
+            --glass-color: rgba(30, 58, 138, 0.7);
+            --border-color: rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <h1>Blue Theme Preview</h1>
+        
+        <!-- Light Blue Themes -->
+        <div class="theme-section">
+            <h2 class="section-title">Light Blue Themes</h2>
+            <div class="themes-grid">
+                <!-- Arctic Sky Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Arctic Sky</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e6f2ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#e6f2ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #cce5ff;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#cce5ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #4da6ff;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#4da6ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #2c5282;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#2c5282</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview arctic-sky">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Arctic Sky theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ocean Breeze Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Ocean Breeze</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #f0f8ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#f0f8ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #d1e7f5;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#d1e7f5</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #5e9eff;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#5e9eff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #2c3e50;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#2c3e50</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview ocean-breeze">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Ocean Breeze theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sapphire Dream Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Sapphire Dream</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e6f0ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#e6f0ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #c9e0ff;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#c9e0ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #3b82f6;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#3b82f6</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e3a8a;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#1e3a8a</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview sapphire-dream">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Sapphire Dream theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cerulean Mist Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Cerulean Mist</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #f5f9ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#f5f9ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #d8e6f7;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#d8e6f7</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #6ab7ff;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#6ab7ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #2d4a6b;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#2d4a6b</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview cerulean-mist">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Cerulean Mist theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Azure Twilight Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Azure Twilight</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #eaf2ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#eaf2ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #d0e4f7;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#d0e4f7</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #4a90e2;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#4a90e2</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #2c4c6e;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#2c4c6e</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview azure-twilight">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Azure Twilight theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sky Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Sky Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #bae6fd;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#bae6fd</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #38bdf8;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#38bdf8</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0c4a6e;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#0c4a6e</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview sky-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Sky Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ice Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Ice Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #f0f9ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#f0f9ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #7dd3fc;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#7dd3fc</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0c4a6e;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#0c4a6e</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview ice-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Ice Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Powder Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Powder Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #bae6fd;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#bae6fd</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #60a5fa;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#60a5fa</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e3a8a;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#1e3a8a</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview powder-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Powder Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Light Sky Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Light Sky</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #f0f9ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#f0f9ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #93c5fd;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#93c5fd</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e3a8a;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#1e3a8a</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview light-sky">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Light Sky theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Baby Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Baby Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #eff6ff;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#eff6ff</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #dbeafe;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#dbeafe</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #bfdbfe;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#bfdbfe</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e40af;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#1e40af</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview baby-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Baby Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dark Blue Themes -->
+        <div class="theme-section">
+            <h2 class="section-title">Dark Blue Themes</h2>
+            <div class="themes-grid">
+                <!-- Midnight Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Midnight Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e293b;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#1e293b</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #334155;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#334155</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #3b82f6;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#3b82f6</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e2e8f0;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e2e8f0</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview midnight-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Midnight Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ocean Depth Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Ocean Depth</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0f172a;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#0f172a</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e293b;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#1e293b</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0ea5e9;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#0ea5e9</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview ocean-depth">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Ocean Depth theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Deep Sapphire Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Deep Sapphire</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e3a8a;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#1e3a8a</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e40af;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#1e40af</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #60a5fa;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#60a5fa</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #dbeafe;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#dbeafe</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview deep-sapphire">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Deep Sapphire theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navy Night Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Navy Night</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0c4a6e;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#0c4a6e</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #075985;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#075985</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0284c7;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#0284c7</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview navy-night">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Navy Night theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Royal Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Royal Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e1b4b;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#1e1b4b</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #312e81;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#312e81</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #4f46e5;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#4f46e5</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0e7ff;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e0e7ff</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview royal-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Royal Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dark Cyan Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Dark Cyan</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #082f49;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#082f49</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0e7490;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#0e7490</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #06b6d4;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#06b6d4</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview dark-cyan">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Dark Cyan theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Twilight Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Twilight Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e293b;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#1e293b</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #334155;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#334155</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #818cf8;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#818cf8</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e2e8f0;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e2e8f0</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview twilight-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Twilight Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Midnight Navy Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Midnight Navy</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0f172a;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#0f172a</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e293b;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#1e293b</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1d4ed8;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#1d4ed8</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0e7ff;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e0e7ff</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview midnight-navy">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Midnight Navy theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ocean Night Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Ocean Night</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0c4a6e;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#0c4a6e</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #075985;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#075985</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #0284c7;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#0284c7</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #e0f2fe;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#e0f2fe</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview ocean-night">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Ocean Night theme.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Deep Blue Theme -->
+                <div class="theme-card">
+                    <h3 class="theme-name">Deep Blue</h3>
+                    <div class="color-swatches">
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e3a8a;"></div>
+                            <span class="color-label">Primary</span>
+                            <span class="color-value">#1e3a8a</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #1e40af;"></div>
+                            <span class="color-label">Secondary</span>
+                            <span class="color-value">#1e40af</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #3b82f6;"></div>
+                            <span class="color-label">Accent</span>
+                            <span class="color-value">#3b82f6</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background-color: #dbeafe;"></div>
+                            <span class="color-label">Text</span>
+                            <span class="color-value">#dbeafe</span>
+                        </div>
+                    </div>
+                    <div class="theme-preview deep-blue">
+                        <input type="text" class="task-input" placeholder="Add a new task...">
+                        <div class="task-item">
+                            <div class="task-checkbox"></div>
+                            <span class="task-text">Sample task item</span>
+                        </div>
+                        <div class="glass-card">
+                            <p>This is a sample glass card with the Deep Blue theme.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Add interactivity to checkboxes
+        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('click', function() {
+                this.classList.toggle('checked');
+            });
+        });
+    </script>
+</body>
+</html>
