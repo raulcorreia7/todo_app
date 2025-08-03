@@ -86,7 +86,8 @@ class AffirmationManager {
             // Create a temporary achievement object for zen notification
             const zenAchievement = {
                 name: achievement.title,
-                description: achievement.message
+                description: achievement.message,
+                icon: achievement.icon || '🌿'
             };
             gamificationManager.showZenAchievementNotification(zenAchievement);
         }

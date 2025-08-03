@@ -589,7 +589,7 @@ class TodoApp {
               <div class="task-edit">
                 <div class="edit-input-group">
                   <input type="text" 
-                         class="task-edit-input" 
+                         class="task-edit-input luxury-input" 
                          data-edit-input="${task.id}"
                          value="${this.escapeHtml(task.text)}"
                          maxlength="${this.CONFIG.maxTaskLength}"
@@ -598,7 +598,7 @@ class TodoApp {
                     <span class="char-count">${task.text.length}/${this.CONFIG.maxTaskLength}</span>
                   </div>
                 </div>
-                <textarea class="task-edit-description" 
+                <textarea class="task-edit-description luxury-textarea" 
                           data-edit-desc="${task.id}"
                           maxlength="500"
                           placeholder="Task description (optional)"
@@ -607,8 +607,8 @@ class TodoApp {
                   <span class="desc-count">${task.description.length}/500</span>
                 </div>
                 <div class="edit-actions">
-                  <button class="task-save" data-task-id="${task.id}">Save</button>
-                  <button class="task-cancel">Cancel</button>
+                  <button class="task-save btn btn--primary" data-task-id="${task.id}">Save</button>
+                  <button class="task-cancel btn btn--ghost">Cancel</button>
                 </div>
               </div>
             ` : `
@@ -776,9 +776,11 @@ class TodoApp {
 
     this.saveTasks();
     
-    // Update gamification
+    // Update gamification for each task added
     if (typeof gamificationManager !== 'undefined') {
-      gamificationManager.addTask(loremTasks.length);
+      loremTasks.forEach(() => {
+        gamificationManager.addTask();
+      });
     }
     
     // Play sound
