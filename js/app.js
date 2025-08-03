@@ -11,14 +11,14 @@ class TodoApp {
     this.editingTaskId = null;
     this.isDirty = false;
     this.renderTimeout = null;
-    
+
     this.CONFIG = {
       maxTaskLength: 500,
       autoSaveDelay: 500,
       animationDuration: 300,
       debounceDelay: 50
     };
-    
+
     this.init();
   }
 
@@ -27,18 +27,18 @@ class TodoApp {
    */
   async init() {
     if (this.isInitialized) return;
-    
+
     await this.waitForDependencies();
     this.setupEventListeners();
     this.loadTasks();
     this.render();
     this.setupFooterVisibility();
-    
+
     // Initialize statistics manager
     if (typeof statisticsManager !== 'undefined' && statisticsManager.isReady()) {
       console.log('Statistics manager initialized');
     }
-    
+
     this.isInitialized = true;
     console.log('Todo app initialized');
   }
@@ -59,7 +59,7 @@ class TodoApp {
     return new Promise((resolve) => {
       const maxWait = 10000; // 10 seconds max
       const startTime = Date.now();
-      
+
       const check = () => {
         if (checkDependencies()) {
           resolve();
@@ -128,6 +128,28 @@ class TodoApp {
       });
     }
 
+    // Volume button
+    const volumeBtn = document.getElementById('volumeBtn');
+    if (volumeBtn) {
+      volumeBtn.addEventListener('click', () => {
+        if (typeof settingsManager !== 'undefined') {
+          const newSoundEnabled = !settingsManager.soundEnabled;
+          settingsManager.setSoundEnabled(newSoundEnabled);
+
+          // Update volume icon
+          const volumeIcon = document.getElementById('volumeIcon');
+          if (volumeIcon) {
+            settingsManager.updateVolumeIcon(volumeIcon, newSoundEnabled);
+          }
+
+          // Play sound toggle sound
+          if (typeof audioManager !== 'undefined') {
+            audioManager.play('toggle');
+          }
+        }
+      });
+    }
+
     // Event delegation for task interactions
     document.addEventListener('change', (e) => {
       // Handle checkbox changes
@@ -142,25 +164,25 @@ class TodoApp {
 
     document.addEventListener('click', (e) => {
       const target = e.target;
-      
+
       // Handle clear completed via data-action attribute
       if (target.matches('[data-action="clear-completed"]')) {
         e.preventDefault();
         this.clearCompleted();
       }
-      
+
       // Handle delete all via data-action attribute
       if (target.matches('[data-action="delete-all"]')) {
         e.preventDefault();
         this.deleteAll();
       }
-      
+
       // Handle test data via data-action attribute
       if (target.matches('[data-action="test-data"]')) {
         e.preventDefault();
         this.addTestData();
       }
-      
+
       // Handle task edit buttons
       if (target.closest('.task-edit-btn')) {
         e.preventDefault();
@@ -169,7 +191,7 @@ class TodoApp {
           this.startEdit(taskId);
         }
       }
-      
+
       // Handle task delete buttons
       if (target.closest('.task-delete-btn')) {
         e.preventDefault();
@@ -178,7 +200,7 @@ class TodoApp {
           this.deleteTask(taskId);
         }
       }
-      
+
       // Handle task save buttons
       if (target.closest('.task-save')) {
         e.preventDefault();
@@ -187,7 +209,7 @@ class TodoApp {
           this.saveEdit(taskId);
         }
       }
-      
+
       // Handle task cancel buttons
       if (target.closest('.task-cancel')) {
         e.preventDefault();
@@ -238,7 +260,7 @@ class TodoApp {
     const oldTaskCount = this.tasks.length;
     this.tasks = storageManager.getTasks();
     const newTaskCount = this.tasks.length;
-    
+
     // Mark as dirty if task count changed during load
     if (oldTaskCount !== newTaskCount) {
       this.markDirty('load');
@@ -251,7 +273,7 @@ class TodoApp {
   saveTasks() {
     storageManager.setTasks(this.tasks);
     this.markDirty('save');
-    
+
     // Dispatch tasksUpdated event to notify other components
     if (typeof bus !== 'undefined') {
       bus.dispatchEvent(new CustomEvent('tasksUpdated'));
@@ -276,7 +298,7 @@ class TodoApp {
     if (this.renderTimeout) {
       clearTimeout(this.renderTimeout);
     }
-    
+
     // Schedule new render with debounce
     this.renderTimeout = setTimeout(() => {
       this.forceRender();
@@ -305,7 +327,7 @@ class TodoApp {
 
     const text = input.value.trim();
     const description = descriptionInput ? descriptionInput.value.trim() : '';
-    
+
     if (!text) {
       this.showValidationError('Task title is required');
       return;
@@ -332,19 +354,19 @@ class TodoApp {
 
     this.tasks.unshift(task);
     this.saveTasks();
-    
+
     input.value = '';
-    
+
     // Play sound
     if (typeof audioManager !== 'undefined') {
       audioManager.play('add');
     }
-    
+
     // Update gamification
     if (typeof gamificationManager !== 'undefined') {
       gamificationManager.addTask();
     }
-    
+
     // Add animation class to the newly added task
     setTimeout(() => {
       const newTaskElement = document.querySelector(`[data-task-id="${task.id}"]`);
@@ -366,14 +388,14 @@ class TodoApp {
 
     task.completed = !task.completed;
     task.updatedAt = new Date().toISOString();
-    
+
     this.saveTasks();
-    
+
     // Play sound
     if (typeof audioManager !== 'undefined') {
       audioManager.play(task.completed ? 'complete' : 'edit');
     }
-    
+
     // Update gamification
     if (typeof gamificationManager !== 'undefined') {
       if (task.completed) {
@@ -385,17 +407,22 @@ class TodoApp {
   /**
    * Delete a task
    */
-  deleteTask(id) {
-    if (!confirm('Delete this task?')) return;
+  async deleteTask(id) {
+    const task = this.tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const confirmed = await modalManager.showDeleteConfirm(task.text);
+
+    if (!confirmed) return;
 
     this.tasks = this.tasks.filter(t => t.id !== id);
     this.saveTasks();
-    
+
     // Play sound
     if (typeof audioManager !== 'undefined') {
       audioManager.play('delete');
     }
-    
+
     // Update gamification
     if (typeof gamificationManager !== 'undefined') {
       gamificationManager.deleteTask();
@@ -408,7 +435,7 @@ class TodoApp {
   startEdit(id) {
     this.editingTaskId = id;
     this.forceRender();
-    
+
     const input = document.querySelector(`[data-edit-input="${id}"]`);
     if (input) {
       input.focus();
@@ -429,7 +456,7 @@ class TodoApp {
 
     const newText = input.value.trim();
     const newDescription = descriptionInput ? descriptionInput.value.trim() : '';
-    
+
     if (!newText) {
       this.deleteTask(id);
       return;
@@ -448,15 +475,15 @@ class TodoApp {
     task.text = newText;
     task.description = newDescription;
     task.updatedAt = new Date().toISOString();
-    
+
     this.editingTaskId = null;
     this.saveTasks();
-    
+
     // Play sound
     if (typeof audioManager !== 'undefined') {
       audioManager.play('edit');
     }
-    
+
     // Update gamification
     if (typeof gamificationManager !== 'undefined') {
       gamificationManager.editTask();
@@ -476,23 +503,30 @@ class TodoApp {
    */
   setFilter(filter) {
     this.currentFilter = filter;
-    
+
     // Update active state
     document.querySelectorAll('[data-filter]').forEach(button => {
       button.classList.toggle('active', button.dataset.filter === filter);
     });
-    
+
     this.forceRender();
   }
 
   /**
    * Clear completed tasks
    */
-  clearCompleted() {
+  async clearCompleted() {
     const completedCount = this.tasks.filter(t => t.completed).length;
     if (completedCount === 0) return;
 
-    const confirmed = confirm(`Clear ${completedCount} completed task${completedCount !== 1 ? 's' : ''}?`);
+    const confirmed = await modalManager.show({
+      title: 'Confirm Deletion',
+      message: `Are you sure you want to clear ${completedCount} completed task${completedCount !== 1 ? 's' : ''}? This cannot be undone.`,
+      confirmText: 'Clear',
+      cancelText: 'Cancel',
+      confirmStyle: 'danger'
+    });
+
     if (!confirmed) return;
 
     this.tasks = this.tasks.filter(t => !t.completed);
@@ -502,21 +536,27 @@ class TodoApp {
   /**
    * Delete all tasks
    */
-  deleteAll() {
+  async deleteAll() {
     if (this.tasks.length === 0) return;
-    
-    const message = `Delete all ${this.tasks.length} task${this.tasks.length !== 1 ? 's' : ''}? This cannot be undone.`;
-    const confirmed = confirm(message);
+
+    const confirmed = await modalManager.show({
+      title: 'Confirm Deletion',
+      message: `Are you sure you want to delete all ${this.tasks.length} task${this.tasks.length !== 1 ? 's' : ''}? This cannot be undone.`,
+      confirmText: 'Delete All',
+      cancelText: 'Cancel',
+      confirmStyle: 'danger'
+    });
+
     if (!confirmed) return;
 
     this.tasks = [];
     this.saveTasks();
-    
+
     // Play sound
     if (typeof audioManager !== 'undefined') {
       audioManager.play('delete');
     }
-    
+
     // Update gamification
     if (typeof gamificationManager !== 'undefined') {
       gamificationManager.resetStats();
@@ -544,27 +584,27 @@ class TodoApp {
     const taskList = document.getElementById('taskList');
     const taskCount = document.getElementById('taskCount');
     const emptyState = document.getElementById('emptyState');
-    
+
     if (!taskList || !taskCount) return;
 
     const filteredTasks = this.getFilteredTasks();
-    
+
     // Update count
     const activeCount = this.tasks.filter(t => !t.completed).length;
     taskCount.textContent = `${activeCount} task${activeCount !== 1 ? 's' : ''} remaining`;
-    
+
     // Show/hide empty state
     if (filteredTasks.length === 0) {
       emptyState.style.display = 'block';
       taskList.innerHTML = '';
       return;
     }
-    
+
     emptyState.style.display = 'none';
-    
+
     // Render tasks
     taskList.innerHTML = filteredTasks.map(task => this.renderTask(task)).join('');
-    
+
     // Setup task event listeners
     this.setupTaskEventListeners();
   }
@@ -574,7 +614,7 @@ class TodoApp {
    */
   renderTask(task) {
     const isEditing = this.editingTaskId === task.id;
-    
+
     return `
       <div class="task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
         <div class="task-content">
@@ -650,7 +690,7 @@ class TodoApp {
       taskEl.addEventListener('mouseenter', () => {
         taskEl.classList.add('hover');
       });
-      
+
       taskEl.addEventListener('mouseleave', () => {
         taskEl.classList.remove('hover');
       });
@@ -673,7 +713,7 @@ class TodoApp {
     const total = this.tasks.length;
     const completed = this.tasks.filter(t => t.completed).length;
     const active = total - completed;
-    
+
     return {
       total,
       completed,
@@ -704,9 +744,9 @@ class TodoApp {
       font-size: 0.9rem;
     `;
     errorDiv.textContent = message;
-    
+
     document.body.appendChild(errorDiv);
-    
+
     setTimeout(() => {
       errorDiv.remove();
     }, 3000);
@@ -775,14 +815,14 @@ class TodoApp {
     });
 
     this.saveTasks();
-    
+
     // Update gamification for each task added
     if (typeof gamificationManager !== 'undefined') {
       loremTasks.forEach(() => {
         gamificationManager.addTask();
       });
     }
-    
+
     // Play sound
     if (typeof audioManager !== 'undefined') {
       audioManager.play('add');
@@ -801,13 +841,13 @@ class TodoApp {
       taskInput.addEventListener('input', (e) => {
         const length = e.target.value.length;
         const maxLength = this.CONFIG.maxTaskLength;
-        
+
         // Update any visible counter
         const counter = e.target.parentElement.querySelector('.char-counter');
         if (counter) {
           counter.textContent = `${length}/${maxLength}`;
           counter.className = 'char-counter';
-          
+
           if (length > maxLength * 0.9) {
             counter.classList.add('warning');
           } else if (length > maxLength * 0.7) {
@@ -823,7 +863,7 @@ class TodoApp {
         const maxLength = 500;
         descCounter.textContent = `${length}/${maxLength}`;
         descCounter.parentElement.className = 'char-counter';
-        
+
         if (length > maxLength * 0.9) {
           descCounter.parentElement.classList.add('error');
         } else if (length > maxLength * 0.7) {
@@ -845,23 +885,23 @@ class TodoApp {
 
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      
+
       // Show footer when scrolling down
       if (scrollTop > lastScrollTop && scrollTop > 100) {
         footer.classList.add('visible');
-      } 
+      }
       // Hide footer when scrolling up to top
       else if (scrollTop <= 50) {
         footer.classList.remove('visible');
       }
-      
+
       lastScrollTop = scrollTop;
-      
+
       // Clear existing timeout
       if (scrollTimeout) {
         clearTimeout(scrollTimeout);
       }
-      
+
       // Set timeout to hide footer after scrolling stops
       scrollTimeout = setTimeout(() => {
         if (scrollTop > 100) {
@@ -872,7 +912,7 @@ class TodoApp {
 
     // Add scroll event listener with passive for better performance
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     // Initial check
     handleScroll();
   }

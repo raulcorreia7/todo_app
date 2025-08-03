@@ -12,25 +12,27 @@ class SettingsManager {
     this.currentFont = 'inter';
     this.soundEnabled = true;
     this.volume = 50;
-    
+
     this.init();
   }
 
   init() {
     this.settingsPanel = document.getElementById('settingsPanel');
-    
+
     // Ensure DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
         this.setupEventListeners();
         this.loadSettings();
         this.renderPaletteSelector();
+        this.setupHeaderButtons();
         this.isInitialized = true;
       });
     } else {
       this.setupEventListeners();
       this.loadSettings();
       this.renderPaletteSelector();
+      this.setupHeaderButtons();
       this.isInitialized = true;
     }
   }
@@ -51,9 +53,12 @@ class SettingsManager {
     });
 
     // Theme toggle
-    document.querySelectorAll('[data-theme]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        this.setTheme(e.target.dataset.theme);
+    document.querySelectorAll('.theme-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const themeName = e.currentTarget.dataset.theme;
+        if (themeName) {
+          this.setTheme(themeName);
+        }
       });
     });
 
@@ -69,6 +74,10 @@ class SettingsManager {
     if (soundToggle) {
       soundToggle.addEventListener('change', (e) => {
         this.setSoundEnabled(e.target.checked);
+        // Play sound toggle sound
+        if (typeof audioManager !== 'undefined') {
+          audioManager.playSoundToggle();
+        }
       });
     }
 
@@ -80,12 +89,33 @@ class SettingsManager {
     }
   }
 
+  setupHeaderButtons() {
+    // No header buttons needed anymore
+  }
+
+  updateVolumeIcon(icon, isEnabled) {
+    if (icon) {
+      if (isEnabled) {
+        icon.innerHTML = `
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        `;
+      } else {
+        icon.innerHTML = `
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        `;
+      }
+    }
+  }
+
   loadSettings() {
     const settings = storageManager.getSettings();
-    
+
     // Check if we have actual saved settings (not just defaults)
     const hasSavedSettings = localStorage.getItem('luxury-todo-settings') !== null;
-    
+
     if (hasSavedSettings) {
       // Use the actual saved settings
       this.currentTheme = settings.theme;
@@ -98,7 +128,7 @@ class SettingsManager {
       this.currentFont = settings.font || 'inter';
       this.soundEnabled = settings.soundEnabled !== false;
       this.volume = settings.volume || 50;
-      
+
       // Save the defaults as actual settings
       this.saveSettings();
     }
@@ -129,7 +159,7 @@ class SettingsManager {
     this.isOpen = true;
     this.settingsPanel.classList.add('open');
     this.updateUI();
-    
+
     if (typeof audioManager !== 'undefined') {
       audioManager.play('settings');
     }
@@ -144,16 +174,16 @@ class SettingsManager {
     this.currentTheme = theme;
     this.applyTheme(theme);
     this.saveSettings();
-    
+
     // Update UI
     document.querySelectorAll('[data-theme]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.theme === theme);
     });
-    
+
     if (typeof themeManager !== 'undefined') {
       themeManager.changeTheme(theme);
     }
-    
+
     if (typeof audioManager !== 'undefined') {
       audioManager.play('palette');
     }
@@ -163,17 +193,21 @@ class SettingsManager {
     this.currentFont = font;
     this.applyFont(font);
     this.saveSettings();
-    
+
     // Update UI
     document.querySelectorAll('[data-font]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.font === font);
     });
+
+    if (typeof audioManager !== 'undefined') {
+      audioManager.play('font');
+    }
   }
 
   setSoundEnabled(enabled) {
     this.soundEnabled = enabled;
     this.saveSettings();
-    
+
     if (typeof audioManager !== 'undefined') {
       audioManager.setEnabled(enabled);
     }
@@ -182,9 +216,10 @@ class SettingsManager {
   setVolume(volume) {
     this.volume = volume;
     this.saveSettings();
-    
+
     if (typeof audioManager !== 'undefined') {
       audioManager.setVolume(volume);
+      audioManager.play('volume');
     }
   }
 
@@ -206,99 +241,22 @@ class SettingsManager {
   }
 
   renderPaletteSelector() {
-    const container = document.getElementById('paletteSelector');
+    // The theme UI is now defined in HTML, so we just need to set up event listeners
+    const container = document.querySelector('.theme-cards-container');
     if (!container) return;
 
-    // Theme definitions with actual theme colors for preview
-    const themeDefinitions = {
-      midnight: {
-        primary: '#1a1a2e',
-        secondary: '#16213e',
-        accent: '#0f3460',
-        text: '#e94560',
-        glow: '#e94560',
-        shadow: 'rgba(233, 69, 96, 0.3)',
-        glass: 'rgba(26, 26, 46, 0.8)',
-        border: 'rgba(233, 69, 96, 0.2)'
-      },
-      ivory: {
-        primary: '#f8f9fa',
-        secondary: '#e9ecef',
-        accent: '#dee2e6',
-        text: '#495057',
-        glow: '#6c757d',
-        shadow: 'rgba(108, 117, 125, 0.2)',
-        glass: 'rgba(248, 249, 250, 0.8)',
-        border: 'rgba(108, 117, 125, 0.1)'
-      },
-      champagne: {
-        primary: '#fff8e7',
-        secondary: '#f3e5ab',
-        accent: '#daa520',
-        text: '#8b4513',
-        glow: '#daa520',
-        shadow: 'rgba(218, 165, 32, 0.3)',
-        glass: 'rgba(255, 248, 231, 0.8)',
-        border: 'rgba(218, 165, 32, 0.2)'
-      },
-      graphite: {
-        primary: '#2c2c2c',
-        secondary: '#404040',
-        accent: '#666666',
-        text: '#cccccc',
-        glow: '#999999',
-        shadow: 'rgba(153, 153, 153, 0.3)',
-        glass: 'rgba(44, 44, 44, 0.8)',
-        border: 'rgba(153, 153, 153, 0.2)'
-      },
-      aurora: {
-        primary: '#0a0a0a',
-        secondary: '#1a1a2e',
-        accent: '#16213e',
-        text: '#00ff88',
-        glow: '#00ff88',
-        shadow: 'rgba(0, 255, 136, 0.3)',
-        glass: 'rgba(10, 10, 10, 0.8)',
-        border: 'rgba(0, 255, 136, 0.2)'
-      },
-      sakura: {
-        primary: '#fff5f5',
-        secondary: '#ffe0e0',
-        accent: '#ffb3ba',
-        text: '#8b2635',
-        glow: '#ff69b4',
-        shadow: 'rgba(255, 105, 180, 0.3)',
-        glass: 'rgba(255, 245, 245, 0.8)',
-        border: 'rgba(255, 105, 180, 0.2)'
-      }
-    };
-
-    const themes = Object.keys(themeDefinitions);
-    
-    container.innerHTML = themes.map(themeName => {
-      const theme = themeDefinitions[themeName];
-      return `
-        <div class="palette-swatch ${themeName === this.currentTheme ? 'active' : ''}" 
-             data-theme="${themeName}" 
-             data-palette="${themeName}"
-             style="background-color: ${theme.glow}"
-             title="${themeName}">
-        </div>
-      `;
-    }).join('');
-
-    // Add event listeners with theme-specific hover preview
+    // Add event listeners for theme cards
     container.addEventListener('click', (e) => {
-      const swatch = e.target.closest('.palette-swatch');
-      if (swatch) {
-        const themeName = swatch.dataset.palette;
+      const card = e.target.closest('.theme-card');
+      if (card) {
+        const themeName = card.dataset.theme;
         this.setTheme(themeName);
-        
+
         // Update active state
-        container.querySelectorAll('.palette-swatch').forEach(s => {
-          s.classList.toggle('active', s.dataset.palette === themeName);
+        container.querySelectorAll('.theme-card').forEach(c => {
+          c.classList.toggle('active', c.dataset.theme === themeName);
         });
-        
+
         // Use themeManager for consistency
         if (typeof themeManager !== 'undefined') {
           themeManager.changeTheme(themeName);
@@ -306,24 +264,43 @@ class SettingsManager {
       }
     });
 
-    // Remove any inline styles that might interfere with CSS
-    container.querySelectorAll('.palette-swatch').forEach(swatch => {
-      swatch.style.transform = '';
-      swatch.style.boxShadow = '';
-      swatch.style.borderColor = '';
-    });
+    // Set initial active state
+    const activeCard = container.querySelector(`.theme-card[data-theme="${this.currentTheme}"]`);
+    if (activeCard) {
+      activeCard.classList.add('active');
+    }
   }
 
   setupVolumeSlider(slider, handle) {
     let isDragging = false;
+    let tempVolume = this.volume; // Store current volume as temp
+
+    const updateVolumeUI = (percentage) => {
+      const fill = document.getElementById('volumeFill');
+      const handle = document.getElementById('volumeHandle');
+
+      if (fill && handle) {
+        fill.style.width = `${percentage}%`;
+        handle.style.left = `${percentage}%`;
+      }
+    };
 
     const updateVolume = (e) => {
       const rect = slider.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-      
-      this.setVolume(percentage);
-      this.updateVolumeUI(percentage);
+
+      // Update UI without playing sound
+      updateVolumeUI(percentage);
+      tempVolume = percentage; // Store the temp volume
+    };
+
+    const applyVolume = () => {
+      // Only apply the volume and play sound when dragging ends
+      if (isDragging) {
+        this.setVolume(tempVolume);
+        isDragging = false;
+      }
     };
 
     const onMouseDown = (e) => {
@@ -338,7 +315,7 @@ class SettingsManager {
     };
 
     const onMouseUp = () => {
-      isDragging = false;
+      applyVolume();
     };
 
     slider.addEventListener('mousedown', onMouseDown);
@@ -357,13 +334,13 @@ class SettingsManager {
       }
     });
 
-    document.addEventListener('touchend', onMouseUp);
+    document.addEventListener('touchend', applyVolume);
   }
 
   updateVolumeUI(volume) {
     const fill = document.getElementById('volumeFill');
     const handle = document.getElementById('volumeHandle');
-    
+
     if (fill && handle) {
       fill.style.width = `${volume}%`;
       handle.style.left = `${volume}%`;

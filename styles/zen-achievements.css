@@ -74,10 +74,13 @@
 }
 
 @keyframes etherealFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
     filter: drop-shadow(0 0 3px var(--glow-color));
   }
+
   50% {
     transform: translateY(-5.5px) scale(1.06);
     filter: drop-shadow(0 0 6px var(--glow-color));
@@ -124,9 +127,12 @@
 }
 
 @keyframes zenGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
   }
+
   50% {
     opacity: 0.6;
   }
@@ -141,7 +147,7 @@
     max-width: none;
     margin: 0 auto;
   }
-  
+
   .zen-achievement-icon-svg {
     width: 22px;
     height: 22px;
@@ -155,7 +161,7 @@
     left: 12px;
     padding: 14px 20px;
   }
-  
+
   .zen-achievement-icon-svg {
     width: 20px;
     height: 20px;
@@ -187,31 +193,35 @@
   background: rgba(255, 245, 245, 0.8);
 }
 
+[data-theme="arcticSky"] .zen-achievement-notification {
+  background: rgba(230, 242, 255, 0.8);
+}
+
 /* Accessibility - Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .zen-achievement-notification {
     transition: opacity 200ms ease;
     transform: none;
   }
-  
+
   .zen-achievement-notification.show {
     transform: none;
   }
-  
+
   .zen-achievement-notification.exit {
     transform: none;
   }
-  
+
   .zen-achievement-notification::before {
     animation: none;
   }
-  
+
   .zen-achievement-icon-svg {
     animation: none;
     transform: none;
     filter: none;
   }
-  
+
   .zen-achievement-notification::after {
     animation: none;
   }
@@ -223,7 +233,7 @@
     border-width: 2px;
     background: var(--glass-color);
   }
-  
+
   .zen-achievement-text {
     opacity: 1;
   }
@@ -260,6 +270,7 @@
     transform: translate(0, 0) scale(0);
     opacity: 1;
   }
+
   100% {
     transform: translate(var(--tx), var(--ty)) scale(1);
     opacity: 0;
@@ -315,9 +326,11 @@
   0% {
     transform: scale(1) rotate(0deg);
   }
+
   50% {
     transform: scale(1.2) rotate(5deg);
   }
+
   100% {
     transform: scale(1) rotate(0deg);
   }
@@ -351,9 +364,11 @@
   0% {
     box-shadow: 0 0 5px var(--glow-color);
   }
+
   50% {
     box-shadow: 0 0 20px var(--glow-color), 0 0 30px var(--glow-color);
   }
+
   100% {
     box-shadow: 0 0 5px var(--glow-color);
   }
@@ -457,7 +472,7 @@
   .achievements-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .achievement-card {
     padding: 14px;
   }
@@ -467,15 +482,15 @@
   .achievements-grid {
     gap: 12px;
   }
-  
+
   .achievement-card {
     padding: 12px;
   }
-  
+
   .achievement-info h5 {
     font-size: 13px;
   }
-  
+
   .achievement-info p {
     font-size: 11px;
   }

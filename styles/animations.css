@@ -1,3 +1,9 @@
+/* Arctic Sky Theme Animations */
+.theme-arcticSky {
+  --animation-duration: 300ms;
+  --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Luxury Animations - Premium Task Entry & Micro-interactions */
 
 /* Add Todo Button Animation */
@@ -16,11 +22,13 @@
     margin: 0;
     padding: 0 1.5rem;
   }
+
   50% {
     opacity: 0.8;
     transform: translateY(-5px) scale(1.02);
     filter: blur(0);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -40,9 +48,11 @@
   0% {
     box-shadow: 0 4px 20px var(--shadow-color);
   }
+
   50% {
     box-shadow: 0 8px 30px var(--glow-color);
   }
+
   100% {
     box-shadow: 0 4px 20px var(--shadow-color);
   }

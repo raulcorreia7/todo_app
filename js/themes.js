@@ -15,7 +15,8 @@ class ThemeManager {
                 glow: '#e94560',
                 shadow: 'rgba(233, 69, 96, 0.3)',
                 glass: 'rgba(26, 26, 46, 0.8)',
-                border: 'rgba(233, 69, 96, 0.2)'
+                border: 'rgba(233, 69, 96, 0.2)',
+                tags: ['dark', 'cool']
             },
             ivory: {
                 name: 'Ivory',
@@ -26,7 +27,8 @@ class ThemeManager {
                 glow: '#6c757d',
                 shadow: 'rgba(108, 117, 125, 0.2)',
                 glass: 'rgba(248, 249, 250, 0.8)',
-                border: 'rgba(108, 117, 125, 0.1)'
+                border: 'rgba(108, 117, 125, 0.1)',
+                tags: ['light']
             },
             champagne: {
                 name: 'Champagne',
@@ -37,7 +39,8 @@ class ThemeManager {
                 glow: '#daa520',
                 shadow: 'rgba(218, 165, 32, 0.3)',
                 glass: 'rgba(255, 248, 231, 0.8)',
-                border: 'rgba(218, 165, 32, 0.2)'
+                border: 'rgba(218, 165, 32, 0.2)',
+                tags: ['light', 'warm']
             },
             graphite: {
                 name: 'Graphite',
@@ -48,7 +51,8 @@ class ThemeManager {
                 glow: '#999999',
                 shadow: 'rgba(153, 153, 153, 0.3)',
                 glass: 'rgba(44, 44, 44, 0.8)',
-                border: 'rgba(153, 153, 153, 0.2)'
+                border: 'rgba(153, 153, 153, 0.2)',
+                tags: ['dark']
             },
             aurora: {
                 name: 'Aurora',
@@ -59,7 +63,32 @@ class ThemeManager {
                 glow: '#00ff88',
                 shadow: 'rgba(0, 255, 136, 0.3)',
                 glass: 'rgba(10, 10, 10, 0.8)',
-                border: 'rgba(0, 255, 136, 0.2)'
+                border: 'rgba(0, 255, 136, 0.2)',
+                tags: ['dark', 'cool']
+            },
+            arcticSky: {
+                name: 'Arctic Sky',
+                primary: '#e6f2ff',
+                secondary: '#cce5ff',
+                accent: '#4da6ff',
+                text: '#2c5282',
+                glow: '#4da6ff',
+                shadow: 'rgba(77, 166, 255, 0.3)',
+                glass: 'rgba(230, 242, 255, 0.7)',
+                border: 'rgba(77, 166, 255, 0.2)',
+                tags: ['light', 'cool']
+            },
+            emerald: {
+                name: 'Emerald',
+                primary: '#0c4a3e',
+                secondary: '#134e4a',
+                accent: '#2ecc71',
+                text: '#e8f8f5',
+                glow: '#2ecc71',
+                shadow: 'rgba(46, 204, 113, 0.3)',
+                glass: 'rgba(12, 74, 62, 0.8)',
+                border: 'rgba(46, 204, 113, 0.2)',
+                tags: ['dark', 'cool']
             },
             sakura: {
                 name: 'Sakura',
@@ -70,10 +99,97 @@ class ThemeManager {
                 glow: '#ff69b4',
                 shadow: 'rgba(255, 105, 180, 0.3)',
                 glass: 'rgba(255, 245, 245, 0.8)',
-                border: 'rgba(255, 105, 180, 0.2)'
+                border: 'rgba(255, 105, 180, 0.2)',
+                tags: ['light', 'warm']
+            },
+            pearl: {
+                name: 'Pearl',
+                primary: '#f8f8ff',
+                secondary: '#e6e6fa',
+                accent: '#d4af37',
+                text: '#4b0082',
+                glow: '#d4af37',
+                shadow: 'rgba(212, 175, 55, 0.3)',
+                glass: 'rgba(248, 248, 255, 0.8)',
+                border: 'rgba(212, 175, 55, 0.2)',
+                tags: ['light', 'warm']
+            },
+            mint: {
+                name: 'Mint',
+                primary: '#f0fff0',
+                secondary: '#e0ffe0',
+                accent: '#2dd4bf',
+                text: '#006400',
+                glow: '#2dd4bf',
+                shadow: 'rgba(45, 212, 191, 0.3)',
+                glass: 'rgba(240, 255, 240, 0.8)',
+                border: 'rgba(45, 212, 191, 0.2)',
+                tags: ['light', 'cool']
+            },
+            coral: {
+                name: 'Coral',
+                primary: '#fff0f5',
+                secondary: '#ffe4e1',
+                accent: '#ff7f50',
+                text: '#8b0000',
+                glow: '#ff7f50',
+                shadow: 'rgba(255, 127, 80, 0.3)',
+                glass: 'rgba(255, 240, 245, 0.8)',
+                border: 'rgba(255, 127, 80, 0.2)',
+                tags: ['light', 'warm']
+            },
+            frost: {
+                name: 'Frost',
+                primary: '#f0f8ff',
+                secondary: '#e6f2ff',
+                accent: '#22d3ee',
+                text: '#000080',
+                glow: '#22d3ee',
+                shadow: 'rgba(34, 211, 238, 0.3)',
+                glass: 'rgba(240, 248, 255, 0.8)',
+                border: 'rgba(34, 211, 238, 0.2)',
+                tags: ['light', 'cool']
+            },
+            lavender: {
+                name: 'Lavender',
+                primary: '#e6e6fa',
+                secondary: '#d8bfd8',
+                accent: '#a78bfa',
+                text: '#4b0082',
+                glow: '#a78bfa',
+                shadow: 'rgba(167, 139, 250, 0.3)',
+                glass: 'rgba(230, 230, 250, 0.8)',
+                border: 'rgba(167, 139, 250, 0.2)',
+                tags: ['light', 'cool']
+            },
+            amethyst: {
+                name: 'Amethyst',
+                primary: '#4b0082',
+                secondary: '#483d8b',
+                accent: '#9b59b6',
+                text: '#dda0dd',
+                glow: '#9b59b6',
+                shadow: 'rgba(155, 89, 182, 0.3)',
+                glass: 'rgba(75, 0, 130, 0.8)',
+                border: 'rgba(155, 89, 182, 0.2)',
+                tags: ['dark', 'cool']
+            },
+            burgundy: {
+                name: 'Burgundy',
+                primary: '#800020',
+                secondary: '#800000',
+                accent: '#dc143c',
+                text: '#f8f8ff',
+                glow: '#dc143c',
+                shadow: 'rgba(220, 20, 60, 0.3)',
+                glass: 'rgba(128, 0, 32, 0.8)',
+                border: 'rgba(220, 20, 60, 0.2)',
+                tags: ['dark', 'warm']
             }
         };
-        
+
+        this.signatureThemes = Object.keys(this.themes);
+
         this.currentTheme = 'midnight';
         this.isInitialized = false;
         this.init();
@@ -87,7 +203,7 @@ class ThemeManager {
         this.setupCSSVariables();
         this.setupEventListeners();
         this.isInitialized = true;
-        
+
         // Mark as ready
         if (typeof bus !== 'undefined') {
             bus.markReady('theme');
@@ -118,9 +234,9 @@ class ThemeManager {
     setupCSSVariables() {
         const root = document.documentElement;
         const theme = this.themes[this.currentTheme];
-        
+
         if (!theme) return;
-        
+
         // Set CSS variables
         root.style.setProperty('--primary-color', theme.primary);
         root.style.setProperty('--secondary-color', theme.secondary);
@@ -130,7 +246,7 @@ class ThemeManager {
         root.style.setProperty('--shadow-color', theme.shadow);
         root.style.setProperty('--glass-color', theme.glass);
         root.style.setProperty('--border-color', theme.border);
-        
+
         // Apply theme class to body
         document.body.className = document.body.className.replace(/theme-\w+/g, '');
         document.body.classList.add(`theme-${this.currentTheme}`);
@@ -148,7 +264,7 @@ class ThemeManager {
                 }
             });
         }
-        
+
         // Listen for system theme changes
         if (window.matchMedia) {
             const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -172,20 +288,20 @@ class ThemeManager {
             console.warn(`Theme ${themeName} not found`);
             return;
         }
-        
+
         this.currentTheme = themeName;
         this.setupCSSVariables();
-        
+
         // Update glass effects
         this.updateGlassEffects();
-        
+
         // Notify other components
         if (typeof bus !== 'undefined') {
             bus.dispatchEvent(new CustomEvent('themeChanged', {
                 detail: { theme: themeName, colors: this.themes[themeName] }
             }));
         }
-        
+
         // Play theme change sound
         if (typeof audioManager !== 'undefined' && audioManager.isReady()) {
             audioManager.play('settings');
@@ -207,14 +323,14 @@ class ThemeManager {
     updateGlassEffects() {
         const theme = this.themes[this.currentTheme];
         if (!theme) return;
-        
+
         // Update glass panels
         const glassElements = document.querySelectorAll('.glass-panel, .glass-card, .glass-button');
         glassElements.forEach(element => {
             // Update backdrop filter based on theme
             const intensity = this.getGlassIntensity(theme);
             element.style.setProperty('--glass-blur', `${intensity}px`);
-            
+
             // Update glow effect
             this.updateGlowEffect(element, theme);
         });
@@ -239,15 +355,15 @@ class ThemeManager {
     updateGlowEffect(element, theme) {
         const glowIntensity = this.getGlowIntensity(theme);
         const glowColor = theme.glow;
-        
+
         element.style.setProperty('--glow-intensity', glowIntensity);
         element.style.setProperty('--glow-color', glowColor);
-        
+
         // Add hover glow effect
         element.addEventListener('mouseenter', () => {
             element.style.setProperty('--glow-opacity', '0.6');
         });
-        
+
         element.addEventListener('mouseleave', () => {
             element.style.setProperty('--glow-opacity', '0.3');
         });
@@ -282,12 +398,12 @@ class ThemeManager {
     getColorBrightness(hexColor) {
         // Remove # if present
         hexColor = hexColor.replace('#', '');
-        
+
         // Convert to RGB
         const r = parseInt(hexColor.substr(0, 2), 16);
         const g = parseInt(hexColor.substr(2, 2), 16);
         const b = parseInt(hexColor.substr(4, 2), 16);
-        
+
         // Calculate brightness using luminance formula
         return (r * 299 + g * 587 + b * 114) / 1000;
     }
@@ -315,6 +431,18 @@ class ThemeManager {
      */
     getTheme(themeName) {
         return this.themes[themeName] || null;
+    }
+
+    /**
+     * Check if a theme is light or dark
+     * @param {string} themeName - Theme name
+     * @returns {boolean} True if theme is light
+     */
+    isLightTheme(themeName) {
+        const theme = this.themes[themeName];
+        if (!theme) return false;
+
+        return this.getColorBrightness(theme.primary) > 128;
     }
 }
 

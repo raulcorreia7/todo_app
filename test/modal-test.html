@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Luxury Modal Previews</title>
 
   <!-- Import existing app styles -->
-  <link rel="stylesheet" href="styles/design-system.css">
-  <link rel="stylesheet" href="styles/luxury-base.css">
-  <link rel="stylesheet" href="styles/luxury-components.css">
-  <link rel="stylesheet" href="styles/animations.css">
-  
+  <link rel="stylesheet" href="../styles/design-system.css">
+  <link rel="stylesheet" href="../styles/luxury-base.css">
+  <link rel="stylesheet" href="../styles/luxury-components.css">
+  <link rel="stylesheet" href="../styles/animations.css">
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=SF+Pro+Display:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
 
   <style>
     /* Theme Variables */
@@ -30,6 +33,31 @@
       --gradient-start: rgba(26, 26, 46, 0.4);
       --gradient-end: rgba(26, 26, 46, 0.8);
       --glass-bg-alt: rgba(26, 26, 46, 0.9);
+      --color-primary: #1a1a2e;
+      --color-secondary: #16213e;
+      --color-accent: #0f3460;
+      --color-text: #e94560;
+      --color-glow: #e94560;
+      --color-shadow: rgba(233, 69, 96, 0.3);
+      --color-glass: rgba(26, 26, 46, 0.8);
+      --color-border: rgba(233, 69, 96, 0.2);
+      --glass-primary: rgba(255, 255, 255, 0.12);
+      --glass-primary-hover: rgba(255, 255, 255, 0.18);
+      --glass-highlight: rgba(255, 255, 255, 0.4);
+      --danger-glass: rgba(220, 20, 60, 0.12);
+      --danger-glass-hover: rgba(220, 20, 60, 0.2);
+      --danger-glass-ghost: rgba(220, 20, 60, 0.08);
+      --danger-glass-ghost-hover: rgba(220, 20, 60, 0.15);
+      --danger-border: rgba(220, 20, 60, 0.3);
+      --danger-border-hover: rgba(220, 20, 60, 0.5);
+      --danger-border-ghost: rgba(220, 20, 60, 0.25);
+      --danger-border-ghost-hover: rgba(220, 20, 60, 0.4);
+      --danger-text: #dc143c;
+      --danger-shadow: rgba(220, 20, 60, 0.2);
+      --danger-shadow-hover: rgba(220, 20, 60, 0.3);
+      --danger-shadow-ghost: rgba(220, 20, 60, 0.15);
+      --danger-shadow-ghost-hover: rgba(220, 20, 60, 0.25);
+      --danger-highlight: rgba(220, 20, 60, 0.4);
     }
 
     [data-theme="midnight"] {
@@ -44,6 +72,31 @@
       --gradient-start: rgba(26, 26, 46, 0.4);
       --gradient-end: rgba(26, 26, 46, 0.8);
       --glass-bg-alt: rgba(26, 26, 46, 0.9);
+      --color-primary: #1a1a2e;
+      --color-secondary: #16213e;
+      --color-accent: #0f3460;
+      --color-text: #e94560;
+      --color-glow: #e94560;
+      --color-shadow: rgba(233, 69, 96, 0.3);
+      --color-glass: rgba(26, 26, 46, 0.8);
+      --color-border: rgba(233, 69, 96, 0.2);
+      --glass-primary: rgba(255, 255, 255, 0.12);
+      --glass-primary-hover: rgba(255, 255, 255, 0.18);
+      --glass-highlight: rgba(255, 255, 255, 0.4);
+      --danger-glass: rgba(220, 20, 60, 0.12);
+      --danger-glass-hover: rgba(220, 20, 60, 0.2);
+      --danger-glass-ghost: rgba(220, 20, 60, 0.08);
+      --danger-glass-ghost-hover: rgba(220, 20, 60, 0.15);
+      --danger-border: rgba(220, 20, 60, 0.3);
+      --danger-border-hover: rgba(220, 20, 60, 0.5);
+      --danger-border-ghost: rgba(220, 20, 60, 0.25);
+      --danger-border-ghost-hover: rgba(220, 20, 60, 0.4);
+      --danger-text: #dc143c;
+      --danger-shadow: rgba(220, 20, 60, 0.2);
+      --danger-shadow-hover: rgba(220, 20, 60, 0.3);
+      --danger-shadow-ghost: rgba(220, 20, 60, 0.15);
+      --danger-shadow-ghost-hover: rgba(220, 20, 60, 0.25);
+      --danger-highlight: rgba(220, 20, 60, 0.4);
     }
 
     [data-theme="ivory"] {
@@ -58,6 +111,31 @@
       --gradient-start: rgba(248, 249, 250, 0.4);
       --gradient-end: rgba(248, 249, 250, 0.8);
       --glass-bg-alt: rgba(248, 249, 250, 0.9);
+      --color-primary: #f8f9fa;
+      --color-secondary: #e9ecef;
+      --color-accent: #dee2e6;
+      --color-text: #495057;
+      --color-glow: #6c757d;
+      --color-shadow: rgba(108, 117, 125, 0.2);
+      --color-glass: rgba(248, 249, 250, 0.8);
+      --color-border: rgba(108, 117, 125, 0.1);
+      --glass-primary: rgba(73, 80, 87, 0.15);
+      --glass-primary-hover: rgba(73, 80, 87, 0.25);
+      --glass-highlight: rgba(73, 80, 87, 0.5);
+      --danger-glass: rgba(199, 44, 72, 0.15);
+      --danger-glass-hover: rgba(199, 44, 72, 0.25);
+      --danger-glass-ghost: rgba(199, 44, 72, 0.1);
+      --danger-glass-ghost-hover: rgba(199, 44, 72, 0.2);
+      --danger-border: rgba(199, 44, 72, 0.35);
+      --danger-border-hover: rgba(199, 44, 72, 0.55);
+      --danger-border-ghost: rgba(199, 44, 72, 0.3);
+      --danger-border-ghost-hover: rgba(199, 44, 72, 0.45);
+      --danger-text: #c72c48;
+      --danger-shadow: rgba(199, 44, 72, 0.25);
+      --danger-shadow-hover: rgba(199, 44, 72, 0.35);
+      --danger-shadow-ghost: rgba(199, 44, 72, 0.2);
+      --danger-shadow-ghost-hover: rgba(199, 44, 72, 0.3);
+      --danger-highlight: rgba(199, 44, 72, 0.5);
     }
 
     [data-theme="champagne"] {
@@ -72,6 +150,31 @@
       --gradient-start: rgba(255, 248, 231, 0.4);
       --gradient-end: rgba(255, 248, 231, 0.8);
       --glass-bg-alt: rgba(255, 248, 231, 0.9);
+      --color-primary: #fff8e7;
+      --color-secondary: #f3e5ab;
+      --color-accent: #daa520;
+      --color-text: #8b4513;
+      --color-glow: #daa520;
+      --color-shadow: rgba(218, 165, 32, 0.3);
+      --color-glass: rgba(255, 248, 231, 0.8);
+      --color-border: rgba(218, 165, 32, 0.2);
+      --glass-primary: rgba(139, 69, 19, 0.12);
+      --glass-primary-hover: rgba(139, 69, 19, 0.2);
+      --glass-highlight: rgba(139, 69, 19, 0.4);
+      --danger-glass: rgba(178, 34, 34, 0.12);
+      --danger-glass-hover: rgba(178, 34, 34, 0.2);
+      --danger-glass-ghost: rgba(178, 34, 34, 0.08);
+      --danger-glass-ghost-hover: rgba(178, 34, 34, 0.15);
+      --danger-border: rgba(178, 34, 34, 0.3);
+      --danger-border-hover: rgba(178, 34, 34, 0.5);
+      --danger-border-ghost: rgba(178, 34, 34, 0.25);
+      --danger-border-ghost-hover: rgba(178, 34, 34, 0.4);
+      --danger-text: #b22222;
+      --danger-shadow: rgba(178, 34, 34, 0.2);
+      --danger-shadow-hover: rgba(178, 34, 34, 0.3);
+      --danger-shadow-ghost: rgba(178, 34, 34, 0.15);
+      --danger-shadow-ghost-hover: rgba(178, 34, 34, 0.25);
+      --danger-highlight: rgba(178, 34, 34, 0.4);
     }
 
     [data-theme="graphite"] {
@@ -86,6 +189,31 @@
       --gradient-start: rgba(44, 44, 44, 0.4);
       --gradient-end: rgba(44, 44, 44, 0.8);
       --glass-bg-alt: rgba(44, 44, 44, 0.9);
+      --color-primary: #2c2c2c;
+      --color-secondary: #404040;
+      --color-accent: #666666;
+      --color-text: #cccccc;
+      --color-glow: #999999;
+      --color-shadow: rgba(153, 153, 153, 0.3);
+      --color-glass: rgba(44, 44, 44, 0.8);
+      --color-border: rgba(153, 153, 153, 0.2);
+      --glass-primary: rgba(204, 204, 204, 0.12);
+      --glass-primary-hover: rgba(204, 204, 204, 0.2);
+      --glass-highlight: rgba(204, 204, 204, 0.4);
+      --danger-glass: rgba(255, 99, 71, 0.12);
+      --danger-glass-hover: rgba(255, 99, 71, 0.2);
+      --danger-glass-ghost: rgba(255, 99, 71, 0.08);
+      --danger-glass-ghost-hover: rgba(255, 99, 71, 0.15);
+      --danger-border: rgba(255, 99, 71, 0.3);
+      --danger-border-hover: rgba(255, 99, 71, 0.5);
+      --danger-border-ghost: rgba(255, 99, 71, 0.25);
+      --danger-border-ghost-hover: rgba(255, 99, 71, 0.4);
+      --danger-text: #ff6347;
+      --danger-shadow: rgba(255, 99, 71, 0.2);
+      --danger-shadow-hover: rgba(255, 99, 71, 0.3);
+      --danger-shadow-ghost: rgba(255, 99, 71, 0.15);
+      --danger-shadow-ghost-hover: rgba(255, 99, 71, 0.25);
+      --danger-highlight: rgba(255, 99, 71, 0.4);
     }
 
     /* Layout & Container Styles */
@@ -101,9 +229,9 @@
       font-weight: 600;
       text-align: center;
       margin-bottom: 3rem;
-      background: linear-gradient(135deg, 
-        var(--text-color, #fff) 0%,
-        var(--accent-color, rgba(255,255,255,0.8)) 100%);
+      background: linear-gradient(135deg,
+          var(--text-color, #fff) 0%,
+          var(--accent-color, rgba(255, 255, 255, 0.8)) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       opacity: 0.9;
@@ -130,7 +258,7 @@
 
     .preview-card:hover {
       transform: translateY(-4px);
-      box-shadow: 
+      box-shadow:
         0 12px 32px var(--shadow-color, rgba(0, 0, 0, 0.2)),
         0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.15)),
         0 0 40px var(--glow-color, rgba(99, 102, 241, 0.1));
@@ -141,9 +269,9 @@
       font-size: 1.5rem;
       font-weight: 600;
       margin: 0;
-      background: linear-gradient(135deg, 
-        var(--text-color, #fff) 0%,
-        var(--accent-color, rgba(255,255,255,0.8)) 100%);
+      background: linear-gradient(135deg,
+          var(--text-color, #fff) 0%,
+          var(--accent-color, rgba(255, 255, 255, 0.8)) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -165,7 +293,7 @@
       border-radius: 16px;
       backdrop-filter: blur(12px);
       border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-      box-shadow: 
+      box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.2),
         0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.1));
       z-index: 100;
@@ -207,6 +335,10 @@
       isolation: isolate;
     }
 
+    .modal.active {
+      display: flex;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -231,11 +363,7 @@
       font-size: 1.75rem;
       font-weight: 600;
       margin: 0 0 1rem;
-      background: linear-gradient(135deg, 
-        var(--text-color, #fff) 0%,
-        var(--accent-color, rgba(255,255,255,0.8)) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-color, #fff);
     }
 
     .modal-content p {
@@ -298,7 +426,7 @@
       backdrop-filter: blur(12px);
       border-radius: 24px;
       border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-      box-shadow: 
+      box-shadow:
         0 0 40px var(--glow-color, rgba(99, 102, 241, 0.1)),
         inset 0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.1));
       animation: slideUpCenter 0.4s ease;
@@ -308,16 +436,16 @@
 
     .floating-glass-modal .modal-content:hover {
       transform: translateY(-2px);
-      box-shadow: 
+      box-shadow:
         0 0 60px var(--glow-color, rgba(99, 102, 241, 0.15)),
         inset 0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.2));
     }
 
     /* 2. Radial Gradient Modal */
     .radial-modal .modal-backdrop {
-      background: radial-gradient(circle at center, 
-        var(--gradient-start, rgba(0,0,0,0.4)) 0%, 
-        var(--gradient-end, rgba(0,0,0,0.8)) 100%);
+      background: radial-gradient(circle at center,
+          var(--gradient-start, rgba(0, 0, 0, 0.4)) 0%,
+          var(--gradient-end, rgba(0, 0, 0, 0.8)) 100%);
       animation: fadeIn 0.3s ease;
       transition: background 0.3s ease;
     }
@@ -335,7 +463,7 @@
     .radial-modal .modal-content:hover {
       transform: scale(1.01);
       border-color: var(--accent-color, rgba(255, 255, 255, 0.2));
-      box-shadow: 
+      box-shadow:
         0 0 40px var(--glow-color, rgba(255, 255, 255, 0.15)),
         inset 0 0 20px var(--glow-color, rgba(255, 255, 255, 0.05));
     }
@@ -349,15 +477,13 @@
     }
 
     .nebula-modal .modal-content {
-      background: linear-gradient(
-        135deg, 
-        var(--glass-bg, rgba(255, 255, 255, 0.05)) 0%,
-        var(--glass-bg-alt, rgba(255, 255, 255, 0.1)) 100%
-      );
+      background: linear-gradient(135deg,
+          var(--glass-bg, rgba(255, 255, 255, 0.05)) 0%,
+          var(--glass-bg-alt, rgba(255, 255, 255, 0.1)) 100%);
       backdrop-filter: blur(12px);
       border-radius: 20px;
       border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-      box-shadow: 
+      box-shadow:
         0 0 50px var(--glow-color, rgba(99, 102, 241, 0.2)),
         inset 0 0 20px var(--glow-color, rgba(99, 102, 241, 0.1));
       animation: fadeInScale 0.4s ease;
@@ -370,18 +496,16 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(
-        45deg,
-        transparent 0%,
-        var(--glow-color, rgba(99, 102, 241, 0.1)) 100%
-      );
+      background: linear-gradient(45deg,
+          transparent 0%,
+          var(--glow-color, rgba(99, 102, 241, 0.1)) 100%);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
     .nebula-modal .modal-content:hover {
       transform: translateY(-2px) scale(1.01);
-      box-shadow: 
+      box-shadow:
         0 0 70px var(--glow-color, rgba(99, 102, 241, 0.25)),
         inset 0 0 30px var(--glow-color, rgba(99, 102, 241, 0.15));
     }
@@ -412,7 +536,7 @@
       background: var(--glass-bg, rgba(255, 255, 255, 0.1));
       border-color: var(--border-color, rgba(255, 255, 255, 0.12));
       transform: translateY(-1px);
-      box-shadow: 
+      box-shadow:
         0 8px 40px rgba(0, 0, 0, 0.12),
         0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.12));
     }
@@ -430,7 +554,7 @@
       backdrop-filter: blur(20px);
       border-radius: 16px;
       border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
-      box-shadow: 
+      box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.2),
         0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.1)),
         0 0 40px var(--glow-color, rgba(99, 102, 241, 0.2));
@@ -446,11 +570,9 @@
       inset: -1px;
       border-radius: 16px;
       padding: 1px;
-      background: linear-gradient(
-        45deg,
-        transparent 0%,
-        var(--accent-color, rgba(255, 255, 255, 0.3)) 100%
-      );
+      background: linear-gradient(45deg,
+          transparent 0%,
+          var(--accent-color, rgba(255, 255, 255, 0.3)) 100%);
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
@@ -461,7 +583,7 @@
 
     .premium-modal .modal-content:hover {
       transform: translateY(-2px);
-      box-shadow: 
+      box-shadow:
         0 12px 40px rgba(0, 0, 0, 0.3),
         0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.2)),
         0 0 60px var(--glow-color, rgba(99, 102, 241, 0.3));
@@ -475,27 +597,34 @@
     /* Add other modal styles... */
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     @keyframes slideUp {
-      from { 
+      from {
         opacity: 0;
         transform: translateY(20px);
       }
-      to { 
+
+      to {
         opacity: 1;
         transform: translateY(0);
       }
     }
 
     @keyframes slideUpCenter {
-      from { 
+      from {
         opacity: 0;
         transform: translateY(-40%);
       }
-      to { 
+
+      to {
         opacity: 1;
         transform: translateY(-60%);
       }
@@ -506,6 +635,7 @@
         opacity: 0;
         transform: scale(0.95);
       }
+
       to {
         opacity: 1;
         transform: scale(1);
@@ -517,6 +647,7 @@
         opacity: 0;
         transform: scale(0.98);
       }
+
       to {
         opacity: 1;
         transform: scale(1);
@@ -528,6 +659,7 @@
         opacity: 0;
         transform: translateY(-20px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -539,9 +671,11 @@
         opacity: 0;
         transform: scale(0.8);
       }
+
       50% {
         transform: scale(1.05);
       }
+
       to {
         opacity: 1;
         transform: scale(1);
@@ -549,6 +683,7 @@
     }
   </style>
 </head>
+
 <body class="font-inter">
   <!-- Background -->
   <div class="background-container">
@@ -558,7 +693,8 @@
 
   <!-- Theme Switcher -->
   <div class="theme-switcher">
-    <select id="themeSelect" class="select" onchange="switchTheme(this.value); localStorage.setItem('theme', this.value)">
+    <select id="themeSelect" class="select"
+      onchange="switchTheme(this.value); localStorage.setItem('theme', this.value)">
       <option value="midnight">Midnight Theme</option>
       <option value="ivory">Ivory Theme</option>
       <option value="champagne">Champagne Theme</option>
@@ -568,12 +704,13 @@
 
   <main class="container">
     <h1 class="section-title">Premium Modal Designs</h1>
-    
+
     <div class="modal-preview-grid">
       <!-- Preview Cards -->
       <div class="preview-card">
         <h3>Floating Glass</h3>
-        <p>Premium glassmorphism effect with subtle depth and layered transparency. Perfect for important confirmations.</p>
+        <p>Premium glassmorphism effect with subtle depth and layered transparency. Perfect for important confirmations.
+        </p>
         <button class="btn btn--primary" onclick="showModal('floating-glass')">
           Preview Design
         </button>
@@ -683,7 +820,7 @@
     // Theme switching functionality
     function switchTheme(themeName) {
       document.documentElement.setAttribute('data-theme', themeName);
-      
+
       // Update nebula background if it exists
       const nebulaBg = document.querySelector('.nebula-bg');
       if (nebulaBg) {
@@ -695,7 +832,7 @@
 
       // Add transition effect to all elements
       document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-      
+
       // Trigger reflow for glass effect
       document.querySelectorAll('.preview-card, .modal-content, .theme-switcher').forEach(el => {
         el.style.backdropFilter = 'blur(10px)';
@@ -710,35 +847,53 @@
       document.getElementById('themeSelect').value = savedTheme;
     });
 
-    // Modal functionality
+    // Modal functionality - Initialize event listeners once
+    document.addEventListener('DOMContentLoaded', () => {
+      // Close modals on backdrop click or escape key
+      document.querySelectorAll('.modal').forEach(modal => {
+        const backdrop = modal.querySelector('.modal-backdrop');
+        if (backdrop) {
+          backdrop.addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+              modal.classList.remove('active');
+            }
+          });
+        }
+
+        // Close on escape key
+        const closeOnEscape = function (e) {
+          if (e.key === 'Escape') {
+            modal.classList.remove('active');
+            document.removeEventListener('keydown', closeOnEscape);
+          }
+        };
+        document.addEventListener('keydown', closeOnEscape);
+      });
+
+      // Close modals on cancel button click
+      document.querySelectorAll('.btn--ghost').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const modal = btn.closest('.modal');
+          if (modal) {
+            modal.classList.remove('active');
+          }
+        });
+      });
+    });
+
+    // Show modal function - just displays the modal
     function showModal(type) {
       const modal = document.getElementById(`${type}-modal`);
-      modal.style.display = 'flex';
-      
-      // Close on backdrop click
-      modal.querySelector('.modal-backdrop').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) {
-          modal.style.display = 'none';
-        }
-      });
+      if (!modal) return;
 
-      // Close on escape key
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          modal.style.display = 'none';
-        }
-      }, { once: true });
-
-      // Close on cancel button click
-      const cancelBtn = modal.querySelector('.btn--ghost');
-      cancelBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-      });
+      modal.classList.add('active');
     }
   </script>
 
   <!-- Import app scripts -->
-  <script src="js/themes.js"></script>
-  <script src="js/animations.js"></script>
+  <script src="../js/bus.js"></script>
+  <script src="../js/themes.js"></script>
+  <script src="../js/animations.js"></script>
 </body>
+
 </html>

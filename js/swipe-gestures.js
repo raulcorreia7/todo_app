@@ -115,9 +115,17 @@ class SwipeGestures {
         }
     }
 
-    handleSwipeDelete() {
+    async handleSwipeDelete() {
         if (this.taskId) {
-            if (confirm('Delete this task?')) {
+            const confirmed = await modalManager.show({
+                title: 'Delete Task',
+                message: 'Are you sure you want to delete this task? This cannot be undone.',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                confirmStyle: 'danger'
+            });
+            
+            if (confirmed) {
                 todoApp.deleteTask(this.taskId);
                 this.showSwipeSuccess('Task deleted');
             }

@@ -11,7 +11,7 @@ class AudioManager {
     this.enabled = true;
     this.isInitialized = false;
     this.sounds = new Map();
-    
+
     this.init();
   }
 
@@ -24,7 +24,7 @@ class AudioManager {
       this.masterGain = this.audioContext.createGain();
       this.masterGain.connect(this.audioContext.destination);
       this.masterGain.gain.value = this.volume / 100;
-      
+
       this.isInitialized = true;
       console.log('Audio manager initialized');
     } catch (error) {
@@ -71,12 +71,12 @@ class AudioManager {
    */
   async play(soundName) {
     if (!this.isReady()) return;
-    
+
     try {
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }
-      
+
       switch (soundName) {
         case 'add':
           this.playAddTask();
@@ -102,8 +102,18 @@ class AudioManager {
         case 'victory':
           this.playVictory();
           break;
+        case 'font':
+          this.playFontChange();
+          break;
+        case 'volume':
+          this.playVolumeAdjust();
+          break;
+        case 'toggle':
+          this.playSoundToggle();
+          break;
         default:
-          console.warn('Unknown sound:', soundName);
+          // Use font change sound for all other interactions
+          this.playFontChange();
       }
     } catch (error) {
       console.warn('Failed to play sound:', error);
@@ -116,18 +126,18 @@ class AudioManager {
   playAddTask() {
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(this.masterGain);
-    
+
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.1);
-    
+
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.05);
     gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
-    
+
     oscillator.start(this.audioContext.currentTime);
     oscillator.stop(this.audioContext.currentTime + 0.3);
   }
@@ -137,22 +147,22 @@ class AudioManager {
    */
   playCompleteTask() {
     const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5
-    
+
     frequencies.forEach((freq, index) => {
       const oscillator = this.audioContext.createOscillator();
       const gainNode = this.audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(this.masterGain);
-      
+
       oscillator.type = 'sine';
       oscillator.frequency.value = freq;
-      
+
       const startTime = this.audioContext.currentTime + (index * 0.1);
       gainNode.gain.setValueAtTime(0, startTime);
       gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
       gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
-      
+
       oscillator.start(startTime);
       oscillator.stop(startTime + 0.6);
     });
@@ -164,18 +174,18 @@ class AudioManager {
   playEditTask() {
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(this.masterGain);
-    
+
     oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(600, this.audioContext.currentTime);
     oscillator.frequency.linearRampToValueAtTime(800, this.audioContext.currentTime + 0.1);
-    
+
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.02);
     gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.25);
-    
+
     oscillator.start(this.audioContext.currentTime);
     oscillator.stop(this.audioContext.currentTime + 0.25);
   }
@@ -187,23 +197,23 @@ class AudioManager {
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
     const filter = this.audioContext.createBiquadFilter();
-    
+
     oscillator.connect(filter);
     filter.connect(gainNode);
     gainNode.connect(this.masterGain);
-    
+
     oscillator.type = 'sawtooth';
     oscillator.frequency.setValueAtTime(400, this.audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.35);
-    
+
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
     filter.frequency.exponentialRampToValueAtTime(200, this.audioContext.currentTime + 0.35);
-    
+
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.05);
     gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.35);
-    
+
     oscillator.start(this.audioContext.currentTime);
     oscillator.stop(this.audioContext.currentTime + 0.35);
   }
@@ -215,23 +225,23 @@ class AudioManager {
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
     const filter = this.audioContext.createBiquadFilter();
-    
+
     oscillator.connect(filter);
     filter.connect(gainNode);
     gainNode.connect(this.masterGain);
-    
+
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 1);
-    
+
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(1000, this.audioContext.currentTime);
     filter.frequency.exponentialRampToValueAtTime(2000, this.audioContext.currentTime + 1);
-    
+
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.1);
     gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 1);
-    
+
     oscillator.start(this.audioContext.currentTime);
     oscillator.stop(this.audioContext.currentTime + 1);
   }
@@ -241,22 +251,22 @@ class AudioManager {
    */
   playPaletteChange() {
     const frequencies = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
-    
+
     frequencies.forEach((freq, index) => {
       const oscillator = this.audioContext.createOscillator();
       const gainNode = this.audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(this.masterGain);
-      
+
       oscillator.type = 'sine';
       oscillator.frequency.value = freq;
-      
+
       const startTime = this.audioContext.currentTime + (index * 0.1);
       gainNode.gain.setValueAtTime(0, startTime);
       gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
       gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
-      
+
       oscillator.start(startTime);
       oscillator.stop(startTime + 0.4);
     });
@@ -268,18 +278,18 @@ class AudioManager {
   playProgressOpen() {
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(this.masterGain);
-    
+
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(300, this.audioContext.currentTime);
     oscillator.frequency.linearRampToValueAtTime(500, this.audioContext.currentTime + 0.5);
-    
+
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.1);
     gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.5);
-    
+
     oscillator.start(this.audioContext.currentTime);
     oscillator.stop(this.audioContext.currentTime + 0.5);
   }
@@ -289,25 +299,100 @@ class AudioManager {
    */
   playVictory() {
     const frequencies = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
-    
+
     frequencies.forEach((freq, index) => {
       const oscillator = this.audioContext.createOscillator();
       const gainNode = this.audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(this.masterGain);
-      
+
       oscillator.type = 'sine';
       oscillator.frequency.value = freq;
-      
+
       const startTime = this.audioContext.currentTime + (index * 0.2);
       gainNode.gain.setValueAtTime(0, startTime);
       gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.1);
       gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
-      
+
       oscillator.start(startTime);
       oscillator.stop(startTime + 0.8);
     });
+  }
+
+  /**
+   * Play font change sound (gentle page turn)
+   */
+  playFontChange() {
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    const filter = this.audioContext.createBiquadFilter();
+
+    oscillator.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(this.masterGain);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(300, this.audioContext.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(450, this.audioContext.currentTime + 0.15);
+    oscillator.frequency.linearRampToValueAtTime(350, this.audioContext.currentTime + 0.3);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1500, this.audioContext.currentTime);
+    filter.frequency.linearRampToValueAtTime(800, this.audioContext.currentTime + 0.3);
+
+    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.08, this.audioContext.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
+
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.3);
+  }
+
+  /**
+   * Play volume adjust sound (subtle blip)
+   */
+  playVolumeAdjust() {
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.masterGain);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.05);
+    oscillator.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.1);
+
+    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.1);
+  }
+
+  /**
+   * Play sound toggle sound (gentle click)
+   */
+  playSoundToggle() {
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.masterGain);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(600, this.audioContext.currentTime);
+    oscillator.frequency.linearRampToValueAtTime(800, this.audioContext.currentTime + 0.05);
+    oscillator.frequency.linearRampToValueAtTime(600, this.audioContext.currentTime + 0.1);
+
+    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.1);
   }
 }
 
