@@ -371,593 +371,152 @@
   <script src="js/nebula-parallax.js"></script>
   <script src="js/ai-providers.js"></script>
   <script src="js/app.js"></script>
-<script>
-// Music UI wiring (pointer-only)
-(function() {
-  const btn = document.getElementById('musicBtn');
-  const icon = document.getElementById('musicIcon');
-  const pop = document.getElementById('musicPopover');
-  const prev = document.getElementById('musicPrev');
-  const playPause = document.getElementById('musicPlayPause');
-  const playI = document.getElementById('musicPlayIcon');
-  const pauseI = document.getElementById('musicPauseIcon');
-  const next = document.getElementById('musicNext');
-  const slider = document.getElementById('musicSlider');
-  const fill = document.getElementById('musicFill');
-  const handle = document.getElementById('musicHandle');
-  const pinBtn = document.getElementById('musicPinBtn');
-  const visualizer = document.querySelector('#musicPopover .music-visualizer');
 
-  if (!btn || !pop) return;
-
-  // Position popover directly above the music button with spacing, accounting for transforms
-  function positionPopover() {
-    const btnRect = btn.getBoundingClientRect();
-    const btnStyles = window.getComputedStyle(btn);
-    const btnTransform = btnStyles.transform;
-
-    // Measure popover at full size by making it temporarily visible off-screen
-    const prevDisplay = pop.style.display;
-    const prevVisibility = pop.style.visibility;
-    const prevLeft = pop.style.left;
-    const prevTop = pop.style.top;
-
-    pop.style.visibility = 'hidden';
-    pop.style.display = 'block';
-    pop.style.left = '-9999px';
-    pop.style.top = '-9999px';
-
-    const popWidth = pop.offsetWidth || 260;
-    const popHeight = pop.offsetHeight || 140;
-
-    // Restore before positioning
-    pop.style.visibility = prevVisibility || '';
-    pop.style.display = prevDisplay || 'none';
-    pop.style.left = prevLeft || '';
-    pop.style.top = prevTop || '';
-
-    pop.style.position = 'fixed';
-
-    // Horizontal center relative to button center
-    const centerX = btnRect.left + btnRect.width / 2;
-    let left = Math.round(centerX - popWidth / 2);
-
-    // Clamp within viewport horizontally (8px padding)
-    left = Math.max(8, Math.min(left, window.innerWidth - popWidth - 8));
-    pop.style.left = `${left}px`;
-    pop.style.right = 'auto';
-
-    // Vertical: strictly above with spacing
-    const SPACING = 12;
-    // If button has transforms (e.g., scale), btnRect already accounts; just position above
-    let top = Math.round(btnRect.top - popHeight - SPACING);
-
-    // Clamp to top padding if not enough room; still keep it "above" visually
-    top = Math.max(8, top);
-
-    pop.style.top = `${top}px`;
-    pop.style.bottom = 'auto';
-    pop.classList.add('above');
-    pop.classList.remove('below');
-  }
-
-  function showPopover() {
-    positionPopover();
-    pop.style.display = 'block';
-    pop.classList.add('open');
-    // Notify visualizer that it is now visible
-    if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-      bus.dispatchEvent(new CustomEvent('musicVisualizerShown', {}));
-    }
-  }
-  function hidePopover() {
-    if (pop.classList.contains('sticky')) return; // keep open when sticky
-    pop.classList.remove('open');
-    pop.style.display = 'none';
-    // Notify visualizer that it is now hidden
-    if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-      bus.dispatchEvent(new CustomEvent('musicVisualizerHidden', {}));
-    }
-  }
-
-  // Music button clicked: emit event for downstream listeners (no direct toggleMute)
-  btn.addEventListener('click', async () => {
-    if (typeof musicManager === 'undefined') return;
-    musicManager.init();
-
-    // Fire semantic event so other modules (e.g., visualizer) can react
-    if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-      bus.dispatchEvent(new CustomEvent('musicButtonClicked', {}));
-    }
-  });
-
-  // Hover/focus show popover (desktop)
-  btn.addEventListener('mouseenter', showPopover);
-  btn.addEventListener('mouseleave', () => {
-    // Close when pointer leaves both btn and pop (unless sticky)
-    setTimeout(() => {
-      const over = pop.matches(':hover') || btn.matches(':hover');
-      if (!over) hidePopover();
-    }, 100);
-  });
-  pop.addEventListener('mouseleave', () => {
-    setTimeout(() => {
-      const over = pop.matches(':hover') || btn.matches(':hover');
-      if (!over) hidePopover();
-    }, 50);
-  });
-  // Mobile tap toggles popover
-  btn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (pop.style.display === 'block') hidePopover();
-    else showPopover();
-  }, { passive: false });
-
-  // Sticky pin behavior
-  if (pinBtn) {
-    pinBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const willStick = !pop.classList.contains('sticky');
-      pop.classList.toggle('sticky', willStick);
-      pinBtn.setAttribute('aria-pressed', String(willStick));
-      pinBtn.classList.toggle('pinned', willStick);
-      if (willStick) {
-        showPopover();
+  <!-- Mobile touch optimization script -->
+  <script>
+  // Mobile touch optimization - ensure proper scrolling behavior
+  (function() {
+    // Add touch-action CSS to ensure proper scrolling
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Ensure proper touch scrolling for mobile devices */
+      .task-list-container {
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 200px;
       }
-      // Inform visualizer/other listeners of sticky state changes
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-        bus.dispatchEvent(new CustomEvent('musicVisualizerStickyChanged', { detail: { sticky: willStick }}));
+      
+      .app-container {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        touch-action: pan-y;
       }
-    });
-  }
-
-  // New: Visualizer display should react to musicButtonClicked (show + init visualizer)
-  if (typeof bus !== 'undefined') {
-    bus.addEventListener('musicButtonClicked', () => {
-      // Toggle sticky state on click of the music button
-      const willStick = !pop.classList.contains('sticky');
-      pop.classList.toggle('sticky', willStick);
-      if (pinBtn) {
-        pinBtn.setAttribute('aria-pressed', String(willStick));
-        pinBtn.classList.toggle('pinned', willStick);
+      
+      /* Prevent text selection during swipe gestures */
+      .task-item {
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: pan-y;
       }
-      if (willStick) {
-        showPopover();
-      } else {
-        hidePopover();
+      
+      /* Allow scrolling on the main container */
+      body {
+        overflow-x: hidden;
+        touch-action: pan-y;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
       }
-      // Broadcast sticky state to any visualizer listeners
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-        bus.dispatchEvent(new CustomEvent('musicVisualizerStickyChanged', { detail: { sticky: willStick }}));
+      
+      /* Ensure footer is always accessible */
+      .app-footer {
+        margin-top: auto;
+        background: var(--glass-color);
+        backdrop-filter: blur(var(--glass-blur));
+        border-top: 1px solid var(--border-color);
+        padding: 1rem;
+        text-align: center;
       }
-      // Explicitly ask the visualizer module to initialize and start (idempotent in module)
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-        bus.dispatchEvent(new CustomEvent('musicVisualizerEnsureInit', {}));
-        bus.dispatchEvent(new CustomEvent('musicVisualizerStart', {}));
+      
+      /* Make sure the task list can grow but not restrict full page scrolling */
+      .task-list {
+        min-height: 100px;
       }
-    });
-
-    // Also listen for popover visibility to control visualizer loop efficiently
-    bus.addEventListener('musicVisualizerShown', () => {
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-        bus.dispatchEvent(new CustomEvent('musicVisualizerEnsureInit', {}));
-        bus.dispatchEvent(new CustomEvent('musicVisualizerStart', {}));
-      }
-    });
-    bus.addEventListener('musicVisualizerHidden', () => {
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-        bus.dispatchEvent(new CustomEvent('musicVisualizerStop', {}));
-      }
-    });
-  }
-
-  // Progress (seek) wiring
-  (function setupProgress() {
-    const track = document.getElementById('musicProgressTrack');
-    const fill = document.getElementById('musicProgressFill');
-    const handle = document.getElementById('musicProgressHandle');
-    const curT = document.getElementById('musicCurrentTime');
-    const durT = document.getElementById('musicDuration');
-    if (!track || !fill || !handle) return;
-
-    let dragging = false;
-    let lastPct = 0;
-
-    const fmt = (sec) => {
-      if (!isFinite(sec)) return '0:00';
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
-      return `${m}:${s.toString().padStart(2, '0')}`;
-    };
-
-    const setUI = (pct) => {
-      lastPct = Math.max(0, Math.min(100, pct));
-      fill.style.width = `${lastPct}%`;
-      handle.style.left = `${lastPct}%`;
-      // timecodes
-      if (window.musicManager) {
-        const el = musicManager.audioEls[musicManager.currentIndex];
-        if (el && isFinite(el.duration) && el.duration > 0) {
-          const cur = (el.duration * lastPct) / 100;
-          curT.textContent = fmt(cur);
-          durT.textContent = fmt(el.duration);
+      
+      /* Mobile-specific adjustments */
+      @media (max-width: 768px) {
+        .app-container {
+          height: 100vh;
+          overflow-y: auto;
+        }
+        
+        .task-list-container {
+          min-height: 300px;
+        }
+        
+        /* Ensure footer is visible at bottom */
+        .app-footer {
+          position: sticky;
+          bottom: 0;
+          z-index: 100;
         }
       }
-    };
-
-    const pctFromClientX = (clientX) => {
-      const rect = track.getBoundingClientRect();
-      const x = Math.max(rect.left, Math.min(clientX, rect.right));
-      return ((x - rect.left) / rect.width) * 100;
-    };
-
-    const onDown = (clientX) => {
-      dragging = true;
-      setUI(pctFromClientX(clientX));
-      track.classList.add('active');
-      handle.classList.add('active');
-    };
-    const onMove = (clientX) => {
-      if (!dragging) return;
-      setUI(pctFromClientX(clientX));
-    };
-    const onUp = () => {
-      if (!dragging) return;
-      dragging = false;
-      track.classList.remove('active');
-      handle.classList.remove('active');
-      // Apply seek
-      if (window.musicManager) {
-        const el = musicManager.audioEls[musicManager.currentIndex];
-        if (el && isFinite(el.duration) && el.duration > 0) {
-          const t = (el.duration * lastPct) / 100;
-          el.currentTime = t;
-          // If not playing, do not auto-play; keep policy. If playing, music continues.
+    `;
+    document.head.appendChild(style);
+    
+    // Optimize touch event listeners for better mobile scrolling
+    document.addEventListener('touchmove', function(e) {
+      // Allow vertical scrolling by default
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const target = e.target;
+        
+        // Check if we're scrolling vertically
+        if (Math.abs(touch.movementY) > Math.abs(touch.movementX)) {
+          // Allow vertical scrolling
+          return;
         }
       }
-    };
-
-    // Mouse
-    track.addEventListener('mousedown', (e) => onDown(e.clientX));
-    document.addEventListener('mousemove', (e) => onMove(e.clientX));
-    document.addEventListener('mouseup', onUp);
-
-    // Touch
-    track.addEventListener('touchstart', (e) => { if (!e.touches || !e.touches[0]) return; e.preventDefault(); onDown(e.touches[0].clientX); }, { passive: false });
-    document.addEventListener('touchmove', (e) => { if (!e.touches || !e.touches[0]) return; e.preventDefault(); onMove(e.touches[0].clientX); }, { passive: false });
-    document.addEventListener('touchend', onUp);
-
-    // Sync from audio timeupdate
-    const syncFromAudio = () => {
-      if (dragging) return;
-      if (!window.musicManager) return;
-      const el = musicManager.audioEls[musicManager.currentIndex];
-      if (!el || !isFinite(el.duration) || el.duration <= 0) {
-        setUI(0);
-        curT.textContent = '0:00';
-        durT.textContent = '0:00';
-        return;
+    }, { passive: true });
+    
+    // Prevent double-tap zoom on mobile
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
       }
-      const pct = (el.currentTime / el.duration) * 100;
-      setUI(pct);
-    };
-
-    // Attach to current element and on track switches
-    const attachTimeUpdate = () => {
-      if (!window.musicManager) return;
-      const el = musicManager.audioEls[musicManager.currentIndex];
-      if (!el) return;
-      el.addEventListener('timeupdate', syncFromAudio);
-      el.addEventListener('durationchange', syncFromAudio);
-      el.addEventListener('loadedmetadata', syncFromAudio);
-      // initial sync
-      syncFromAudio();
-    };
-    attachTimeUpdate();
-
-    if (typeof bus !== 'undefined') {
-      // Reattach on next/prev play
-      bus.addEventListener('music:playing', () => {
-        attachTimeUpdate();
-        syncFromAudio();
-      });
-      bus.addEventListener('music:paused', () => syncFromAudio());
-      bus.addEventListener('music:silenceStart', () => setUI(0)); // starting next after silence resets UI; next() will resync
+      lastTouchEnd = now;
+    }, false);
+    
+    // Ensure proper scrolling behavior for task list
+    const taskListContainer = document.querySelector('.task-list-container');
+    if (taskListContainer) {
+      taskListContainer.addEventListener('touchstart', function(e) {
+        // Store the initial touch position
+        this.startY = e.touches[0].clientY;
+      }, { passive: true });
+      
+      taskListContainer.addEventListener('touchmove', function(e) {
+        if (!this.startY) return;
+        
+        const touch = e.touches[0];
+        const deltaY = touch.clientY - this.startY;
+        
+        // If we're scrolling vertically, allow it
+        if (Math.abs(deltaY) > 10) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
+    
+    // Ensure the app container can scroll to reveal footer
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+      appContainer.addEventListener('scroll', function() {
+        // Ensure footer is always accessible
+        const footer = document.querySelector('.app-footer');
+        if (footer) {
+          const scrollPosition = this.scrollTop + this.clientHeight;
+          const documentHeight = this.scrollHeight;
+          
+          // Show footer when we're near the bottom
+          if (scrollPosition >= documentHeight - 100) {
+            footer.style.opacity = '1';
+            footer.style.visibility = 'visible';
+          }
+        }
+      }, { passive: true });
     }
   })();
+  </script>
 
-  // Transport
-  if (prev) prev.addEventListener('click', () => musicManager && musicManager.prev());
-  if (next) next.addEventListener('click', () => musicManager && musicManager.next());
-  if (playPause) playPause.addEventListener('click', async () => {
-    if (!musicManager) return;
-    await musicManager.togglePlay();
-    const playing = musicManager.isPlaying;
-    playI.style.display = playing ? 'none' : 'inline';
-    pauseI.style.display = playing ? 'inline' : 'none';
-  });
-
-  // Volume button toggles global sound enabled/disabled and mirrors music mute state
-  (function setupVolumeButtonToggle() {
-    const vBtn = document.getElementById('volumeBtn');
-    const vIcon = document.getElementById('volumeIcon');
-
-    if (!vBtn) return;
-
-    // Store last known music transport state so we can restore on unmute (persisted)
-    let lastMusicWasPlaying = false;
-    const SOUND_ENABLED_KEY = 'sound.enabled';
-    const SOUND_LAST_TRANSPORT_KEY = 'sound.lastTransport';
-
-    // Helper to reflect enabled/disabled UI state (cross overlay)
-    const reflectSoundState = (enabled) => {
-      if (enabled) {
-        vBtn.classList.add('enabled');
-        vBtn.classList.remove('disabled');
-      } else {
-        vBtn.classList.add('disabled');
-        vBtn.classList.remove('enabled');
-      }
-      if (typeof settingsManager !== 'undefined' && vIcon) {
-        try {
-          settingsManager.updateVolumeIcon(vIcon, enabled);
-        } catch(e) {
-          // no-op
-        }
-      }
-    };
-
-    // Initial sync once managers are available
-    const initialSync = async () => {
-      // Determine enabled from storage or settings (default true)
-      let enabled = true;
-      try {
-        const stored = localStorage.getItem(SOUND_ENABLED_KEY);
-        if (stored === 'true' || stored === 'false') {
-          enabled = (stored === 'true');
-        } else if (typeof settingsManager !== 'undefined' && typeof settingsManager.soundEnabled !== 'undefined') {
-          enabled = !!settingsManager.soundEnabled;
-          localStorage.setItem(SOUND_ENABLED_KEY, String(enabled));
-        } else {
-          localStorage.setItem(SOUND_ENABLED_KEY, 'true');
-        }
-      } catch(e) { /* no-op */ }
-
-      // Last transport default paused if unknown
-      try {
-        const lt = localStorage.getItem(SOUND_LAST_TRANSPORT_KEY);
-        lastMusicWasPlaying = (lt === 'playing');
-      } catch(e) { lastMusicWasPlaying = false; }
-
-      reflectSoundState(enabled);
-
-      if (typeof musicManager !== 'undefined') {
-        // If disabled at load: ensure paused and muted
-        if (!enabled) {
-          if (musicManager.isPlaying) {
-            try { await musicManager.pause(); } catch(e) {}
-          }
-          if (!musicManager.isMuted) {
-            try { await musicManager.toggleMute(); } catch(e) {}
-          }
-        } else {
-          // Enabled at load: do not auto-play; ensure UI matches current mute
-          // Do not force unmute if user had muted manually in a prior session.
-        }
-      }
-    };
-
-    // Click toggles settings + music mute and manages transport restore behavior (stop on mute, restore on unmute)
-    vBtn.addEventListener('click', async () => {
-      // Current enabled from storage/settings (default true)
-      let enabledNow = true;
-      try {
-        const stored = localStorage.getItem(SOUND_ENABLED_KEY);
-        if (stored === 'true' || stored === 'false') {
-          enabledNow = (stored === 'true');
-        } else if (typeof settingsManager !== 'undefined' && typeof settingsManager.soundEnabled !== 'undefined') {
-          enabledNow = !!settingsManager.soundEnabled;
-        }
-      } catch(e) { /* no-op */ }
-
-      const nextEnabled = !enabledNow;
-
-      // Persist sound.enabled
-      try { localStorage.setItem(SOUND_ENABLED_KEY, String(nextEnabled)); } catch(e) {}
-
-      // Persist via settings if available
-      if (typeof settingsManager !== 'undefined' && typeof settingsManager.setSoundEnabled === 'function') {
-        try { settingsManager.setSoundEnabled(nextEnabled); } catch(e) { /* no-op */ }
-      }
-
-      if (typeof musicManager !== 'undefined') {
-        if (!nextEnabled) {
-          // Turning OFF: store last transport, stop playback, then mute
-          lastMusicWasPlaying = !!musicManager.isPlaying;
-          try { localStorage.setItem(SOUND_LAST_TRANSPORT_KEY, lastMusicWasPlaying ? 'playing' : 'paused'); } catch(e) {}
-
-          if (musicManager.isPlaying) {
-            try { await musicManager.pause(); } catch(e) {}
-          }
-          if (!musicManager.isMuted) {
-            try { await musicManager.toggleMute(); } catch(e) {}
-          }
-        } else {
-          // Turning ON: unmute first, then restore last transport
-          if (musicManager.isMuted) {
-            try { await musicManager.toggleMute(); } catch(e) {}
-          }
-          // Restore last known transport preference
-          let lt = 'paused';
-          try {
-            const storedLt = localStorage.getItem(SOUND_LAST_TRANSPORT_KEY);
-            if (storedLt === 'playing' || storedLt === 'paused') lt = storedLt;
-          } catch(e) {}
-          if (lt === 'playing') {
-            try { await musicManager.play(); } catch(e) {}
-            lastMusicWasPlaying = true;
-          } else {
-            // remain paused
-            lastMusicWasPlaying = false;
-          }
-        }
-      }
-
-      reflectSoundState(nextEnabled);
-    });
-
-    // Listen to settings changes for cross-tab/other UI sync
-    if (typeof bus !== 'undefined') {
-      bus.addEventListener('settingsChanged', () => {
-        const enabled = (typeof settingsManager !== 'undefined' && typeof settingsManager.soundEnabled !== 'undefined')
-          ? !!settingsManager.soundEnabled
-          : true;
-        reflectSoundState(enabled);
-      });
-      // Keep overlay in sync even if mute changed elsewhere
-      bus.addEventListener('music:muted', (ev) => {
-        const muted = !!(ev && ev.detail && ev.detail.muted);
-        reflectSoundState(!muted);
-      });
-      // Track transport state to restore on unmute correctly (and persist)
-      bus.addEventListener('music:playing', () => { 
-        lastMusicWasPlaying = true; 
-        try { localStorage.setItem(SOUND_LAST_TRANSPORT_KEY, 'playing'); } catch(e) {}
-      });
-      bus.addEventListener('music:paused', () => { 
-        lastMusicWasPlaying = false; 
-        try { localStorage.setItem(SOUND_LAST_TRANSPORT_KEY, 'paused'); } catch(e) {}
-      });
-      bus.addEventListener('music:silenceStart', () => { 
-        lastMusicWasPlaying = false; 
-        try { localStorage.setItem(SOUND_LAST_TRANSPORT_KEY, 'paused'); } catch(e) {}
-      });
-    }
-
-    // Do one initial sync after a brief delay to allow managers to initialize
-    setTimeout(initialSync, 0);
-  })();
-
-  // Volume slider (pointer-only, with apply on release)
-  // No separate enable/disable toggle; volume button now controls sound enable/disable
-
-  if (slider && handle) {
-    let isDragging = false;
-    let temp = (typeof musicManager !== 'undefined') ? (musicManager.targetVolume * 100) : 45;
-
-    const updateUI = (pct) => {
-      fill.style.width = `${pct}%`;
-      handle.style.left = `${pct}%`;
-      slider.setAttribute('aria-valuenow', String(Math.round(pct)));
-    };
-    updateUI(temp);
-
-    const pctFromEvent = (e) => {
-      const rect = slider.getBoundingClientRect();
-      const x = e.clientX || (e.touches && e.touches[0].clientX);
-      return Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
-    };
-
-    const onDown = (e) => { isDragging = true; temp = pctFromEvent(e); updateUI(temp); };
-    const onMove = (e) => { if (!isDragging) return; temp = pctFromEvent(e); updateUI(temp); };
-    const onUp = () => {
-      if (!isDragging) return;
-      isDragging = false;
-      if (typeof musicManager !== 'undefined') {
-        musicManager.init();
-        musicManager.setVolume(temp / 100, { smooth: true });
-        // if user unmuted via slider (>0) and currently muted, do not auto-unmute per spec
-      }
-    };
-
-    slider.addEventListener('mousedown', onDown);
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-
-    slider.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(e.touches[0]); slider.classList.add('active'); handle.classList.add('active'); }, { passive: false });
-    document.addEventListener('touchmove', (e) => { if (!isDragging) return; e.preventDefault(); onMove(e.touches[0]); }, { passive: false });
-    document.addEventListener('touchend', () => { onUp(); slider.classList.remove('active'); handle.classList.remove('active'); });
-
-    // Sync from manager events
-    if (typeof bus !== 'undefined') {
-      bus.addEventListener('music:volumeChanged', (ev) => {
-        const pct = Math.round((ev.detail.volume || 0) * 100);
-        updateUI(pct);
-      });
-    }
-  }
-
-  // Subtle glow hint if autoplay blocked
-  if (typeof bus !== 'undefined') {
-    bus.addEventListener('music:hintStart', () => {
-      btn.classList.add('hint');
-      setTimeout(() => btn.classList.remove('hint'), 4000);
-    });
-    // Spinner on buffering
-    bus.addEventListener('music:buffering', (ev) => {
-      if (ev.detail && ev.detail.buffering) btn.classList.add('buffering');
-      else btn.classList.remove('buffering');
-    });
-    // Silence indication (optional dim)
-    bus.addEventListener('music:silenceStart', () => btn.classList.add('silence'));
-    bus.addEventListener('music:silenceEnd', () => btn.classList.remove('silence'));
-  }
-
-  // Update play/pause icon based on events
-  if (typeof bus !== 'undefined') {
-    bus.addEventListener('music:playing', () => {
-      playI.style.display = 'none'; pauseI.style.display = 'inline';
-      pop.classList.add('is-playing'); btn.classList.add('is-playing');
-      if (visualizer) visualizer.classList.add('is-playing');
-      pop.classList.remove('is-paused','is-silent');
-    });
-    bus.addEventListener('music:paused', () => {
-      playI.style.display = 'inline'; pauseI.style.display = 'none';
-      pop.classList.remove('is-playing'); btn.classList.remove('is-playing');
-      if (visualizer) visualizer.classList.remove('is-playing');
-      pop.classList.add('is-paused');
-    });
-    bus.addEventListener('music:muted', (ev) => {
-      if (!ev || typeof ev.detail === 'undefined') return;
-      const m = !!ev.detail.muted;
-      btn.classList.toggle('muted', m);
-      pop.classList.toggle('is-muted', m);
-      if (visualizer) visualizer.classList.toggle('is-muted', m);
-    });
-    bus.addEventListener('music:silenceStart', () => {
-      pop.classList.add('is-silent'); btn.classList.remove('is-playing');
-      if (visualizer) visualizer.classList.remove('is-playing');
-    });
-    bus.addEventListener('music:silenceEnd', () => {
-      pop.classList.remove('is-silent');
-    });
-    bus.addEventListener('music:buffering', (ev) => {
-      const b = !!(ev.detail && ev.detail.buffering);
-      pop.classList.toggle('is-buffering', b);
-      if (visualizer) visualizer.classList.toggle('is-buffering', b);
-    });
-    bus.addEventListener('music:volumeChanged', (ev) => {
-      const v = Math.max(0, Math.min(1, (ev.detail && ev.detail.volume) || 0));
-      document.documentElement.style.setProperty('--music-amp', String(v));
-    });
-  }
-
-  // Reposition on resize
-  window.addEventListener('resize', () => { if (pop.style.display === 'block') positionPopover(); });
-  window.addEventListener('scroll', () => { if (pop.style.display === 'block') positionPopover(); }, { passive: true });
-
-  // Close on outside click when not sticky
-  document.addEventListener('click', (e) => {
-    if (!pop.classList.contains('open') || pop.classList.contains('sticky')) return;
-    const within = pop.contains(e.target) || btn.contains(e.target);
-    if (!within) hidePopover();
-  });
-})();
-</script>
-})();
-</script>
-
-<style>
+  <style>
 /* Ensure order: statistics, music, volume, settings on wide viewports */
 @media (min-width: 900px) {
   .floating-controls {
@@ -1287,7 +846,7 @@
 .music-progress-handle.active {
   transform: translate(-50%, -50%) scale(1.08);
 }
-</style>
+  </style>
 </body>
 
 </html>

@@ -11,6 +11,9 @@ class SwipeGestures {
         this.touchEndY = 0;
         this.minSwipeDistance = 50;
         this.isSwiping = false;
+        this.touchStartTime = 0;
+        this.lastTouchTime = 0;
+        this.debounceThreshold = 300; // 300ms debounce
         
         this.init();
     }
@@ -20,20 +23,35 @@ class SwipeGestures {
     }
 
     setupTouchListeners() {
+        // Use passive event listeners for better performance
         document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
         document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
         document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+        document.addEventListener('touchcancel', this.handleTouchCancel.bind(this), { passive: true });
     }
 
     handleTouchStart(e) {
         const taskItem = e.target.closest('.task-item');
         if (!taskItem) return;
 
+        const currentTime = Date.now();
+        
+        // Debounce touch events to prevent continuous triggering
+        if (currentTime - this.lastTouchTime < this.debounceThreshold) {
+            return;
+        }
+        
+        this.lastTouchTime = currentTime;
+        this.touchStartTime = currentTime;
+
         this.touchStartX = e.touches[0].clientX;
         this.touchStartY = e.touches[0].clientY;
         this.currentTaskItem = taskItem;
         this.taskId = taskItem.dataset.taskId;
         this.isSwiping = false;
+        
+        // Reset any existing swipe state
+        this.resetSwipe();
     }
 
     handleTouchMove(e) {
@@ -45,11 +63,23 @@ class SwipeGestures {
         const deltaX = this.touchEndX - this.touchStartX;
         const deltaY = this.touchEndY - this.touchStartY;
 
-        // Only handle horizontal swipes
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
-            e.preventDefault();
-            this.isSwiping = true;
-            this.showSwipeFeedback(deltaX);
+        // Calculate swipe angle to determine if it's horizontal or vertical
+        const angle = Math.atan2(Math.abs(deltaY), Math.abs(deltaX)) * 180 / Math.PI;
+        
+        // Only handle horizontal swipes (angle < 45 degrees) and minimum distance
+        if (angle < 45 && Math.abs(deltaX) > 20) {
+            // Only preventDefault if we're actually swiping horizontally
+            // and not scrolling vertically
+            if (Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+                e.preventDefault();
+                this.isSwiping = true;
+                this.showSwipeFeedback(deltaX);
+            }
+        } else {
+            // Vertical movement detected - allow scrolling
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                this.resetSwipe();
+            }
         }
     }
 
@@ -72,6 +102,11 @@ class SwipeGestures {
             }
         }
 
+        this.resetSwipe();
+    }
+
+    handleTouchCancel(e) {
+        // Touch was cancelled (e.g., user scrolled)
         this.resetSwipe();
     }
 
@@ -176,7 +211,7 @@ class SwipeGestures {
     }
 }
 
-// Add CSS for swipe animations
+// Add CSS for swipe animations and touch optimization
 const swipeStyles = document.createElement('style');
 swipeStyles.textContent = `
     @keyframes swipeSuccess {
@@ -191,6 +226,19 @@ swipeStyles.textContent = `
     
     .task-item {
         transition: transform 0.2s ease, opacity 0.2s ease;
+        touch-action: pan-y; /* Allow vertical scrolling */
+    }
+    
+    /* Ensure scroll containers can scroll properly */
+    .task-list-container {
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Prevent text selection during swipe */
+    .task-item.swiping {
+        user-select: none;
+        -webkit-user-select: none;
     }
 `;
 document.head.appendChild(swipeStyles);
