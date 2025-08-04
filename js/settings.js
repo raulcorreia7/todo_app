@@ -87,6 +87,11 @@ class SettingsManager {
     if (volumeSlider && volumeHandle) {
       this.setupVolumeSlider(volumeSlider, volumeHandle);
     }
+    
+    // Listen for theme ready event to update UI properly
+    document.addEventListener('themeReady', () => {
+      this.updateUI();
+    });
   }
 
   setupHeaderButtons() {
@@ -133,9 +138,23 @@ class SettingsManager {
       this.saveSettings();
     }
 
+    // Apply theme immediately (this will be called before DOM is ready)
     this.applyTheme(this.currentTheme);
-    this.applyFont(this.currentFont);
-    this.applySoundSettings();
+    
+    // Apply other settings after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        this.applyFont(this.currentFont);
+        this.applySoundSettings();
+        // Also make sure theme is applied properly when DOM is ready
+        this.updateUI();
+      });
+    } else {
+      this.applyFont(this.currentFont);
+      this.applySoundSettings();
+      // Also make sure theme is applied properly when DOM is ready
+      this.updateUI();
+    }
   }
 
   saveSettings() {
@@ -224,8 +243,12 @@ class SettingsManager {
   }
 
   applyTheme(theme) {
+    // Apply theme immediately to prevent flash
     document.body.className = document.body.className.replace(/theme-\w+/g, '');
     document.body.classList.add(`theme-${theme}`);
+    
+    // Also update the settings manager's current theme
+    this.currentTheme = theme;
   }
 
   applyFont(font) {
@@ -287,8 +310,8 @@ class SettingsManager {
 
     const updateVolume = (e) => {
       const rect = slider.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      const x = e.clientX || (e.touches && e.touches[0].clientX);
+      const percentage = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
 
       // Update UI without playing sound
       updateVolumeUI(percentage);
@@ -318,23 +341,42 @@ class SettingsManager {
       applyVolume();
     };
 
+    // Mouse events
     slider.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 
     // Touch events
-    slider.addEventListener('touchstart', (e) => {
+    const onTouchStart = (e) => {
+      // Prevent scrolling when touching the slider
+      e.preventDefault();
       isDragging = true;
       updateVolume(e.touches[0]);
-    });
 
-    document.addEventListener('touchmove', (e) => {
+      // Add active class to enable pointer events
+      slider.classList.add('active');
+      handle.classList.add('active');
+    };
+
+    const onTouchMove = (e) => {
       if (isDragging) {
+        // Prevent scrolling when dragging the slider
+        e.preventDefault();
         updateVolume(e.touches[0]);
       }
-    });
+    };
 
-    document.addEventListener('touchend', applyVolume);
+    const onTouchEnd = () => {
+      applyVolume();
+
+      // Remove active class after interaction
+      slider.classList.remove('active');
+      handle.classList.remove('active');
+    };
+
+    slider.addEventListener('touchstart', onTouchStart, { passive: false });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
   }
 
   updateVolumeUI(volume) {

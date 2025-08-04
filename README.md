@@ -12,24 +12,12 @@ A simple, no-frills local server for testing the Luxury Todo app with hot reload
 
 ## Quick Start
 
-### Automatic Setup (Recommended)
-
 ```bash
-# Install dependencies and start server (one command)
+# Install dependencies and start server (recommended)
 npm start
 
 # Or for development
 npm run dev
-```
-
-### Manual Setup
-
-```bash
-# Install dependencies only
-npm run setup
-
-# Start server
-npm start
 ```
 
 ## Access URLs
@@ -56,35 +44,24 @@ Once the server is running, you can access the app at:
 1. Make sure your phone and computer are on the same WiFi network
 2. Find your computer's local IP address (see above)
 3. On your phone's browser, navigate to: `http://[your-computer-ip]:8080`
-4. The app will work just like on your computer!
 
-## Development Features
+## Sound Files
 
-### Hot Reload
-- The server automatically detects file changes
-- Your browser will refresh when you save changes
-- No manual refresh needed during development
+The app uses the following sound files in the `sounds/` directory:
 
-### PWA Support
-- Service worker registration
-- Proper CORS headers
-- Manifest file support
-- Offline functionality ready
-
-### File Structure
-The server automatically serves all files from the current directory:
-- `index.html` - Main app entry point
-- `js/` - JavaScript files (including all app modules)
-- `styles/` - CSS files (including all theme and component styles)
-- `sounds/` - Audio files (for premium sound effects)
-- `manifest.json` - PWA manifest
-- Other files in the root directory
-
-**How it works:**
-- The `-s .` flag tells `serve` to use the current directory as the root
-- All subdirectories (`js/`, `styles/`, `sounds/`) are automatically served
-- URLs are mapped directly to file paths (e.g., `/js/app.js` serves `js/app.js`)
-- No additional configuration needed for your file structure
+| Interaction | Filename |
+|-------------|----------|
+| Add Task | `add-task.mp3` |
+| Complete Task | `complete-task.mp3` |
+| Edit Task | `edit-task.mp3` |
+| Delete Task | `delete-task.mp3` |
+| Settings Open | `settings-open.mp3` |
+| Palette Change | `palette-change.mp3` |
+| Progress Open | `progress-open.mp3` |
+| Victory | `victory.mp3` |
+| Font Change | `font-change.mp3` |
+| Volume Adjust | `volume-adjust.mp3` |
+| Sound Toggle | `sound-toggle.mp3` |
 
 ## Troubleshooting
 
@@ -118,14 +95,6 @@ npm run dev
 # Stop server
 Press Ctrl+C in the terminal
 ```
-
-## Server Configuration
-
-The server is configured with:
-- **Port**: 8080
-- **Host**: 0.0.0.0 (allows access from any device on the network)
-- **Static Files**: Serves from current directory
-- **Hot Reload**: Enabled for development
 
 ## License
 

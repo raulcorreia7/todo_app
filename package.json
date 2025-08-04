@@ -1,11 +1,12 @@
 {
   "name": "luxury-todo-server",
-  "version": "1.0.0",
+  "version": "v1.0.0-9",
   "description": "Local server for Luxury Todo app with hot reload and HTTPS",
   "scripts": {
     "start": "npm install && serve -l 8080 -s .",
     "dev": "npm install && serve -l 8080 -s .",
-    "setup": "npm install"
+    "setup": "npm install",
+    "version": "node scripts/update-version.js"
   },
   "dependencies": {
     "serve": "^14.2.0"

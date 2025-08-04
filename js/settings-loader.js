@@ -118,7 +118,7 @@ class SettingsLoader {
     // Apply settings with error handling for each component
     const promises = [];
     
-    // Apply theme
+    // Apply theme first (this is critical for preventing flash)
     if (settings.theme) {
       promises.push(this.applyTheme(settings.theme));
     }
@@ -138,16 +138,26 @@ class SettingsLoader {
     
     // Mark that settings have been applied by loader
     window.settingsAppliedByLoader = true;
+    
+    // Signal that theme is ready
+    this.markThemeReady();
   }
 
   async waitForComponents() {
     const checkComponents = () => {
       return (
-        typeof themeManager !== 'undefined' && themeManager.isReady &&
-        typeof settingsManager !== 'undefined' && settingsManager.isInitialized &&
+        typeof themeManager !== 'undefined' && 
+        (typeof themeManager.isReady === 'function' ? themeManager.isReady() : true) &&
+        typeof settingsManager !== 'undefined' && 
+        (typeof settingsManager.isInitialized === 'boolean' ? settingsManager.isInitialized : true) &&
         typeof audioManager !== 'undefined'
       );
     };
+    
+    // If components are already ready, resolve immediately
+    if (checkComponents()) {
+      return Promise.resolve();
+    }
     
     return new Promise((resolve) => {
       const check = () => {
@@ -163,8 +173,13 @@ class SettingsLoader {
 
   async applyTheme(theme) {
     try {
-      if (typeof themeManager !== 'undefined' && themeManager.changeTheme) {
+      // Apply theme immediately to prevent flash
+      if (typeof themeManager !== 'undefined' && typeof themeManager.changeTheme === 'function') {
         themeManager.changeTheme(theme);
+      } else {
+        // Fallback for direct application
+        document.body.className = document.body.className.replace(/theme-\w+/g, '');
+        document.body.classList.add(`theme-${theme}`);
       }
     } catch (error) {
       console.warn('Failed to apply theme:', error);
@@ -235,6 +250,21 @@ class SettingsLoader {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  markThemeReady() {
+    // Remove loading state from body
+    document.body.classList.remove('loading-theme');
+    
+    // Add ready class to app container
+    const appContainer = document.querySelector('.app-container');
+    if (appContainer) {
+      appContainer.classList.add('theme-ready');
+    }
+    
+    // Emit custom event for other components
+    const event = new CustomEvent('themeReady', { detail: {} });
+    document.dispatchEvent(event);
+  }
+
   isReady() {
     return this.isLoaded;
   }
@@ -260,8 +290,14 @@ setTimeout(() => {
       const settings = storageManager.getSettings();
       
       // Apply basic settings directly
-      if (settings.theme && typeof themeManager !== 'undefined') {
-        themeManager.changeTheme(settings.theme);
+      if (settings.theme) {
+        // Try to use theme manager first, fallback to direct application
+        if (typeof themeManager !== 'undefined' && typeof themeManager.changeTheme === 'function') {
+          themeManager.changeTheme(settings.theme);
+        } else {
+          document.body.className = document.body.className.replace(/theme-\w+/g, '');
+          document.body.classList.add(`theme-${settings.theme}`);
+        }
       }
       
       if (settings.font) {

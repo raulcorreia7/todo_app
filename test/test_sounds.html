@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound System Test - Enhanced Debugging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .sound-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .step-display {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e9f7ef;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .sound-manager {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-container {
+            margin-top: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #ddd;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .tab-button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 0 4px 4px 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .audio-initialization {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .audio-initialization h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .audio-initialization p {
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .audio-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .audio-status.initializing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .audio-status.ready {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .audio-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .sound-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sound-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .sound-button.playing::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+
+        .value-display {
+            display: inline-block;
+            min-width: 50px;
+            text-align: right;
+            margin-left: 10px;
+            font-family: monospace;
+        }
+
+        .collapsible {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .collapsible:hover {
+            background-color: #45a049;
+        }
+
+        .collapsible-content {
+            padding: 0 10px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: #f9f9f9;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .collapsible.active {
+            border-radius: 4px 4px 0 0;
+        }
+
+        .collapsible-content.active {
+            max-height: 1000px;
+            padding: 15px;
+        }
+
+        .debug-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .debug-info {
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .sound-specific-controls {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .input-group input[type="number"] {
+            width: 80px;
+            margin-left: 10px;
+        }
+
+        .input-group input[type="text"] {
+            width: 100px;
+            margin-left: 10px;
+        }
+
+        .input-group select {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Sound System Test - Enhanced Debugging</h1>
+
+    <div class="audio-initialization">
+        <h2>Audio System</h2>
+        <p>The audio system initializes automatically on first user interaction (click or touch).</p>
+        <div id="audio-status" class="audio-status ready">Audio ready</div>
+    </div>
+
+    <div class="tab-container">
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="switchTab('sound-manager')">Sound Manager</button>
+            <button class="tab-button" onclick="switchTab('audio-manager')">Audio Manager</button>
+        </div>
+
+        <div id="sound-manager" class="tab-content active">
+            <h2>Sound Manager Tests</h2>
+            <div class="sound-buttons">
+                <button class="sound-button" onclick="playSound('addTask')">Add Task</button>
+                <button class="sound-button" onclick="playSound('completeTask')">Complete Task</button>
+                <button class="sound-button" onclick="playSound('victorySwell')">Victory Swell</button>
+                <button class="sound-button" onclick="playSound('editSave')">Edit Save</button>
+                <button class="sound-button" onclick="playSound('deleteTask')">Delete Task</button>
+                <button class="sound-button" onclick="playSound('unlockPalette')">Unlock Palette</button>
+                <button class="sound-button" onclick="playSound('openProgress')">Open Progress</button>
+                <button class="sound-button" onclick="playSound('paletteHover')">Palette Hover</button>
+            </div>
+
+            <div class="controls">
+                <button class="collapsible" onclick="toggleCollapsible(this)">Global Controls</button>
+                <div class="collapsible-content active">
+                    <div class="control-group">
+                        <label for="volume-sound">Master Volume:</label>
+                        <div class="input-group">
+                            <input type="range" id="volume-sound" min="0" max="1" step="0.01" value="0.5"
+                                oninput="setVolume('sound', this.value)">
+                            <span id="volume-value-sound" class="value-display">0.5</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="max-steps-sound">Max Steps:</label>
+                        <div class="input-group">
+                            <input type="range" id="max-steps-sound" min="1" max="10" step="1" value="5"
+                                oninput="setMaxSteps('sound', this.value)">
+                            <span id="max-steps-value-sound" class="value-display">5</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="pitch-variation-sound">Pitch Variation Range:</label>
+                        <div class="input-group">
+                            <input type="range" id="pitch-variation-sound" min="0.5" max="10" step="0.1" value="4.0"
+                                oninput="setPitchVariation('sound', this.value)">
+                            <span id="pitch-variation-value-sound" class="value-display">4.0</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="start-octave-sound">Start Octave:</label>
+                        <div class="input-group">
+                            <input type="range" id="start-octave-sound" min="1" max="7" step="1" value="2"
+                                oninput="setStartOctave('sound', this.value)">
+                            <span id="start-octave-value-sound" class="value-display">2</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="end-octave-sound">End Octave:</label>
+                        <div class="input-group">
+                            <input type="range" id="end-octave-sound" min="1" max="7" step="1" value="4"
+                                oninput="setEndOctave('sound', this.value)">
+                            <span id="end-octave-value-sound" class="value-display">4</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="harmonic-layers-sound">Harmonic Layers:</label>
+                        <div class="input-group">
+                            <input type="range" id="harmonic-layers-sound" min="0" max="5" step="1" value="2"
+                                oninput="setHarmonicLayers('sound', this.value)">
+                            <span id="harmonic-layers-value-sound" class="value-display">2</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <button onclick="randomizeAllSteps('sound')">Randomize All Steps</button>
+                        <button onclick="resetAllSteps('sound')">Reset All Steps</button>
+                        <button onclick="enableRewardSound('sound', true)">Enable Reward Sound</button>
+                        <button onclick="enableRewardSound('sound', false)">Disable Reward Sound</button>
+                    </div>
+                </div>
+
+                <button class="collapsible" onclick="toggleCollapsible(this)">Dynamic Parameter Control</button>
+                <div class="collapsible-content">
+                    <div class="control-group">
+                        <h4>Adjust All Parameters</h4>
+                        <p>Use these controls to dynamically modify all sound parameters at once:</p>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="global-volume-multiplier">Global Volume Multiplier:</label>
+                        <div class="input-group">
+                            <input type="range" id="global-volume-multiplier" min="0" max="2" step="0.01" value="1"
+                                oninput="setGlobalVolumeMultiplier(this.value)">
+                            <span id="global-volume-multiplier-value" class="value-display">1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="global-frequency-multiplier">Global Frequency Multiplier:</label>
+                        <div class="input-group">
+                            <input type="range" id="global-frequency-multiplier" min="0.5" max="2" step="0.01" value="1"
+                                oninput="setGlobalFrequencyMultiplier(this.value)">
+                            <span id="global-frequency-multiplier-value" class="value-display">1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="global-pitch-shift">Global Pitch Shift (semitones):</label>
+                        <div class="input-group">
+                            <input type="range" id="global-pitch-shift" min="-12" max="12" step="1" value="0"
+                                oninput="setGlobalPitchShift(this.value)">
+                            <span id="global-pitch-shift-value" class="value-display">0</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="global-duration-multiplier">Global Duration Multiplier:</label>
+                        <div class="input-group">
+                            <input type="range" id="global-duration-multiplier" min="0.5" max="2" step="0.01" value="1"
+                                oninput="setGlobalDurationMultiplier(this.value)">
+                            <span id="global-duration-multiplier-value" class="value-display">1.0</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="global-attack-time">Global Attack Time (s):</label>
+                        <div class="input-group">
+                            <input type="range" id="global-attack-time" min="0" max="1" step="0.01" value="0.05"
+                                oninput="setGlobalAttackTime(this.value)">
+                            <span id="global-attack-time-value" class="value-display">0.05</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="global-release-time">Global Release Time (s):</label>
+                        <div class="input-group">
+                            <input type="range" id="global-release-time" min="0" max="2" step="0.01" value="0.3"
+                                oninput="setGlobalReleaseTime(this.value)">
+                            <span id="global-release-time-value" class="value-display">0.3</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <button onclick="randomizeAllParameters()">Randomize All Parameters</button>
+                        <button onclick="resetAllParameters()">Reset All Parameters</button>
+                        <button onclick="exportCurrentSettings()">Export Settings</button>
+                        <button onclick="importSettings()">Import Settings</button>
+                        <input type="file" id="settings-import" style="display: none;" accept=".json"
+                            onchange="handleSettingsImport(event)">
+                    </div>
+                </div>
+
+                <button class="collapsible" onclick="toggleCollapsible(this)">Sound-Specific Controls</button>
+                <div class="collapsible-content">
+                    <div id="sound-specific-controls-sound">
+                        <h4>Base Frequencies</h4>
+                        <div class="control-group">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background-color: #f0f0f0;">
+                                        <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Sound</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Base
+                                            Frequency</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="base-frequencies-table">
+                                    <!-- Table rows will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="control-group">
+                            <button onclick="updateAllBaseFrequencies()">Update All Frequencies</button>
+                            <button onclick="resetBaseFrequencies()">Reset to Defaults</button>
+                        </div>
+
+                        <h4>Selected Sound Controls</h4>
+                        <div id="selected-sound-controls">
+                            <p>Select a sound to edit its specific parameters</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="collapsible" onclick="toggleCollapsible(this)">Step Management</button>
+                <div class="collapsible-content active">
+                    <div class="control-group">
+                        <label for="steps-sound">Set All Steps:</label>
+                        <div class="input-group">
+                            <input type="range" id="steps-sound" min="0" max="4" step="1" value="0"
+                                oninput="setAllSteps('sound', this.value)">
+                            <span id="steps-value-sound" class="value-display">0</span>
+                        </div>
+                    </div>
+
+                    <div class="step-display">
+                        <strong>Current Steps:</strong>
+                        <div id="steps-display-sound">addTask: 0, completeTask: 0, victorySwell: 0, editSave: 0,
+                            deleteTask: 0, unlockPalette: 0, openProgress: 0, paletteHover: 0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="audio-manager" class="tab-content">
+            <h2>Audio Manager Tests</h2>
+            <div class="sound-buttons">
+                <button class="sound-button" onclick="playAudio('add')">Add Task</button>
+                <button class="sound-button" onclick="playAudio('complete')">Complete Task</button>
+                <button class="sound-button" onclick="playAudio('victory')">Victory</button>
+                <button class="sound-button" onclick="playAudio('edit')">Edit Task</button>
+                <button class="sound-button" onclick="playAudio('delete')">Delete Task</button>
+                <button class="sound-button" onclick="playAudio('settings')">Settings Open</button>
+                <button class="sound-button" onclick="playAudio('palette')">Palette Change</button>
+                <button class="sound-button" onclick="playAudio('progress')">Progress Open</button>
+                <button class="sound-button" onclick="playAudio('font')">Font Change</button>
+                <button class="sound-button" onclick="playAudio('volume')">Volume Adjust</button>
+                <button class="sound-button" onclick="playAudio('toggle')">Sound Toggle</button>
+            </div>
+
+            <div class="controls">
+                <button class="collapsible" onclick="toggleCollapsible(this)">Global Controls</button>
+                <div class="collapsible-content active">
+                    <div class="control-group">
+                        <label for="volume-audio">Master Volume:</label>
+                        <div class="input-group">
+                            <input type="range" id="volume-audio" min="0" max="100" step="1" value="50"
+                                oninput="setVolume('audio', this.value)">
+                            <span id="volume-value-audio" class="value-display">50</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="max-steps-audio">Max Steps:</label>
+                        <div class="input-group">
+                            <input type="range" id="max-steps-audio" min="1" max="10" step="1" value="5"
+                                oninput="setMaxSteps('audio', this.value)">
+                            <span id="max-steps-value-audio" class="value-display">5</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <button onclick="randomizeAllSteps('audio')">Randomize All Steps</button>
+                        <button onclick="resetAllSteps('audio')">Reset All Steps</button>
+                    </div>
+                </div>
+
+                <button class="collapsible" onclick="toggleCollapsible(this)">Step Management</button>
+                <div class="collapsible-content active">
+                    <div class="control-group">
+                        <label for="steps-audio">Set All Steps:</label>
+                        <div class="input-group">
+                            <input type="range" id="steps-audio" min="0" max="4" step="1" value="0"
+                                oninput="setAllSteps('audio', this.value)">
+                            <span id="steps-value-audio" class="value-display">0</span>
+                        </div>
+                    </div>
+
+                    <div class="step-display">
+                        <strong>Current Steps:</strong>
+                        <div id="steps-display-audio">add: 0, complete: 0, edit: 0, delete: 0, settings: 0, palette: 0,
+                            progress: 0, victory: 0, font: 0, volume: 0, toggle: 0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-panel">
+        <button class="collapsible active" onclick="toggleCollapsible(this)">Debug Information</button>
+        <div class="collapsible-content active">
+            <h3>Sound Manager Debug Info</h3>
+            <div id="sound-debug-info" class="debug-info"></div>
+
+            <h3>Audio Manager Debug Info</h3>
+            <div id="audio-debug-info" class="debug-info"></div>
+        </div>
+    </div>
+
+    <script src="../js/bus.js"></script>
+    <script src="../js/sound.js"></script>
+    <script src="../js/audio.js"></script>
+    <script>
+        // Initialize sound managers
+        let audioInitialized = true;
+        let selectedSound = null;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+
+            // Update debug info
+            updateDebugInfo();
+        }
+
+        // Collapsible sections
+        function toggleCollapsible(element) {
+            element.classList.toggle('active');
+            const content = element.nextElementSibling;
+            content.classList.toggle('active');
+        }
+
+        // Sound Manager Functions
+        function playSound(soundName) {
+            if (!audioInitialized) {
+                alert('Audio not initialized. Please click somewhere on the page first.');
+                return;
+            }
+
+            // Add playing animation
+            event.target.classList.add('playing');
+            setTimeout(() => {
+                event.target.classList.remove('playing');
+            }, 600);
+
+            soundManager.play(soundName);
+            selectedSound = soundName;
+            updateSoundSpecificControls('sound', soundName);
+            updateStepsDisplay('sound');
+            updateDebugInfo();
+        }
+
+        function setVolume(manager, value) {
+            if (manager === 'sound') {
+                soundManager.setVolume(parseFloat(value));
+                document.getElementById('volume-value-sound').textContent = value;
+            } else {
+                audioManager.setVolume(parseInt(value));
+                document.getElementById('volume-value-audio').textContent = value;
+            }
+            updateDebugInfo();
+        }
+
+        function setMaxSteps(manager, value) {
+            if (manager === 'sound') {
+                soundManager.maxSteps = parseInt(value);
+                document.getElementById('max-steps-value-sound').textContent = value;
+            }
+            updateDebugInfo();
+        }
+
+        function setPitchVariation(manager, value) {
+            if (manager === 'sound') {
+                soundManager.pitchVariationRange = parseFloat(value);
+                document.getElementById('pitch-variation-value-sound').textContent = value;
+            }
+            updateDebugInfo();
+        }
+
+        function setStartOctave(manager, value) {
+            if (manager === 'sound') {
+                soundManager.startOctave = parseInt(value);
+                document.getElementById('start-octave-value-sound').textContent = value;
+            }
+            updateDebugInfo();
+        }
+
+        function setEndOctave(manager, value) {
+            if (manager === 'sound') {
+                soundManager.endOctave = parseInt(value);
+                document.getElementById('end-octave-value-sound').textContent = value;
+            }
+            updateDebugInfo();
+        }
+
+        function setHarmonicLayers(manager, value) {
+            if (manager === 'sound') {
+                soundManager.harmonicLayers = parseInt(value);
+                document.getElementById('harmonic-layers-value-sound').textContent = value;
+            }
+            updateDebugInfo();
+        }
+
+        function enableRewardSound(manager, enabled) {
+            if (manager === 'sound') {
+                soundManager.rewardSoundEnabled = enabled;
+            }
+            updateDebugInfo();
+        }
+
+        function setAllSteps(manager, value) {
+            if (manager === 'sound') {
+                soundManager.setAllSoundSteps(parseInt(value));
+                document.getElementById('steps-value-sound').textContent = value;
+            } else {
+                audioManager.setAllSoundSteps(parseInt(value));
+                document.getElementById('steps-value-audio').textContent = value;
+            }
+            updateStepsDisplay(manager);
+            updateDebugInfo();
+        }
+
+        function randomizeAllSteps(manager) {
+            if (manager === 'sound') {
+                soundManager.randomizeAllSoundSteps();
+            } else {
+                audioManager.randomizeAllSoundSteps();
+            }
+            updateStepsDisplay(manager);
+            updateDebugInfo();
+        }
+
+        function resetAllSteps(manager) {
+            if (manager === 'sound') {
+                soundManager.setAllSoundSteps(0);
+            } else {
+                audioManager.setAllSoundSteps(0);
+            }
+            updateStepsDisplay(manager);
+            updateDebugInfo();
+        }
+
+        function updateStepsDisplay(manager) {
+            if (manager === 'sound') {
+                const stepsDisplay = document.getElementById('steps-display-sound');
+                const steps = soundManager.soundSteps;
+                stepsDisplay.textContent = Object.entries(steps)
+                    .map(([sound, step]) => `${sound}: ${step}`)
+                    .join(', ');
+            } else {
+                const stepsDisplay = document.getElementById('steps-display-audio');
+                const steps = audioManager.soundSteps;
+                stepsDisplay.textContent = Object.entries(steps)
+                    .map(([sound, step]) => `${sound}: ${step}`)
+                    .join(', ');
+            }
+        }
+
+        function updateSoundSpecificControls(manager, soundName) {
+            if (manager !== 'sound') return;
+
+            const container = document.getElementById('sound-specific-controls-sound');
+            const sound = soundManager;
+
+            container.innerHTML = `
+                <h4>Editing: ${soundName}</h4>
+                
+                <div class="control-group">
+                    <label>Base Frequency:</label>
+                    <div class="input-group">
+                        <input type="number" id="base-freq-${soundName}" value="${sound.baseFrequencies[soundName] || 440}" min="20" max="20000" step="1">
+                        <button onclick="updateBaseFrequency('${soundName}', this.value)">Update</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Current Step:</label>
+                    <div class="input-group">
+                        <input type="range" id="step-${soundName}" min="0" max="${sound.maxSteps - 1}" step="1" value="${sound.soundSteps[soundName] || 0}" oninput="updateSoundStep('${soundName}', this.value)">
+                        <span id="step-value-${soundName}" class="value-display">${sound.soundSteps[soundName] || 0}</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button onclick="incrementSoundStep('${soundName}')">Increment Step</button>
+                    <button onclick="decrementSoundStep('${soundName}')">Decrement Step</button>
+                    <button onclick="resetSoundStep('${soundName}')">Reset Step</button>
+                </div>
+            `;
+        }
+
+        function updateBaseFrequency(soundName, value) {
+            soundManager.baseFrequencies[soundName] = parseFloat(value);
+            updateDebugInfo();
+        }
+
+        function updateSoundStep(soundName, value) {
+            soundManager.soundSteps[soundName] = parseInt(value);
+            document.getElementById(`step-value-${soundName}`).textContent = value;
+            updateStepsDisplay('sound');
+            updateDebugInfo();
+        }
+
+        function incrementSoundStep(soundName) {
+            if (soundManager.soundSteps[soundName] < soundManager.maxSteps - 1) {
+                soundManager.soundSteps[soundName]++;
+                updateSoundSpecificControls('sound', soundName);
+                updateStepsDisplay('sound');
+                updateDebugInfo();
+            }
+        }
+
+        function decrementSoundStep(soundName) {
+            if (soundManager.soundSteps[soundName] > 0) {
+                soundManager.soundSteps[soundName]--;
+                updateSoundSpecificControls('sound', soundName);
+                updateStepsDisplay('sound');
+                updateDebugInfo();
+            }
+        }
+
+        function resetSoundStep(soundName) {
+            soundManager.soundSteps[soundName] = 0;
+            updateSoundSpecificControls('sound', soundName);
+            updateStepsDisplay('sound');
+            updateDebugInfo();
+        }
+
+        // Audio Manager Functions
+        function playAudio(soundName) {
+            if (!audioInitialized) {
+                alert('Audio not initialized. Please click somewhere on the page first.');
+                return;
+            }
+
+            // Add playing animation
+            event.target.classList.add('playing');
+            setTimeout(() => {
+                event.target.classList.remove('playing');
+            }, 600);
+
+            audioManager.play(soundName);
+            updateStepsDisplay('audio');
+            updateDebugInfo();
+        }
+
+        function updateDebugInfo() {
+            // Sound Manager Debug Info
+            const soundDebug = document.getElementById('sound-debug-info');
+            soundDebug.textContent = `Audio Context State: ${soundManager.audioContext ? soundManager.audioContext.state : 'Not initialized'}
+Enabled: ${soundManager.enabled}
+Volume: ${soundManager.volume}
+Max Steps: ${soundManager.maxSteps}
+Current Step: ${soundManager.currentStep}
+Pitch Variation Range: ${soundManager.pitchVariationRange}
+Start Octave: ${soundManager.startOctave}
+End Octave: ${soundManager.endOctave}
+Harmonic Layers: ${soundManager.harmonicLayers}
+Reward Sound Enabled: ${soundManager.rewardSoundEnabled}
+Base Frequencies: ${JSON.stringify(soundManager.baseFrequencies, null, 2)}
+Sound Steps: ${JSON.stringify(soundManager.soundSteps, null, 2)}`;
+
+            // Audio Manager Debug Info
+            const audioDebug = document.getElementById('audio-debug-info');
+            audioDebug.textContent = `Audio Context State: ${audioManager.audioContext ? audioManager.audioContext.state : 'Not initialized'}
+Enabled: ${audioManager.enabled}
+Volume: ${audioManager.volume}
+Is Ready: ${audioManager.isReady()}
+Sound Steps: ${JSON.stringify(audioManager.soundSteps, null, 2)}`;
+        }
+
+        // Base frequency management
+        const defaultBaseFrequencies = {
+            "addTask": 350,
+            "completeTask": 220,
+            "victorySwell": 220,
+            "editSave": 250,
+            "deleteTask": 150,
+            "unlockPalette": 180,
+            "openProgress": 120,
+            "paletteHover": 800
+        };
+
+        // Initialize base frequencies table
+        function initializeBaseFrequenciesTable() {
+            const tableBody = document.getElementById('base-frequencies-table');
+            tableBody.innerHTML = '';
+
+            // Get all sound names from soundManager.sounds
+            const soundNames = Array.from(soundManager.sounds.keys());
+
+            soundNames.forEach(soundName => {
+                const row = document.createElement('tr');
+
+                // Sound name cell
+                const nameCell = document.createElement('td');
+                nameCell.textContent = soundName;
+                nameCell.style.padding = '8px';
+                nameCell.style.border = '1px solid #ddd';
+                row.appendChild(nameCell);
+
+                // Frequency input cell
+                const freqCell = document.createElement('td');
+                freqCell.style.padding = '8px';
+                freqCell.style.border = '1px solid #ddd';
+
+                const freqInput = document.createElement('input');
+                freqInput.type = 'number';
+                freqInput.id = `freq-${soundName}`;
+                freqInput.value = soundManager.baseFrequencies[soundName] || defaultBaseFrequencies[soundName] || 440;
+                freqInput.min = '20';
+                freqInput.max = '20000';
+                freqInput.step = '1';
+                freqInput.style.width = '100%';
+
+                freqCell.appendChild(freqInput);
+                row.appendChild(freqCell);
+
+                // Actions cell
+                const actionsCell = document.createElement('td');
+                actionsCell.style.padding = '8px';
+                actionsCell.style.border = '1px solid #ddd';
+
+                const updateBtn = document.createElement('button');
+                updateBtn.textContent = 'Update';
+                updateBtn.style.marginRight = '5px';
+                updateBtn.onclick = () => updateSingleBaseFrequency(soundName);
+
+                const resetBtn = document.createElement('button');
+                resetBtn.textContent = 'Reset';
+                resetBtn.onclick = () => resetSingleBaseFrequency(soundName);
+
+                actionsCell.appendChild(updateBtn);
+                actionsCell.appendChild(resetBtn);
+                row.appendChild(actionsCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update single base frequency
+        function updateSingleBaseFrequency(soundName) {
+            const input = document.getElementById(`freq-${soundName}`);
+            const value = parseFloat(input.value);
+
+            if (!isNaN(value)) {
+                soundManager.baseFrequencies[soundName] = value;
+                updateDebugInfo();
+            }
+        }
+
+        // Reset single base frequency to default
+        function resetSingleBaseFrequency(soundName) {
+            const defaultValue = defaultBaseFrequencies[soundName] || 440;
+            soundManager.baseFrequencies[soundName] = defaultValue;
+
+            // Update the input field
+            const input = document.getElementById(`freq-${soundName}`);
+            input.value = defaultValue;
+
+            updateDebugInfo();
+        }
+
+        // Update all base frequencies
+        function updateAllBaseFrequencies() {
+            const soundNames = Array.from(soundManager.sounds.keys());
+
+            soundNames.forEach(soundName => {
+                const input = document.getElementById(`freq-${soundName}`);
+                const value = parseFloat(input.value);
+
+                if (!isNaN(value)) {
+                    soundManager.baseFrequencies[soundName] = value;
+                }
+            });
+
+            updateDebugInfo();
+        }
+
+        // Reset all base frequencies to defaults
+        function resetBaseFrequencies() {
+            const soundNames = Array.from(soundManager.sounds.keys());
+
+            soundNames.forEach(soundName => {
+                const defaultValue = defaultBaseFrequencies[soundName] || 440;
+                soundManager.baseFrequencies[soundName] = defaultValue;
+
+                // Update the input field
+                const input = document.getElementById(`freq-${soundName}`);
+                input.value = defaultValue;
+            });
+
+            updateDebugInfo();
+        }
+
+        // Global parameter controls
+        let globalParameters = {
+            volumeMultiplier: 1.0,
+            frequencyMultiplier: 1.0,
+            pitchShift: 0,
+            durationMultiplier: 1.0,
+            attackTime: 0.05,
+            releaseTime: 0.3
+        };
+
+        // Set global volume multiplier
+        function setGlobalVolumeMultiplier(value) {
+            globalParameters.volumeMultiplier = parseFloat(value);
+            document.getElementById('global-volume-multiplier-value').textContent = value;
+
+            // Apply to all sounds
+            const soundNames = Array.from(soundManager.sounds.keys());
+            soundNames.forEach(soundName => {
+                if (soundManager.baseFrequencies[soundName]) {
+                    // Volume is applied at the master gain level, so we'll update the master volume
+                    soundManager.setVolume(soundManager.volume * globalParameters.volumeMultiplier);
+                }
+            });
+
+            updateDebugInfo();
+        }
+
+        // Set global frequency multiplier
+        function setGlobalFrequencyMultiplier(value) {
+            globalParameters.frequencyMultiplier = parseFloat(value);
+            document.getElementById('global-frequency-multiplier-value').textContent = value;
+
+            // Apply to all base frequencies
+            const soundNames = Array.from(soundManager.sounds.keys());
+            soundNames.forEach(soundName => {
+                if (soundManager.baseFrequencies[soundName]) {
+                    soundManager.baseFrequencies[soundName] *= globalParameters.frequencyMultiplier;
+                }
+            });
+
+            // Update the table display
+            initializeBaseFrequenciesTable();
+            updateDebugInfo();
+        }
+
+        // Set global pitch shift
+        function setGlobalPitchShift(value) {
+            globalParameters.pitchShift = parseInt(value);
+            document.getElementById('global-pitch-shift-value').textContent = value;
+            updateDebugInfo();
+        }
+
+        // Set global duration multiplier
+        function setGlobalDurationMultiplier(value) {
+            globalParameters.durationMultiplier = parseFloat(value);
+            document.getElementById('global-duration-multiplier-value').textContent = value;
+            updateDebugInfo();
+        }
+
+        // Set global attack time
+        function setGlobalAttackTime(value) {
+            globalParameters.attackTime = parseFloat(value);
+            document.getElementById('global-attack-time-value').textContent = value;
+            updateDebugInfo();
+        }
+
+        // Set global release time
+        function setGlobalReleaseTime(value) {
+            globalParameters.releaseTime = parseFloat(value);
+            document.getElementById('global-release-time-value').textContent = value;
+            updateDebugInfo();
+        }
+
+        // Randomize all parameters
+        function randomizeAllParameters() {
+            // Randomize global parameters
+            globalParameters.volumeMultiplier = Math.random() * 1.5 + 0.5; // 0.5 to 2.0
+            globalParameters.frequencyMultiplier = Math.random() * 1.5 + 0.5; // 0.5 to 2.0
+            globalParameters.pitchShift = Math.floor(Math.random() * 24) - 12; // -12 to 12
+            globalParameters.durationMultiplier = Math.random() * 1.5 + 0.5; // 0.5 to 2.0
+            globalParameters.attackTime = Math.random() * 0.5; // 0 to 0.5
+            globalParameters.releaseTime = Math.random() * 1.5 + 0.5; // 0.5 to 2.0
+
+            // Update UI controls
+            document.getElementById('global-volume-multiplier').value = globalParameters.volumeMultiplier;
+            document.getElementById('global-volume-multiplier-value').textContent = globalParameters.volumeMultiplier.toFixed(2);
+
+            document.getElementById('global-frequency-multiplier').value = globalParameters.frequencyMultiplier;
+            document.getElementById('global-frequency-multiplier-value').textContent = globalParameters.frequencyMultiplier.toFixed(2);
+
+            document.getElementById('global-pitch-shift').value = globalParameters.pitchShift;
+            document.getElementById('global-pitch-shift-value').textContent = globalParameters.pitchShift;
+
+            document.getElementById('global-duration-multiplier').value = globalParameters.durationMultiplier;
+            document.getElementById('global-duration-multiplier-value').textContent = globalParameters.durationMultiplier.toFixed(2);
+
+            document.getElementById('global-attack-time').value = globalParameters.attackTime;
+            document.getElementById('global-attack-time-value').textContent = globalParameters.attackTime.toFixed(2);
+
+            document.getElementById('global-release-time').value = globalParameters.releaseTime;
+            document.getElementById('global-release-time-value').textContent = globalParameters.releaseTime.toFixed(2);
+
+            // Apply frequency multiplier to all base frequencies
+            setGlobalFrequencyMultiplier(globalParameters.frequencyMultiplier);
+
+            // Randomize sound-specific parameters
+            const soundNames = Array.from(soundManager.sounds.keys());
+            soundNames.forEach(soundName => {
+                // Randomize base frequency
+                const baseFreq = defaultBaseFrequencies[soundName] || 440;
+                soundManager.baseFrequencies[soundName] = baseFreq * (Math.random() * 0.5 + 0.75); // 0.75x to 1.25x
+
+                // Randomize step
+                soundManager.soundSteps[soundName] = Math.floor(Math.random() * soundManager.maxSteps);
+            });
+
+            // Update UI
+            initializeBaseFrequenciesTable();
+            updateStepsDisplay('sound');
+            updateDebugInfo();
+        }
+
+        // Reset all parameters to defaults
+        function resetAllParameters() {
+            // Reset global parameters
+            globalParameters = {
+                volumeMultiplier: 1.0,
+                frequencyMultiplier: 1.0,
+                pitchShift: 0,
+                durationMultiplier: 1.0,
+                attackTime: 0.05,
+                releaseTime: 0.3
+            };
+
+            // Update UI controls
+            document.getElementById('global-volume-multiplier').value = globalParameters.volumeMultiplier;
+            document.getElementById('global-volume-multiplier-value').textContent = globalParameters.volumeMultiplier.toFixed(2);
+
+            document.getElementById('global-frequency-multiplier').value = globalParameters.frequencyMultiplier;
+            document.getElementById('global-frequency-multiplier-value').textContent = globalParameters.frequencyMultiplier.toFixed(2);
+
+            document.getElementById('global-pitch-shift').value = globalParameters.pitchShift;
+            document.getElementById('global-pitch-shift-value').textContent = globalParameters.pitchShift;
+
+            document.getElementById('global-duration-multiplier').value = globalParameters.durationMultiplier;
+            document.getElementById('global-duration-multiplier-value').textContent = globalParameters.durationMultiplier.toFixed(2);
+
+            document.getElementById('global-attack-time').value = globalParameters.attackTime;
+            document.getElementById('global-attack-time-value').textContent = globalParameters.attackTime.toFixed(2);
+
+            document.getElementById('global-release-time').value = globalParameters.releaseTime;
+            document.getElementById('global-release-time-value').textContent = globalParameters.releaseTime.toFixed(2);
+
+            // Reset sound-specific parameters
+            resetBaseFrequencies();
+            resetAllSteps('sound');
+
+            // Update UI
+            initializeBaseFrequenciesTable();
+            updateStepsDisplay('sound');
+            updateDebugInfo();
+        }
+
+        // Export current settings
+        function exportCurrentSettings() {
+            const settings = {
+                globalParameters: globalParameters,
+                soundManager: {
+                    baseFrequencies: soundManager.baseFrequencies,
+                    soundSteps: soundManager.soundSteps,
+                    maxSteps: soundManager.maxSteps,
+                    pitchVariationRange: soundManager.pitchVariationRange,
+                    startOctave: soundManager.startOctave,
+                    endOctave: soundManager.endOctave,
+                    harmonicLayers: soundManager.harmonicLayers,
+                    rewardSoundEnabled: soundManager.rewardSoundEnabled,
+                    volume: soundManager.volume,
+                    enabled: soundManager.enabled
+                }
+            };
+
+            const dataStr = JSON.stringify(settings, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = 'sound-settings.json';
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Import settings
+        function importSettings() {
+            document.getElementById('settings-import').click();
+        }
+
+        // Handle settings import
+        function handleSettingsImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const settings = JSON.parse(e.target.result);
+
+                    // Apply global parameters
+                    if (settings.globalParameters) {
+                        globalParameters = settings.globalParameters;
+
+                        // Update UI controls
+                        document.getElementById('global-volume-multiplier').value = globalParameters.volumeMultiplier;
+                        document.getElementById('global-volume-multiplier-value').textContent = globalParameters.volumeMultiplier.toFixed(2);
+
+                        document.getElementById('global-frequency-multiplier').value = globalParameters.frequencyMultiplier;
+                        document.getElementById('global-frequency-multiplier-value').textContent = globalParameters.frequencyMultiplier.toFixed(2);
+
+                        document.getElementById('global-pitch-shift').value = globalParameters.pitchShift;
+                        document.getElementById('global-pitch-shift-value').textContent = globalParameters.pitchShift;
+
+                        document.getElementById('global-duration-multiplier').value = globalParameters.durationMultiplier;
+                        document.getElementById('global-duration-multiplier-value').textContent = globalParameters.durationMultiplier.toFixed(2);
+
+                        document.getElementById('global-attack-time').value = globalParameters.attackTime;
+                        document.getElementById('global-attack-time-value').textContent = globalParameters.attackTime.toFixed(2);
+
+                        document.getElementById('global-release-time').value = globalParameters.releaseTime;
+                        document.getElementById('global-release-time-value').textContent = globalParameters.releaseTime.toFixed(2);
+                    }
+
+                    // Apply sound manager settings
+                    if (settings.soundManager) {
+                        const sm = settings.soundManager;
+
+                        if (sm.baseFrequencies) soundManager.baseFrequencies = sm.baseFrequencies;
+                        if (sm.soundSteps) soundManager.soundSteps = sm.soundSteps;
+                        if (sm.maxSteps) soundManager.maxSteps = sm.maxSteps;
+                        if (sm.pitchVariationRange) soundManager.pitchVariationRange = sm.pitchVariationRange;
+                        if (sm.startOctave) soundManager.startOctave = sm.startOctave;
+                        if (sm.endOctave) soundManager.endOctave = sm.endOctave;
+                        if (sm.harmonicLayers) soundManager.harmonicLayers = sm.harmonicLayers;
+                        if (sm.rewardSoundEnabled !== undefined) soundManager.rewardSoundEnabled = sm.rewardSoundEnabled;
+                        if (sm.volume !== undefined) soundManager.setVolume(sm.volume);
+                        if (sm.enabled !== undefined) soundManager.setEnabled(sm.enabled);
+                    }
+
+                    // Update UI
+                    initializeBaseFrequenciesTable();
+                    updateStepsDisplay('sound');
+                    updateDebugInfo();
+
+                    alert('Settings imported successfully!');
+                } catch (error) {
+                    alert('Error importing settings: ' + error.message);
+                }
+            };
+
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        // Initialize displays
+        updateStepsDisplay('sound');
+        updateStepsDisplay('audio');
+        initializeBaseFrequenciesTable();
+        updateDebugInfo();
+    </script>
+</body>
+
+</html>

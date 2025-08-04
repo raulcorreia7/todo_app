@@ -880,41 +880,32 @@ class TodoApp {
     const footer = document.querySelector('.app-footer');
     if (!footer) return;
 
-    let lastScrollTop = 0;
-    let scrollTimeout;
+    // Make footer initially visible
+    footer.classList.add('visible');
 
-    const handleScroll = () => {
+    // Handle footer visibility based on scroll position
+    const updateFooterVisibility = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
 
-      // Show footer when scrolling down
-      if (scrollTop > lastScrollTop && scrollTop > 100) {
+      // Show footer when within 10% of the bottom
+      if (scrollPercentage >= 90) {
         footer.classList.add('visible');
-      }
-      // Hide footer when scrolling up to top
-      else if (scrollTop <= 50) {
+        footer.classList.remove('hidden');
+      } else {
         footer.classList.remove('visible');
+        footer.classList.add('hidden');
       }
-
-      lastScrollTop = scrollTop;
-
-      // Clear existing timeout
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout);
-      }
-
-      // Set timeout to hide footer after scrolling stops
-      scrollTimeout = setTimeout(() => {
-        if (scrollTop > 100) {
-          footer.classList.remove('visible');
-        }
-      }, 2000);
     };
 
-    // Add scroll event listener with passive for better performance
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Call on scroll and resize
+    window.addEventListener('scroll', updateFooterVisibility, { passive: true });
+    window.addEventListener('resize', updateFooterVisibility);
 
     // Initial check
-    handleScroll();
+    updateFooterVisibility();
   }
 }
 

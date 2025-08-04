@@ -199,9 +199,15 @@ class ThemeManager {
      * Initialize theme system
      */
     init() {
+        // Load theme from settings first (this will be called before DOM is ready)
         this.loadTheme();
+        
+        // Setup CSS variables with the loaded theme
         this.setupCSSVariables();
+        
+        // Setup event listeners for runtime changes
         this.setupEventListeners();
+        
         this.isInitialized = true;
 
         // Mark as ready

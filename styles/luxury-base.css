@@ -404,3 +404,73 @@ body {
     font-size: 1rem;
   }
 }
+
+/* App Version Styling */
+.app-version {
+  font-size: 0.75rem;
+  opacity: 0.4;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  transition: opacity var(--transition-normal);
+}
+
+.app-footer:hover .app-version {
+  opacity: 0.6;
+}
+
+/* App Footer Styling */
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem 2rem;
+  background: rgba(var(--primary-color-rgb, 26, 26, 46), 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-color);
+  z-index: 100;
+  transition: transform var(--transition-normal);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-footer.visible {
+  transform: translateY(0);
+}
+
+.app-footer.hidden {
+  transform: translateY(100%);
+}
+
+.footer-text {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  opacity: 0.7;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Ensure footer is always visible when scrolling */
+@media (min-width: 801px) {
+  .app-container {
+    padding-bottom: 5rem;
+    /* Space for footer */
+  }
+}
+
+@media (max-width: 800px) {
+  .app-container {
+    padding-bottom: 4rem;
+    /* Space for footer */
+  }
+
+  .app-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  .footer-text {
+    font-size: 0.75rem;
+  }
+}

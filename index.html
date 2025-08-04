@@ -29,9 +29,28 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=SF+Pro+Display:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
+
+  <!-- Theme loading styles -->
+  <style>
+    /* Hide content until theme is loaded to prevent flashing */
+    .app-container {
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .app-container.theme-ready {
+      opacity: 1;
+    }
+
+    /* Loading state for theme */
+    body.loading-theme {
+      background-color: #1a1a2e;
+      /* Default dark theme color */
+    }
+  </style>
 </head>
 
-<body class="font-inter">
+<body class="font-inter loading-theme">
   <!-- Background -->
   <div class="background-container">
     <div class="nebula-bg"></div>
@@ -302,6 +321,7 @@
       Vibe Coded by Raúl Correia
       <span class="heart-emoji">❤️</span>
       with <span class="llm-name">Kimi K2 and GLM-4.5 Air</span>
+      <span class="app-version" id="appVersion"></span>
     </p>
   </div>
 
@@ -315,6 +335,9 @@
       }
     });
   </script>
+
+  <!-- Version Script -->
+  <script src="js/version.js"></script>
 
   <!-- Scripts -->
   <script src="js/bus.js"></script>
