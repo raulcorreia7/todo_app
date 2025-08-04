@@ -168,16 +168,28 @@ class EventBus {
                 return;
             }
 
+            const cleanup = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                if (handler) this.removeEventListener('componentReady', handler);
+            };
+
             const timeoutId = setTimeout(() => {
+                cleanup();
                 reject(new Error(`Timeout waiting for ${componentName}`));
             }, timeout);
 
-            this.addEventListener('componentReady', (event) => {
-                if (event.detail.component === componentName) {
-                    clearTimeout(timeoutId);
-                    resolve();
+            const handler = (event) => {
+                try {
+                    if (event.detail && event.detail.component === componentName) {
+                        cleanup();
+                        resolve();
+                    }
+                } catch (e) {
+                    // no-op
                 }
-            });
+            };
+
+            this.addEventListener('componentReady', handler);
         });
     }
 }

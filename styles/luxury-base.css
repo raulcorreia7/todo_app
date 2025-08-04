@@ -24,6 +24,20 @@ body {
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
+/* Theme preload/hide flash (moved from index.html inline styles) */
+.app-container {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.app-container.theme-ready {
+  opacity: 1;
+}
+
+body.loading-theme {
+  background-color: #1a1a2e; /* Default dark theme color */
+}
+
 /* Arctic Sky Theme Specific Styles */
 .theme-arcticSky {
   --font-family-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;

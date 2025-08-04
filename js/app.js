@@ -53,6 +53,18 @@ class TodoApp {
 
     this.isInitialized = true;
     console.log('Todo app initialized');
+
+    // Signal globally that the app is fully ready for dependent systems (e.g., music delayed start)
+    try {
+      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
+        bus.dispatchEvent(new CustomEvent('app:ready'));
+      } else {
+        // Fallback: also fire a DOM event so listeners without the bus can hook in
+        document.dispatchEvent(new CustomEvent('app:ready'));
+      }
+    } catch (e) {
+      console.warn('Failed to dispatch app:ready event', e);
+    }
   }
 
   /**
@@ -123,7 +135,7 @@ class TodoApp {
     const checkDependencies = () => {
       return (
         typeof storageManager !== 'undefined' && storageManager.isReady() &&
-        typeof themeManager !== 'undefined' && themeManager.isReady &&
+        typeof themeManager !== 'undefined' && (typeof themeManager.isReady === 'function' ? themeManager.isReady() : !!themeManager.isReady) &&
         typeof settingsManager !== 'undefined' && settingsManager.isReady() &&
         typeof settingsLoader !== 'undefined' && settingsLoader.isReady()
       );
@@ -201,30 +213,28 @@ class TodoApp {
       });
     }
 
-    // Volume button
+    // Music button: toggle play/pause (do NOT toggle mute here)
     const volumeBtn = document.getElementById('volumeBtn');
     if (volumeBtn) {
-      volumeBtn.addEventListener('click', () => {
-        if (typeof settingsManager !== 'undefined') {
-          const newSoundEnabled = !settingsManager.soundEnabled;
-          settingsManager.setSoundEnabled(newSoundEnabled);
-
-          // Update volume icon with animation
+      volumeBtn.addEventListener('click', async () => {
+        try {
+          if (typeof musicManager !== 'undefined') {
+            await musicManager.togglePlay();
+          }
+          // Update transport icon with a subtle animation
           const volumeIcon = document.getElementById('volumeIcon');
           if (volumeIcon) {
             volumeIcon.classList.add('toggling');
-            settingsManager.updateVolumeIcon(volumeIcon, newSoundEnabled);
-            
-            // Remove animation class after transition
             setTimeout(() => {
               volumeIcon.classList.remove('toggling');
             }, 300);
           }
-
-          // Play sound toggle sound
+          // Provide a small UI sound feedback (optional)
           if (typeof audioManager !== 'undefined') {
             audioManager.play('toggle');
           }
+        } catch (e) {
+          console.warn('Music toggle failed:', e);
         }
       });
     }
@@ -300,6 +310,29 @@ class TodoApp {
     if (typeof bus !== 'undefined') {
       bus.addEventListener('tasksUpdated', () => this.render());
       bus.addEventListener('settingsChanged', () => this.render());
+
+      // Keep music button state in sync with actual playback
+      const syncMusicBtn = (playing) => {
+        const btn = document.getElementById('volumeBtn');
+        if (!btn) return;
+        btn.classList.toggle('is-playing', !!playing);
+        btn.classList.toggle('is-paused', !playing);
+      };
+      bus.addEventListener('music:started', () => syncMusicBtn(true));
+      bus.addEventListener('music:playing', () => syncMusicBtn(true));
+      bus.addEventListener('music:paused', () => syncMusicBtn(false));
+      bus.addEventListener('music:silenceStart', () => syncMusicBtn(false));
+      bus.addEventListener('music:buffering', (e) => {
+        const btn = document.getElementById('volumeBtn');
+        if (!btn) return;
+        btn.classList.toggle('buffering', !!(e.detail && e.detail.buffering));
+      });
+      bus.addEventListener('music:hintStart', () => {
+        const btn = document.getElementById('volumeBtn');
+        if (!btn) return;
+        btn.classList.add('hint');
+        setTimeout(() => btn.classList.remove('hint'), 3000);
+      });
     }
 
     // Keyboard shortcuts
@@ -398,43 +431,6 @@ class TodoApp {
     }
   }
 
-  /**
-   * Update volume button state based on sound enabled flag
-   * @param {boolean} enabled - Whether sound is enabled
-   */
-  updateVolumeButtonState(enabled) {
-    const volumeBtn = document.getElementById('volumeBtn');
-    const volumeIcon = document.getElementById('volumeIcon');
-    
-    if (volumeBtn) {
-      // Add or remove disabled class based on sound state
-      if (enabled) {
-        volumeBtn.classList.remove('disabled');
-        volumeBtn.classList.add('enabled');
-        // Add a subtle pulse effect when sound is enabled
-        volumeBtn.style.animation = 'pulseGlow 2s ease-in-out infinite';
-      } else {
-        volumeBtn.classList.remove('enabled');
-        volumeBtn.classList.add('disabled');
-        // Remove animation when sound is disabled
-        volumeBtn.style.animation = 'none';
-      }
-    }
-    
-    // Update the icon to reflect the state
-    if (volumeIcon && settingsManager) {
-      settingsManager.updateVolumeIcon(volumeIcon, enabled);
-    }
-    
-    // Update the settings panel's sound toggle to match
-    const soundToggle = document.getElementById('soundToggle');
-    if (soundToggle) {
-      soundToggle.checked = enabled;
-    }
-    
-    // Store the current state for comparison
-    this.lastSoundEnabledState = enabled;
-  }
 
   /**
    * Add a new task

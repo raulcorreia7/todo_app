@@ -2821,6 +2821,355 @@
   font-weight: 600;
 }
 
+/* Ensure order: statistics, music, volume, settings on wide viewports (moved from index.html inline) */
+@media (min-width: 900px) {
+  .floating-controls {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 12px;
+    align-items: end;
+  }
+  #statisticsBtn { order: 1; }
+  #musicBtn { order: 2; }
+  #volumeBtn { order: 3; }
+  #settingsBtn { order: 4; }
+}
+
+/* Shared styles for audio floating buttons (music + volume) */
+.btn--floating.btn--floating-audio { }
+#volumeBtn.btn--floating-audio.enabled,
+#musicBtn.btn--floating-audio.is-playing {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+#volumeBtn.btn--floating-audio.disabled,
+#musicBtn.btn--floating-audio.muted {
+  animation: none;
+}
+#volumeBtn.btn--floating-audio.buffering::before,
+#musicBtn.btn--floating-audio.buffering::before {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border: 2px solid transparent;
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  right: 6px; top: 6px;
+  animation: spin 1s linear infinite;
+}
+#volumeBtn.btn--floating-audio.disabled,
+#musicBtn.btn--floating-audio.music-disabled { opacity: 0.85; }
+
+/* Music popover header & visualizer (moved from index.html inline) */
+.music-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  gap: 0.5rem;
+}
+.music-pin.btn { padding: 2px; opacity: 0.6; }
+.music-pin.btn svg { width: 12px; height: 12px; }
+.music-pin.btn.pinned { opacity: 1; filter: drop-shadow(0 0 6px var(--glow-color)); }
+
+/* Small sticky button positioned at top-right of the visualizer */
+.music-visualizer {
+  position: relative; /* enable absolute positioning for pin button */
+}
+.music-pin.small {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm, 6px);
+  background: rgba(18,18,18,0.35);
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(6px);
+  transition: background 120ms ease, opacity 120ms ease, transform 120ms ease;
+  opacity: 0.95;
+  z-index: 2; /* ensure it sits above bars */
+}
+.music-pin.small:hover { opacity: 1; background: rgba(18,18,18,0.5); transform: scale(1.04); }
+.music-pin.small.pinned {
+  box-shadow: 0 0 10px var(--glow-color);
+  border-color: var(--accent-color);
+}
+.music-pin.small svg { width: 12px; height: 12px; }
+
+.music-visualizer {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: end;
+  gap: 6px;
+  height: clamp(60px, 25vh, 160px);
+  width: 100%;
+  opacity: 0.0;
+  transition: opacity 200ms ease;
+}
+.music-visualizer.is-playing { opacity: 0.9; }
+.music-visualizer.is-muted,
+.music-popover.is-muted .music-visualizer,
+.music-popover.is-buffering .music-visualizer,
+.music-popover.is-paused .music-visualizer,
+.music-popover.is-silent .music-visualizer { opacity: 0.35; }
+/* keep pin visible even when visualizer is dimmed */
+.music-popover.is-muted .music-pin.small,
+.music-popover.is-buffering .music-pin.small,
+.music-popover.is-paused .music-pin.small,
+.music-popover.is-silent .music-pin.small { opacity: 0.95; }
+
+.music-visualizer .bar {
+  width: 100%;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--glow-color), var(--accent-color));
+  box-shadow: 0 0 8px var(--glow-color);
+  height: 18%;
+  transform-origin: bottom center;
+  animation: vizBreath 1.2s ease-in-out infinite; /* faster baseline for more reactive feel */
+  animation-play-state: paused;
+}
+.music-visualizer.is-playing .bar { animation-play-state: running; }
+
+/* stagger with nth-child to add organic feel (reduced delays for snappier response) */
+.music-visualizer .bar:nth-child(1) { animation-delay: 0ms; }
+.music-visualizer .bar:nth-child(2) { animation-delay: 60ms; }
+.music-visualizer .bar:nth-child(3) { animation-delay: 120ms; }
+.music-visualizer .bar:nth-child(4) { animation-delay: 180ms; }
+.music-visualizer .bar:nth-child(5) { animation-delay: 240ms; }
+.music-visualizer .bar:nth-child(6) { animation-delay: 300ms; }
+.music-visualizer .bar:nth-child(7) { animation-delay: 360ms; }
+.music-visualizer .bar:nth-child(8) { animation-delay: 420ms; }
+
+/* Micro equalizer on button */
+#musicBtn.is-playing::after {
+  content: '';
+  position: absolute;
+  right: 6px; bottom: 6px;
+  width: 12px; height: 6px;
+  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
+  -webkit-mask:
+    radial-gradient(circle 1px at 2px 50%, #000 99%, transparent 100%),
+    radial-gradient(circle 1px at 6px 50%, #000 99%, transparent 100%),
+    radial-gradient(circle 1px at 10px 50%, #000 99%, transparent 100%);
+  mask:
+    radial-gradient(circle 1px at 2px 50%, #000 99%, transparent 100%),
+    radial-gradient(circle 1px at 6px 50%, #000 99%, transparent 100%),
+    radial-gradient(circle 1px at 10px 50%, #000 99%, transparent 100%);
+  filter: drop-shadow(0 0 6px var(--glow-color));
+  opacity: 0.85;
+  animation: microPulse 2.4s ease-in-out infinite;
+}
+#musicBtn.muted.is-playing::after,
+#musicBtn.buffering.is-playing::after,
+#musicBtn.silence.is-playing::after,
+#musicBtn.music-disabled.is-playing::after { opacity: 0.25; animation-play-state: paused; }
+
+/* Music popover styling - reuse design tokens */
+.music-popover {
+  position: fixed;
+  background: var(--glass-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: 0 6px 20px var(--shadow-color);
+  padding: 0.75rem;
+  z-index: 1000;
+  min-width: 260px;
+  transition: transform 120ms ease, opacity 120ms ease, height 120ms ease;
+  transform-origin: bottom center;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr; /* header, transport, slider row, visualizer grows */
+  gap: 0.5rem;
+}
+.music-popover.sticky { pointer-events: auto; }
+.music-popover.above { transform-origin: bottom center; }
+.music-popover.below { transform-origin: top center; }
+.music-popover.open { opacity: 1; transform: scale(1); }
+.music-popover:not(.open) { opacity: 0; transform: scale(0.98); }
+
+.music-transport {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.music-volume {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.music-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.music-slider-container {
+  flex: 1;
+  position: relative;
+}
+
+.music-slider {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.music-fill {
+  height: 100%;
+  width: 45%;
+  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
+  border-radius: 4px;
+  box-shadow: 0 0 8px var(--glow-color);
+}
+
+.music-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  width: 16px;
+  height: 16px;
+  background: var(--glass-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--glow-color);
+}
+
+/* Progress slider inside visualizer */
+.music-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+
+.music-timecodes {
+  display: flex;
+  gap: 10px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  color: var(--text-color);
+}
+
+.music-progress-track {
+  position: relative;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.music-progress-fill {
+  position: absolute;
+  height: 100%;
+  left: 0;
+  top: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
+  box-shadow: 0 0 8px var(--glow-color);
+  border-radius: 4px 0 0 4px;
+}
+
+.music-progress-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  left: 0%;
+  background: var(--glass-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--glow-color);
+  transition: transform 80ms ease;
+}
+.music-progress-track.active .music-progress-handle,
+.music-progress-handle.active {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Music Visualizer - Sticky Glass Card */
+#music-visualizer.visualizer-container {
+  position: fixed;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(5.5rem, env(safe-area-inset-bottom)); /* above footer */
+  z-index: 80; /* below modals, above content */
+  background: var(--glass-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: 0 8px 30px var(--shadow-color), 0 0 15px var(--glow-color);
+  padding: 0.5rem 0.75rem;
+  min-width: 180px;
+  pointer-events: auto;
+}
+
+#music-visualizer .visualizer-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 42px;
+  width: 100%;
+}
+
+#music-visualizer .viz-bar {
+  width: 5px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--glow-color), var(--accent-color));
+  box-shadow: 0 0 6px var(--glow-color);
+  transform-origin: bottom center;
+  transform: scaleY(0.08);
+  will-change: transform;
+}
+
+/* State modifiers */
+#music-visualizer.is-paused .viz-bar,
+#music-visualizer.is-silence .viz-bar {
+  opacity: 0.55;
+  box-shadow: 0 0 3px var(--glow-color);
+}
+
+#music-visualizer.is-buffering .visualizer-bars {
+  filter: saturate(0.7) brightness(0.9);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #music-visualizer.visualizer-container {
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: max(5rem, env(safe-area-inset-bottom));
+    padding: 0.4rem 0.6rem;
+    min-width: 150px;
+  }
+  #music-visualizer .visualizer-bars {
+    height: 36px;
+    gap: 3px;
+  }
+  #music-visualizer .viz-bar {
+    width: 4px;
+  }
+}
+
+/* Ensure it doesn't overlap modals */
+.modal.active + #music-visualizer,
+.modal-overlay.active + #music-visualizer {
+  z-index: 80;
+}
+
 /* Floating Controls */
 .floating-controls {
   position: fixed;
@@ -2859,6 +3208,20 @@
 .floating-btn:hover svg {
   filter: drop-shadow(0 0 3px var(--glow-color));
 }
+
+/* Keyframes moved from inline style (ensure availability) */
+@keyframes vizBreath {
+  0%   { height: calc(16% + 26% * var(--music-amp, 0.45)); }
+  20%  { height: calc(34% + 18% * var(--music-amp, 0.45)); }
+  50%  { height: calc(72% + 10% * var(--music-amp, 0.45)); }
+  80%  { height: calc(36% + 20% * var(--music-amp, 0.45)); }
+  100% { height: calc(16% + 26% * var(--music-amp, 0.45)); }
+}
+@keyframes microPulse {
+  0%,100% { transform: translateZ(0) scaleY(1); }
+  50% { transform: translateZ(0) scaleY(1.2); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Make floating control icons 40% bigger */
 .floating-controls .btn--floating svg {
