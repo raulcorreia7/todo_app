@@ -13,7 +13,8 @@ class TodoApp {
     this.renderTimeout = null;
 
     this.CONFIG = {
-      maxTaskLength: 500,
+      maxTitleLength: 100,
+      maxDescriptionLength: 500,
       autoSaveDelay: 500,
       animationDuration: 300,
       debounceDelay: 50
@@ -33,14 +34,86 @@ class TodoApp {
     this.loadTasks();
     this.render();
     this.setupFooterVisibility();
+    
+    // Initialize volume button state
+    this.initializeVolumeButtonState();
+    
+    // Setup settings change listener for volume button
+    this.setupSettingsChangeListener();
 
     // Initialize statistics manager
     if (typeof statisticsManager !== 'undefined' && statisticsManager.isReady()) {
       console.log('Statistics manager initialized');
     }
 
+    // Initialize audio manager
+    if (typeof audioManager !== 'undefined' && audioManager.isInitialized) {
+      console.log('Audio manager initialized');
+    }
+
     this.isInitialized = true;
     console.log('Todo app initialized');
+  }
+
+  /**
+   * Refactor text using AI
+   * @param {string} text - The text to refactor
+   * @param {string} type - Type of text to refactor ('title' or 'description')
+   * @returns {Promise<string>} - The refactored text
+   */
+  async refactorTextWithAI(text, type = 'general') {
+    try {
+      // Check if AI features are enabled
+      if (!window.AI_CONFIG || !window.AI_CONFIG.enabled) {
+        console.warn('AI features are disabled');
+        return text;
+      }
+
+      // Check if we have API keys
+      const hasOpenAIKey = window.OPENAI_API_KEY && window.OPENAI_API_KEY.trim() !== '';
+      const hasAnthropicKey = window.ANTHROPIC_API_KEY && window.ANTHROPIC_API_KEY.trim() !== '';
+      
+      if (!hasOpenAIKey && !hasAnthropicKey) {
+        console.warn('No AI API keys configured');
+        return text;
+      }
+
+      // Show loading state
+      const refactorBtn = document.querySelector('.ai-refactor-btn');
+      if (refactorBtn) {
+        refactorBtn.classList.add('loading');
+      }
+
+      // Check if AI providers are available
+      if (typeof AIProviders !== 'undefined' && AIProviders.refactorText) {
+        // Use the AI provider factory
+        return await AIProviders.refactorText(text, window.AI_CONFIG.defaultStyle, { 
+          type,
+          maxTokens: window.AI_CONFIG.maxTokens,
+          temperature: window.AI_CONFIG.temperature
+        });
+      } else {
+        // Fallback to simple transformation
+        const refactored = text
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        
+        return refactored;
+      }
+    } catch (error) {
+      console.error('Error refactoring text:', error);
+      // Fallback: return a simple improvement
+      return text
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    } finally {
+      // Hide loading state
+      if (refactorBtn) {
+        refactorBtn.classList.remove('loading');
+      }
+    }
   }
 
   /**
@@ -136,10 +209,16 @@ class TodoApp {
           const newSoundEnabled = !settingsManager.soundEnabled;
           settingsManager.setSoundEnabled(newSoundEnabled);
 
-          // Update volume icon
+          // Update volume icon with animation
           const volumeIcon = document.getElementById('volumeIcon');
           if (volumeIcon) {
+            volumeIcon.classList.add('toggling');
             settingsManager.updateVolumeIcon(volumeIcon, newSoundEnabled);
+            
+            // Remove animation class after transition
+            setTimeout(() => {
+              volumeIcon.classList.remove('toggling');
+            }, 300);
           }
 
           // Play sound toggle sound
@@ -251,6 +330,9 @@ class TodoApp {
 
     // Character counters
     this.setupCharacterCounters();
+    
+    // AI refactor button listeners
+    this.setupAIRefactorListeners();
   }
 
   /**
@@ -306,15 +388,52 @@ class TodoApp {
   }
 
   /**
-   * Force immediate re-render regardless of dirty state
+   * Force a re-render of the task list
    */
   forceRender() {
-    this.isDirty = false;
-    if (this.renderTimeout) {
-      clearTimeout(this.renderTimeout);
-      this.renderTimeout = null;
+    if (typeof this.render === 'function') {
+      this.render();
+    } else {
+      console.error('forceRender: render method is not a function');
     }
-    this.render();
+  }
+
+  /**
+   * Update volume button state based on sound enabled flag
+   * @param {boolean} enabled - Whether sound is enabled
+   */
+  updateVolumeButtonState(enabled) {
+    const volumeBtn = document.getElementById('volumeBtn');
+    const volumeIcon = document.getElementById('volumeIcon');
+    
+    if (volumeBtn) {
+      // Add or remove disabled class based on sound state
+      if (enabled) {
+        volumeBtn.classList.remove('disabled');
+        volumeBtn.classList.add('enabled');
+        // Add a subtle pulse effect when sound is enabled
+        volumeBtn.style.animation = 'pulseGlow 2s ease-in-out infinite';
+      } else {
+        volumeBtn.classList.remove('enabled');
+        volumeBtn.classList.add('disabled');
+        // Remove animation when sound is disabled
+        volumeBtn.style.animation = 'none';
+      }
+    }
+    
+    // Update the icon to reflect the state
+    if (volumeIcon && settingsManager) {
+      settingsManager.updateVolumeIcon(volumeIcon, enabled);
+    }
+    
+    // Update the settings panel's sound toggle to match
+    const soundToggle = document.getElementById('soundToggle');
+    if (soundToggle) {
+      soundToggle.checked = enabled;
+    }
+    
+    // Store the current state for comparison
+    this.lastSoundEnabledState = enabled;
   }
 
   /**
@@ -323,23 +442,22 @@ class TodoApp {
   addTask() {
     const input = document.getElementById('newTaskInput');
     const descriptionInput = document.getElementById('newTaskDescription');
+    
     if (!input) return;
-
+    
     const text = input.value.trim();
     const description = descriptionInput ? descriptionInput.value.trim() : '';
-
-    if (!text) {
-      this.showValidationError('Task title is required');
+    
+    if (!text) return;
+    
+    // Validate lengths
+    if (text.length > this.CONFIG.maxTitleLength) {
+      this.showValidationError(`Task title too long! Maximum ${this.CONFIG.maxTitleLength} characters.`);
       return;
     }
 
-    if (text.length > this.CONFIG.maxTaskLength) {
-      this.showValidationError(`Task too long! Maximum ${this.CONFIG.maxTaskLength} characters.`);
-      return;
-    }
-
-    if (description.length > 500) {
-      this.showValidationError(`Description too long! Maximum 500 characters.`);
+    if (description.length > this.CONFIG.maxDescriptionLength) {
+      this.showValidationError(`Description too long! Maximum ${this.CONFIG.maxDescriptionLength} characters.`);
       return;
     }
 
@@ -418,11 +536,6 @@ class TodoApp {
     this.tasks = this.tasks.filter(t => t.id !== id);
     this.saveTasks();
 
-    // Play sound
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play('delete');
-    }
-
     // Update gamification
     if (typeof gamificationManager !== 'undefined') {
       gamificationManager.deleteTask();
@@ -434,12 +547,33 @@ class TodoApp {
    */
   startEdit(id) {
     this.editingTaskId = id;
+    
+    // Add animation class to the task item
+    const taskElement = document.querySelector(`[data-task-id="${id}"]`);
+    if (taskElement) {
+      taskElement.classList.add('edit-mode');
+      taskElement.classList.remove('exit-edit-mode');
+      
+      // Ensure AI refactor buttons are positioned correctly after animation
+      setTimeout(() => {
+        const refactorBtns = taskElement.querySelectorAll('.ai-refactor-btn');
+        refactorBtns.forEach(btn => {
+          btn.style.right = '1rem';
+          btn.style.top = '50%';
+          btn.style.transform = 'translateY(-50%)';
+        });
+      }, 400); // Match the animation duration
+    }
+    
     this.forceRender();
 
     const input = document.querySelector(`[data-edit-input="${id}"]`);
     if (input) {
-      input.focus();
-      input.select();
+      // Focus and select with a small delay to ensure the DOM is ready
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 100);
     }
   }
 
@@ -462,13 +596,13 @@ class TodoApp {
       return;
     }
 
-    if (newText.length > this.CONFIG.maxTaskLength) {
-      alert(`Task too long! Maximum ${this.CONFIG.maxTaskLength} characters.`);
+    if (newText.length > this.CONFIG.maxTitleLength) {
+      alert(`Task title too long! Maximum ${this.CONFIG.maxTitleLength} characters.`);
       return;
     }
 
-    if (newDescription.length > 500) {
-      alert(`Description too long! Maximum 500 characters.`);
+    if (newDescription.length > this.CONFIG.maxDescriptionLength) {
+      alert(`Description too long! Maximum ${this.CONFIG.maxDescriptionLength} characters.`);
       return;
     }
 
@@ -476,26 +610,57 @@ class TodoApp {
     task.description = newDescription;
     task.updatedAt = new Date().toISOString();
 
-    this.editingTaskId = null;
-    this.saveTasks();
-
-    // Play sound
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play('edit');
+    // Add exit animation class to the task item
+    const taskElement = document.querySelector(`[data-task-id="${id}"]`);
+    if (taskElement) {
+      taskElement.classList.add('exit-edit-mode');
+      taskElement.classList.remove('edit-mode');
     }
-
-    // Update gamification
-    if (typeof gamificationManager !== 'undefined') {
-      gamificationManager.editTask();
+    
+    // Find and animate the save button
+    const saveButton = document.querySelector(`.task-save[data-task-id="${id}"]`);
+    if (saveButton) {
+      saveButton.classList.add('success');
+      
+      // Remove the success class after the animation completes
+      setTimeout(() => {
+        saveButton.classList.remove('success');
+      }, 600);
     }
+    
+    // Wait for the animation to complete before clearing the editing state
+    setTimeout(() => {
+      this.editingTaskId = null;
+      this.saveTasks();
+
+      // Play sound
+      if (typeof audioManager !== 'undefined') {
+        audioManager.play('edit');
+      }
+
+      // Update gamification
+      if (typeof gamificationManager !== 'undefined') {
+        gamificationManager.editTask();
+      }
+    }, this.CONFIG.animationDuration);
   }
 
   /**
    * Cancel editing
    */
   cancelEdit() {
-    this.editingTaskId = null;
-    this.forceRender();
+    // Add exit animation class to the task item
+    const taskElement = document.querySelector(`[data-task-id="${this.editingTaskId}"]`);
+    if (taskElement) {
+      taskElement.classList.add('exit-edit-mode');
+      taskElement.classList.remove('edit-mode');
+    }
+    
+    // Wait for the animation to complete before clearing the editing state
+    setTimeout(() => {
+      this.editingTaskId = null;
+      this.forceRender();
+    }, this.CONFIG.animationDuration);
   }
 
   /**
@@ -508,6 +673,11 @@ class TodoApp {
     document.querySelectorAll('[data-filter]').forEach(button => {
       button.classList.toggle('active', button.dataset.filter === filter);
     });
+
+    // Play sound
+    if (typeof audioManager !== 'undefined') {
+      audioManager.play('settings');
+    }
 
     this.forceRender();
   }
@@ -551,11 +721,6 @@ class TodoApp {
 
     this.tasks = [];
     this.saveTasks();
-
-    // Play sound
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play('delete');
-    }
 
     // Update gamification
     if (typeof gamificationManager !== 'undefined') {
@@ -616,9 +781,9 @@ class TodoApp {
     const isEditing = this.editingTaskId === task.id;
 
     return `
-      <div class="task-item ${task.completed ? 'completed' : ''}" data-task-id="${task.id}">
+      <div class="task-item ${task.completed ? 'completed' : ''} ${isEditing ? 'edit-mode' : ''}" data-task-id="${task.id}">
         <div class="task-content">
-          <label class="task-checkbox">
+          <label class="task-checkbox luxury-checkbox" data-task-id="${task.id}">
             <input type="checkbox" ${task.completed ? 'checked' : ''} 
                    data-task-id="${task.id}">
             <span class="checkmark"></span>
@@ -628,27 +793,55 @@ class TodoApp {
             ${isEditing ? `
               <div class="task-edit">
                 <div class="edit-input-group">
-                  <input type="text" 
-                         class="task-edit-input luxury-input" 
-                         data-edit-input="${task.id}"
-                         value="${this.escapeHtml(task.text)}"
-                         maxlength="${this.CONFIG.maxTaskLength}"
-                         placeholder="Task title">
+                  <div class="ai-refactor-container">
+                    <input type="text" 
+                           class="task-edit-input luxury-input" 
+                           data-edit-input="${task.id}"
+                           value="${this.escapeHtml(task.text)}"
+                           maxlength="${this.CONFIG.maxTitleLength}"
+                           placeholder="Task title">
+                    <button class="ai-refactor-btn" 
+                            data-refactor-type="title" 
+                            data-task-id="${task.id}"
+                            title="Refactor with AI">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9.5 16.5L3 12l6.5-4.5L16 12l-6.5 4.5z"></path>
+                        <path d="M15 12l6.5-4.5L22 12l-6.5 4.5L15 12z"></path>
+                        <path d="M9.5 7.5L16 3l6.5 4.5"></path>
+                        <path d="M9.5 16.5L16 21l6.5-4.5"></path>
+                      </svg>
+                    </button>
+                  </div>
                   <div class="char-counter">
-                    <span class="char-count">${task.text.length}/${this.CONFIG.maxTaskLength}</span>
+                    <span class="char-count">${task.text.length}/${this.CONFIG.maxTitleLength}</span>
                   </div>
                 </div>
-                <textarea class="task-edit-description luxury-textarea" 
-                          data-edit-desc="${task.id}"
-                          maxlength="500"
-                          placeholder="Task description (optional)"
-                          rows="2">${this.escapeHtml(task.description)}</textarea>
-                <div class="char-counter">
-                  <span class="desc-count">${task.description.length}/500</span>
+                <div class="edit-input-group">
+                  <div class="ai-refactor-container">
+                    <textarea class="task-edit-description luxury-textarea" 
+                              data-edit-desc="${task.id}"
+                              maxlength="500"
+                              placeholder="Task description (optional)"
+                              rows="2">${this.escapeHtml(task.description)}</textarea>
+                    <button class="ai-refactor-btn" 
+                            data-refactor-type="description" 
+                            data-task-id="${task.id}"
+                            title="Refactor with AI">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9.5 16.5L3 12l6.5-4.5L16 12l-6.5 4.5z"></path>
+                        <path d="M15 12l6.5-4.5L22 12l-6.5 4.5L15 12z"></path>
+                        <path d="M9.5 7.5L16 3l6.5 4.5"></path>
+                        <path d="M9.5 16.5L16 21l6.5-4.5"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="char-counter">
+                    <span class="desc-count">${task.description.length}/500</span>
+                  </div>
                 </div>
                 <div class="edit-actions">
                   <button class="task-save btn btn--primary" data-task-id="${task.id}">Save</button>
-                  <button class="task-cancel btn btn--ghost">Cancel</button>
+                  <button class="task-cancel btn btn--ghost" data-task-id="${task.id}">Cancel</button>
                 </div>
               </div>
             ` : `
@@ -660,22 +853,29 @@ class TodoApp {
               </div>
             `}
           </div>
-        </div>
-        
-        <div class="task-actions">
-          <button class="task-edit-btn" data-task-id="${task.id}" title="Edit">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </button>
           
-          <button class="task-delete-btn" data-task-id="${task.id}" title="Delete">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-          </button>
+          <div class="task-actions">
+            <button class="task-edit-btn" data-task-id="${task.id}" title="Edit">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </button>
+            
+            <button class="task-ai-refactor-btn" data-task-id="${task.id}" title="Refactor with AI">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"></path>
+                <path d="M9 12l2 2 4-4"></path>
+              </svg>
+            </button>
+            
+            <button class="task-delete-btn" data-task-id="${task.id}" title="Delete">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -695,6 +895,175 @@ class TodoApp {
         taskEl.classList.remove('hover');
       });
     });
+  }
+
+  /**
+   * Setup AI refactor button listeners
+   */
+  setupAIRefactorListeners() {
+    document.addEventListener('click', (e) => {
+      // Handle AI refactor buttons
+      if (e.target.closest('.ai-refactor-btn')) {
+        e.preventDefault();
+        const button = e.target.closest('.ai-refactor-btn');
+        const taskId = button.dataset.taskId;
+        const refactorType = button.dataset.refactorType;
+        
+        if (taskId && refactorType) {
+          this.refactorWithAI(taskId, refactorType, button);
+        }
+      }
+      
+      // Handle task AI refactor button (for entire task)
+      if (e.target.closest('.task-ai-refactor-btn')) {
+        e.preventDefault();
+        const button = e.target.closest('.task-ai-refactor-btn');
+        const taskId = button.dataset.taskId;
+        
+        if (taskId) {
+          this.refactorEntireTaskWithAI(taskId, button);
+        }
+      }
+    });
+    
+    // Handle AI refactor button positioning when entering/exiting edit mode
+    document.addEventListener('animationend', (e) => {
+      if (e.target.classList.contains('task-item')) {
+        if (e.target.classList.contains('edit-mode')) {
+          // Position AI refactor buttons properly when entering edit mode
+          const refactorBtns = e.target.querySelectorAll('.ai-refactor-btn');
+          refactorBtns.forEach(btn => {
+            btn.style.right = '1rem';
+            btn.style.top = '50%';
+            btn.style.transform = 'translateY(-50%)';
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Refactor task text with AI
+   */
+  async refactorWithAI(taskId, type, button) {
+    const task = this.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Show charging effect
+    button.classList.add('charging');
+    
+    // Show loading state
+    button.classList.add('loading');
+    button.disabled = true;
+
+    try {
+      // Get the current text
+      const currentText = type === 'title' ? task.text : task.description;
+      
+      // Use the refactorTextWithAI method which can be customized for different AI providers
+      const refactoredText = await this.refactorTextWithAI(currentText);
+      
+      // Update the task with the refactored text
+      if (type === 'title') {
+        task.text = refactoredText;
+      } else {
+        task.description = refactoredText;
+      }
+      
+      task.updatedAt = new Date().toISOString();
+      
+      // Save and re-render
+      this.saveTasks();
+      this.forceRender();
+      
+      // Show success effect
+      button.classList.remove('loading', 'charging');
+      button.classList.add('success');
+      
+      // Focus on the updated field
+      setTimeout(() => {
+        const input = document.querySelector(`[data-edit-input="${taskId}"]`);
+        const textarea = document.querySelector(`[data-edit-desc="${taskId}"]`);
+        
+        if (type === 'title' && input) {
+          input.focus();
+          input.select();
+        } else if (type === 'description' && textarea) {
+          textarea.focus();
+          textarea.select();
+        }
+        
+        // Remove success effect after animation
+        setTimeout(() => {
+          button.classList.remove('success');
+        }, 600);
+      }, 100);
+      
+    } catch (error) {
+      console.error('AI refactor error:', error);
+      alert('Failed to refactor text with AI. Please try again later.');
+    } finally {
+      // Remove loading and charging states
+      button.classList.remove('loading', 'charging');
+      button.disabled = false;
+    }
+  }
+
+  /**
+   * Refactor entire task with AI
+   */
+  async refactorEntireTaskWithAI(taskId, button) {
+    const task = this.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Show loading state
+    button.classList.add('loading');
+    button.disabled = true;
+
+    try {
+      // Combine title and description for AI processing
+      const fullText = `${task.text}\n${task.description}`;
+      
+      // Use the refactorTextWithAI method
+      const refactoredText = await this.refactorTextWithAI(fullText, 'full');
+      
+      // Split the refactored text back into title and description
+      // Try to find a natural break point
+      const lines = refactoredText.split('\n').filter(line => line.trim());
+      
+      if (lines.length > 1) {
+        // If there are multiple lines, use the first as title and the rest as description
+        task.text = lines[0].trim();
+        task.description = lines.slice(1).join('\n').trim();
+      } else {
+        // If only one line, use it as title and leave description empty
+        task.text = lines[0].trim();
+        task.description = '';
+      }
+      
+      task.updatedAt = new Date().toISOString();
+      
+      // Save and re-render
+      this.saveTasks();
+      this.forceRender();
+      
+      // Focus on the title field
+      setTimeout(() => {
+        const input = document.querySelector(`[data-edit-input="${taskId}"]`);
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('AI refactor error:', error);
+      alert('Failed to refactor task with AI. Please try again later.');
+    } finally {
+      // Remove loading state
+      button.classList.remove('loading');
+      button.disabled = false;
+    }
   }
 
   /**
@@ -790,7 +1159,7 @@ class TodoApp {
         description: "Quia dolor sit amet consectetur adipisci velit sed quia non numquam."
       },
       {
-        text: "Ut enim ad minima veniam quis nostrum",
+        text: "Ut enim ad minima veniam nostrum",
         description: "Exercitationem ullam corporis suscipit laboriosam nisi ut aliquid ex ea commodi."
       },
       {
@@ -840,7 +1209,7 @@ class TodoApp {
     if (taskInput) {
       taskInput.addEventListener('input', (e) => {
         const length = e.target.value.length;
-        const maxLength = this.CONFIG.maxTaskLength;
+        const maxLength = this.CONFIG.maxTitleLength;
 
         // Update any visible counter
         const counter = e.target.parentElement.querySelector('.char-counter');
@@ -871,6 +1240,88 @@ class TodoApp {
         }
       });
     }
+  }
+
+  /**
+   * Update volume button visual state based on sound enabled status
+   * @param {boolean} isEnabled - Whether sound is enabled
+   */
+  updateVolumeButtonState(isEnabled) {
+    const volumeBtn = document.getElementById('volumeBtn');
+    const volumeIcon = document.getElementById('volumeIcon');
+    
+    if (volumeBtn) {
+      // Add or remove disabled class based on sound state
+      if (isEnabled) {
+        volumeBtn.classList.remove('disabled');
+        volumeBtn.classList.add('enabled');
+        // Add a subtle pulse effect when sound is enabled
+        volumeBtn.style.animation = 'pulseGlow 2s ease-in-out infinite';
+      } else {
+        volumeBtn.classList.remove('enabled');
+        volumeBtn.classList.add('disabled');
+        // Remove animation when sound is disabled
+        volumeBtn.style.animation = 'none';
+      }
+    }
+    
+    // Update the icon to reflect the state
+    if (volumeIcon && settingsManager) {
+      settingsManager.updateVolumeIcon(volumeIcon, isEnabled);
+    }
+    
+    // Update the settings panel's sound toggle to match
+    const soundToggle = document.getElementById('soundToggle');
+    if (soundToggle) {
+      soundToggle.checked = isEnabled;
+    }
+    
+    // Store the current state for comparison
+    this.lastSoundEnabledState = isEnabled;
+  }
+
+  /**
+   * Initialize volume button state based on current settings
+   */
+  initializeVolumeButtonState() {
+    if (typeof settingsManager !== 'undefined') {
+      this.updateVolumeButtonState(settingsManager.soundEnabled);
+      // Store initial state for comparison
+      this.lastSoundEnabledState = settingsManager.soundEnabled;
+    }
+  }
+
+  /**
+   * Listen for settings changes to update volume button state
+   */
+  setupSettingsChangeListener() {
+    if (typeof settingsManager === 'undefined') return;
+    
+    // Store the last known state
+    this.lastSoundEnabledState = settingsManager.soundEnabled;
+    
+    // Listen for settings changes via the event bus
+    if (typeof bus !== 'undefined') {
+      bus.addEventListener('settingsChanged', () => {
+        // Update volume button state whenever settings change
+        this.updateVolumeButtonState(settingsManager.soundEnabled);
+        this.lastSoundEnabledState = settingsManager.soundEnabled;
+      });
+    }
+    
+    // Also listen for storage changes as a backup
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'luxury-todo-settings') {
+        try {
+          const settings = JSON.parse(e.newValue);
+          // Update volume button state whenever settings change
+          this.updateVolumeButtonState(settings.soundEnabled);
+          this.lastSoundEnabledState = settings.soundEnabled;
+        } catch (error) {
+          console.warn('Failed to parse settings from storage:', error);
+        }
+      }
+    });
   }
 
   /**

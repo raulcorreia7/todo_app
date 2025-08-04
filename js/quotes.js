@@ -53,6 +53,7 @@ class QuoteManager {
     ];
     
     this.currentQuote = null;
+    this.nextQuote = null; // Preloaded next quote
     this.lastQuoteDate = null;
     
     this.init();
@@ -64,7 +65,9 @@ class QuoteManager {
   init() {
     this.loadQuoteData();
     this.updateDailyQuote();
+    this.preloadNextQuote();
     this.startQuoteRotation();
+    this.setupQuoteClickHandler();
   }
 
   /**
@@ -123,13 +126,45 @@ class QuoteManager {
   }
 
   /**
-   * Start quote rotation (daily)
+   * Start quote rotation (15 seconds with daily reset)
    */
   startQuoteRotation() {
-    // Check for new quote every hour
+    // Check if it's a new day and set daily quote
+    this.updateDailyQuote();
+    
+    // Start 15-second rotation for subtle quote changes
     setInterval(() => {
-      this.updateDailyQuote();
-    }, 3600000); // 1 hour
+      this.rotateToNewQuote();
+    }, 15000); // 15 seconds
+  }
+
+  /**
+   * Rotate to a new quote (subtle change)
+   */
+  rotateToNewQuote() {
+    const quoteElement = document.querySelector('.daily-quote');
+    if (!quoteElement) return;
+    
+    // Add changing class for fade effect
+    quoteElement.classList.add('changing');
+    
+    // After fade out, change quote and fade back in
+    setTimeout(() => {
+      // Select a different quote from the array
+      let newQuote;
+      do {
+        const randomIndex = Math.floor(Math.random() * this.quotes.length);
+        newQuote = this.quotes[randomIndex];
+      } while (newQuote === this.currentQuote && this.quotes.length > 1);
+      
+      this.currentQuote = newQuote;
+      this.displayQuote();
+      
+      // Remove changing class to fade back in
+      setTimeout(() => {
+        quoteElement.classList.remove('changing');
+      }, 50);
+    }, 500); // Match the CSS transition duration
   }
 
   /**
@@ -147,6 +182,66 @@ class QuoteManager {
     this.lastQuoteDate = new Date().toDateString();
     this.saveQuoteData();
     this.displayQuote();
+  }
+
+  /**
+   * Preload the next quote for instant switching
+   */
+  preloadNextQuote() {
+    let newQuote;
+    do {
+      const randomIndex = Math.floor(Math.random() * this.quotes.length);
+      newQuote = this.quotes[randomIndex];
+    } while (newQuote === this.currentQuote && this.quotes.length > 1);
+    
+    this.nextQuote = newQuote;
+  }
+
+  /**
+   * Setup click handler for the quote element
+   */
+  setupQuoteClickHandler() {
+    const quoteElement = document.querySelector('.daily-quote');
+    if (quoteElement) {
+      quoteElement.addEventListener('click', () => {
+        this.instantQuoteChange();
+      });
+    }
+  }
+
+  /**
+   * Instantly change quote when clicked
+   */
+  instantQuoteChange() {
+    const quoteElement = document.querySelector('.daily-quote');
+    if (!quoteElement || !this.nextQuote) return;
+    
+    // Use the preloaded quote if available
+    if (this.nextQuote) {
+      this.currentQuote = this.nextQuote;
+      this.nextQuote = null; // Clear the preloaded quote
+    } else {
+      // Fallback to selecting a new quote
+      let newQuote;
+      do {
+        const randomIndex = Math.floor(Math.random() * this.quotes.length);
+        newQuote = this.quotes[randomIndex];
+      } while (newQuote === this.currentQuote && this.quotes.length > 1);
+      
+      this.currentQuote = newQuote;
+    }
+    
+    // Preload the next quote for future clicks
+    this.preloadNextQuote();
+    
+    // Update display with instant transition
+    quoteElement.style.opacity = '0';
+    
+    // Use requestAnimationFrame for smoother transition
+    requestAnimationFrame(() => {
+      this.displayQuote();
+      quoteElement.style.opacity = '1';
+    });
   }
 }
 
@@ -179,6 +274,8 @@ if (typeof StorageManager !== 'undefined') {
 
 // Create global quote manager
 const quoteManager = new QuoteManager();
+
+// Remove test button functionality (no longer needed)
 
 // Export for debugging
 if (window.DEV) {

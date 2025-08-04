@@ -185,13 +185,13 @@ class EventBus {
 // Create global event bus
 const bus = new EventBus();
 
-// Initialize bus when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    bus.init();
-    bus.processQueue();
-});
+// Initialize bus immediately
+bus.init();
 
 // Export for debugging
 if (window.DEV) {
     window.bus = bus;
 }
+
+// Process any queued events immediately
+bus.processQueue();

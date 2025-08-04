@@ -84,3 +84,104 @@
 * {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+/* Edit Mode Animations - Removed to prevent twitching */
+/* These animations have been removed to prevent twitching during edit mode transitions */
+
+/* Fade in/out for smooth transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* AI refactor button animation */
+@keyframes aiRefactorPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+.task-ai-refactor-btn:hover {
+  animation: aiRefactorPulse 1.5s infinite;
+}
+
+/* Enhanced Task Completion/Undo Animations - Individual Task Focus */
+
+
+/* Task completion animations */
+@keyframes completeTask {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.99);
+    opacity: 1;
+  }
+}
+
+@keyframes uncompleteTask {
+  0% {
+    transform: scale(0.99);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.01);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* Volume button pulse glow when sound is enabled */
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(46, 213, 115, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(46, 213, 115, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(46, 213, 115, 0.3);
+  }
+}

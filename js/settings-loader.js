@@ -234,7 +234,7 @@ class SettingsLoader {
     return {
       theme: 'midnight',
       font: 'inter',
-      soundEnabled: false,
+      soundEnabled: true,
       volume: 50,
       animations: true
     };

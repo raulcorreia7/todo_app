@@ -16,12 +16,7 @@ class AudioManager {
     // Pitch variation properties for gamified audio
     this.currentStep = 0;
     this.maxSteps = 10; // Increased to 10 steps for more gradual progression
-    this.pitchVariationRange = 5.0; // Increased for more dramatic climb
     this.rewardSoundEnabled = true;
-
-    // Octave progression for dopamine hit (C1 to C5)
-    this.startOctave = 1; // C1 (32.70 Hz)
-    this.endOctave = 5;   // C5 (523.25 Hz) - Extended range for more dramatic progression
 
     // Harmonic evolution properties
     this.harmonicLayers = 2; // Number of harmonic layers to add
@@ -51,14 +46,26 @@ class AudioManager {
       'complete': 220,
       'edit': 250,
       'delete': 150,
-      'settings': 80,
+      'settings': 180,
       'palette': 180,
-      'progress': 120,
+      'progress': 180,
       'victory': 220,
-      'font': 120,
-      'volume': 350,
-      'toggle': 250
+      'font': 180,
+      'volume': 180,
+      'toggle': 180
     };
+
+    // Settings panel sound (subtle and consistent)
+    this.settingsSound = {
+      frequency: 180,
+      type: 'sine',
+      duration: 0.15,
+      volume: 0.08
+    };
+
+    // Random pitch variation parameters
+    this.randomPitchRange = 0.1; // ±10% variation for non-task sounds
+    this.randomPitchEnabled = true;
 
     this.init();
   }
@@ -66,7 +73,7 @@ class AudioManager {
   /**
    * Initialize audio system
    */
-  async init() {
+  init() {
     try {
       // Create audio context but don't resume it yet
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -77,28 +84,8 @@ class AudioManager {
       this.isInitialized = true;
       console.log('Audio manager initialized');
 
-      // Try to initialize audio context immediately
-      if (this.audioContext.state === 'suspended') {
-        // Add a user gesture listener to resume the audio context
-        const resumeAudio = () => {
-          this.audioContext.resume().then(() => {
-            this.audioInitialized = true;
-            console.log('Audio context initialized successfully');
-            // Remove the event listener after first use
-            document.removeEventListener('click', resumeAudio);
-            document.removeEventListener('touchstart', resumeAudio);
-          }).catch(error => {
-            console.warn('Failed to initialize audio context:', error);
-          });
-        };
-
-        // Listen for user gesture
-        document.addEventListener('click', resumeAudio, { once: true });
-        document.addEventListener('touchstart', resumeAudio, { once: true });
-      } else {
-        this.audioInitialized = true;
-        console.log('Audio context initialized successfully');
-      }
+      // Audio context will be initialized on first user interaction
+      this.audioInitialized = false;
     } catch (error) {
       console.warn('Audio initialization failed:', error);
       this.enabled = false;
@@ -185,6 +172,20 @@ class AudioManager {
   }
 
   /**
+   * Get random pitch variation for subtle sounds
+   * @param {number} baseFrequency - The base frequency of the sound
+   * @returns {number} The frequency with random variation
+   */
+  getRandomPitchVariation(baseFrequency) {
+    if (!this.randomPitchEnabled) {
+      return baseFrequency;
+    }
+
+    const randomFactor = 1 + (Math.random() - 0.5) * 2 * this.randomPitchRange;
+    return baseFrequency * randomFactor;
+  }
+
+  /**
    * Increment the step counter and reset if needed
    */
   incrementStep() {
@@ -207,6 +208,11 @@ class AudioManager {
   async play(soundName) {
     // Don't play sounds for "test" button
     if (soundName === 'test') return;
+
+    // Initialize audio on first user interaction
+    if (!this.audioInitialized) {
+      await this.initializeAudio();
+    }
 
     if (!this.isReady()) {
       console.warn('Audio not ready. Please initialize audio first.');
@@ -255,33 +261,9 @@ class AudioManager {
         // Increment the step for this specific sound
         this.soundSteps[soundName] = (soundStep + 1) % this.maxSteps;
       } else {
-        // All other sounds are simple basic sounds without scaling
-        switch (soundName) {
-          case 'settings':
-            this.playSettingsOpen();
-            break;
-          case 'palette':
-            this.playPaletteChange();
-            break;
-          case 'progress':
-            this.playProgressOpen();
-            break;
-          case 'victory':
-            this.playVictory();
-            break;
-          case 'font':
-            this.playFontChange();
-            break;
-          case 'volume':
-            this.playVolumeAdjust();
-            break;
-          case 'toggle':
-            this.playSoundToggle();
-            break;
-          default:
-            // Use font change sound for all other interactions
-            this.playFontChange();
-        }
+        // All non-task sounds use the same subtle settings sound
+        const variedFrequency = this.getRandomPitchVariation(this.settingsSound.frequency);
+        this.playSettingsSound(variedFrequency);
       }
     } catch (error) {
       console.warn('Failed to play sound:', error);
@@ -446,9 +428,12 @@ class AudioManager {
   }
 
   /**
-   * Play settings open sound (silk unfold) - simple basic sound
+   * Play settings sound (subtle and consistent for all settings actions)
    */
-  playSettingsOpen() {
+  playSettingsSound(frequency) {
+    const now = this.audioContext.currentTime;
+
+    // Main oscillator
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
     const filter = this.audioContext.createBiquadFilter();
@@ -457,20 +442,20 @@ class AudioManager {
     filter.connect(gainNode);
     gainNode.connect(this.masterGain);
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(120, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(180, this.audioContext.currentTime + 1);
+    oscillator.type = this.settingsSound.type;
+    oscillator.frequency.setValueAtTime(frequency, now);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.1, now + this.settingsSound.duration);
 
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(300, this.audioContext.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 1);
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(frequency * 0.8, now);
+    filter.Q.setValueAtTime(1, now);
 
-    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 1);
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(this.settingsSound.volume, now + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + this.settingsSound.duration);
 
-    oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 1);
+    oscillator.start(now);
+    oscillator.stop(now + this.settingsSound.duration);
   }
 
   /**
@@ -634,98 +619,52 @@ class AudioManager {
   playRewardSound() {
     const now = this.audioContext.currentTime;
 
-    // Create a triumphant sound with multiple oscillators
-    // Using C4 to C6 range for a more satisfying but quicker dopamine hit
-    const frequencies = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+    // Create a subtle but satisfying reward sound
+    // Using a gentle ascending arpeggio
+    const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5
 
     frequencies.forEach((freq, index) => {
       const oscillator = this.audioContext.createOscillator();
       const gainNode = this.audioContext.createGain();
       const filter = this.audioContext.createBiquadFilter();
 
-      // Morph between sine and triangle based on step progression
-      oscillator.type = this.waveformMorphFactor > 0.5 ? 'triangle' : 'sine';
-      oscillator.frequency.setValueAtTime(freq, now + index * 0.1);
+      // Use sine wave for a pure, gentle sound
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(freq, now + index * 0.08);
 
       filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1000, now);
-      filter.Q.setValueAtTime(5, now);
+      filter.frequency.setValueAtTime(1200, now);
+      filter.Q.setValueAtTime(3, now);
 
-      gainNode.gain.setValueAtTime(0, now + index * 0.1);
-      gainNode.gain.linearRampToValueAtTime(0.2, now + index * 0.1 + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, now + index * 0.1 + 0.8);
+      gainNode.gain.setValueAtTime(0, now + index * 0.08);
+      gainNode.gain.linearRampToValueAtTime(0.08, now + index * 0.08 + 0.03);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.4);
 
       oscillator.connect(filter);
       filter.connect(gainNode);
       gainNode.connect(this.masterGain);
 
-      oscillator.start(now + index * 0.1);
-      oscillator.stop(now + index * 0.1 + 0.8);
+      oscillator.start(now + index * 0.08);
+      oscillator.stop(now + index * 0.08 + 0.4);
     });
 
-    // Add harmonic layers for richness
-    for (let i = 0; i < this.harmonicLayers; i++) {
-      const harmonicOsc = this.audioContext.createOscillator();
-      const harmonicGain = this.audioContext.createGain();
-
-      // Higher harmonics with decreasing volume
-      const harmonicFreq = 523.25 * (2 + (i * 0.5)); // Use C5 as base
-      harmonicOsc.type = 'sine';
-      harmonicOsc.frequency.setValueAtTime(harmonicFreq, now);
-
-      // Lower volume for harmonics
-      const harmonicVolume = 0.05 / (i + 1);
-      harmonicGain.gain.setValueAtTime(0, now);
-      harmonicGain.gain.linearRampToValueAtTime(harmonicVolume, now + 0.2);
-      harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-
-      harmonicOsc.connect(harmonicGain);
-      harmonicGain.connect(this.masterGain);
-
-      harmonicOsc.start(now);
-      harmonicOsc.stop(now + 0.8);
-    }
-
-    // Add a subtle "shimmer" effect with morphing
+    // Add a very subtle "shimmer" effect
     const shimmerOsc = this.audioContext.createOscillator();
     const shimmerGain = this.audioContext.createGain();
 
-    shimmerOsc.type = this.waveformMorphFactor > 0.5 ? 'triangle' : 'sine';
-    shimmerOsc.frequency.setValueAtTime(2000, now);
-    shimmerOsc.frequency.exponentialRampToValueAtTime(4000, now + 0.5);
+    shimmerOsc.type = 'sine';
+    shimmerOsc.frequency.setValueAtTime(1500, now);
+    shimmerOsc.frequency.exponentialRampToValueAtTime(2500, now + 0.3);
 
     shimmerGain.gain.setValueAtTime(0, now);
-    shimmerGain.gain.linearRampToValueAtTime(0.05, now + 0.1);
-    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    shimmerGain.gain.linearRampToValueAtTime(0.02, now + 0.05);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
 
     shimmerOsc.connect(shimmerGain);
     shimmerGain.connect(this.masterGain);
 
     shimmerOsc.start(now);
-    shimmerOsc.stop(now + 0.5);
-
-    // Add extra harmonic layers for the reward sound
-    for (let i = 0; i < this.harmonicLayers + 1; i++) {
-      const harmonicOsc = this.audioContext.createOscillator();
-      const harmonicGain = this.audioContext.createGain();
-
-      // Higher harmonics with decreasing volume
-      const harmonicFreq = 523.25 * (2 + (i * 0.5)); // Use C5 as base
-      harmonicOsc.type = 'sine';
-      harmonicOsc.frequency.setValueAtTime(harmonicFreq, now);
-
-      // Lower volume for harmonics
-      const harmonicVolume = 0.03 / (i + 1);
-      harmonicGain.gain.setValueAtTime(0, now);
-      harmonicGain.gain.linearRampToValueAtTime(harmonicVolume, now + 0.3);
-      harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 1);
-
-      harmonicOsc.connect(harmonicGain);
-      harmonicGain.connect(this.masterGain);
-
-      harmonicOsc.start(now);
-      harmonicOsc.stop(now + 1);
-    }
+    shimmerOsc.stop(now + 0.3);
   }
 
   /**

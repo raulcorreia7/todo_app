@@ -152,13 +152,13 @@ class ThemeManager {
             },
             lavender: {
                 name: 'Lavender',
-                primary: '#e6e6fa',
-                secondary: '#d8bfd8',
+                primary: '#f5f3ff',
+                secondary: '#e9d5ff',
                 accent: '#a78bfa',
                 text: '#4b0082',
                 glow: '#a78bfa',
                 shadow: 'rgba(167, 139, 250, 0.3)',
-                glass: 'rgba(230, 230, 250, 0.8)',
+                glass: 'rgba(245, 243, 255, 0.8)',
                 border: 'rgba(167, 139, 250, 0.2)',
                 tags: ['light', 'cool']
             },
@@ -190,7 +190,7 @@ class ThemeManager {
 
         this.signatureThemes = Object.keys(this.themes);
 
-        this.currentTheme = 'midnight';
+        this.currentTheme = 'emerald';
         this.isInitialized = false;
         this.init();
     }
@@ -230,7 +230,7 @@ class ThemeManager {
     loadTheme() {
         if (typeof settingsManager !== 'undefined' && settingsManager.isReady()) {
             const settings = settingsManager.getSettings();
-            this.currentTheme = settings.theme || 'midnight';
+            this.currentTheme = settings.theme || 'emerald';
         }
     }
 
@@ -449,6 +449,65 @@ class ThemeManager {
         if (!theme) return false;
 
         return this.getColorBrightness(theme.primary) > 128;
+    }
+
+    /**
+     * Get color temperature (warm vs cool) based on RGB values
+     * @param {string} hexColor - Hex color string
+     * @returns {string} 'warm' or 'cool'
+     */
+    getColorTemperature(hexColor) {
+        // Remove # if present
+        hexColor = hexColor.replace('#', '');
+        
+        // Convert to RGB
+        const r = parseInt(hexColor.substr(0, 2), 16);
+        const g = parseInt(hexColor.substr(2, 2), 16);
+        const b = parseInt(hexColor.substr(4, 2), 16);
+        
+        // Calculate color temperature using RGB ratios
+        // Higher red values = warmer, higher blue values = cooler
+        const warmth = (r * 0.7) - (b * 0.3);
+        
+        return warmth > 0 ? 'warm' : 'cool';
+    }
+
+    /**
+     * Sort themes intelligently by type and color temperature
+     * @returns {Array} Array of sorted theme names
+     */
+    getSortedThemes() {
+        const themeNames = Object.keys(this.themes);
+        
+        // Sort themes by:
+        // 1. Dark themes first, then light themes
+        // 2. Within each group, warm themes first, then cool themes
+        // 3. Alphabetically as a final tiebreaker
+        return themeNames.sort((a, b) => {
+            const themeA = this.themes[a];
+            const themeB = this.themes[b];
+            
+            // Determine if themes are dark or light
+            const isADark = this.getColorBrightness(themeA.primary) <= 128;
+            const isBDark = this.getColorBrightness(themeB.primary) <= 128;
+            
+            // Sort by darkness (dark first)
+            if (isADark !== isBDark) {
+                return isADark ? -1 : 1;
+            }
+            
+            // If both are dark or both are light, sort by color temperature
+            const tempA = this.getColorTemperature(themeA.accent);
+            const tempB = this.getColorTemperature(themeB.accent);
+            
+            if (tempA !== tempB) {
+                // Warm themes first
+                return tempA === 'warm' ? -1 : 1;
+            }
+            
+            // If darkness and temperature are the same, sort alphabetically
+            return themeA.name.localeCompare(themeB.name);
+        });
     }
 }
 

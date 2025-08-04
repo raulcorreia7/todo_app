@@ -234,7 +234,7 @@ class StorageManager {
      */
     getDefaultSettings() {
         return {
-            theme: 'midnight',
+            theme: 'emerald',
             darkMode: true,
             soundEnabled: false,
             volume: 50,

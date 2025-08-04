@@ -50,7 +50,7 @@
   </style>
 </head>
 
-<body class="font-inter loading-theme">
+<body class="font-inter theme-emerald loading-theme">
   <!-- Background -->
   <div class="background-container">
     <div class="nebula-bg"></div>
@@ -63,6 +63,7 @@
     <header class="app-header">
       <div class="header-content">
         <h1 class="app-title">Luxury Todo</h1>
+        <p class="daily-quote" title="Click to change quote">Loading daily quote...</p>
       </div>
     </header>
 
@@ -125,7 +126,7 @@
   </div>
 
 
-  <!-- Settings Panel -->
+  <!-- Settings Panel (static structure, sections enhanced dynamically by JS) -->
   <div id="settingsPanel" class="settings-panel">
     <div class="settings-header">
       <h3>Settings</h3>
@@ -133,98 +134,47 @@
     </div>
 
     <div class="settings-content">
-      <!-- Sound Controls -->
-      <div class="settings-section">
-        <h4>Sound</h4>
-        <div class="volume-control">
-          <label>
-            <input type="checkbox" id="soundToggle" checked>
-            Enable Sounds
-          </label>
-          <div class="volume-slider-container">
-            <div class="volume-slider" id="volumeSlider">
-              <div class="volume-fill" id="volumeFill"></div>
-              <div class="volume-handle" id="volumeHandle"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Font Selection -->
-      <div class="settings-section">
+      <!-- Font Section -->
+      <div class="settings-section" id="fontSection">
         <h4>Font</h4>
-        <div class="font-selector">
-          <button class="font-option active" data-font="inter">Inter</button>
+        <div class="font-selector" id="fontSelector">
+          <!-- Dynamically enhanced by js/settings.js -->
+          <button class="font-option" data-font="inter">Inter</button>
           <button class="font-option" data-font="playfair">Playfair</button>
           <button class="font-option" data-font="sf">SF Pro</button>
         </div>
       </div>
 
-      <!-- Theme Section -->
-      <div class="settings-section">
+      <!-- Sound Section -->
+      <div class="settings-section" id="soundSection">
+        <h4>Sound</h4>
+        <div class="volume-control">
+          <label class="settings-checkbox">
+            <input type="checkbox" id="soundToggle" />
+            <span class="checkmark" aria-hidden="true"></span>
+          </label>
+          <div class="volume-slider-container">
+            <div class="volume-fill" id="volumeFill" style="width: 50%"></div>
+            <div class="volume-slider" id="volumeSlider" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
+            <div class="volume-handle" id="volumeHandle" style="left: 50%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Utilities Section (Reset to Defaults injected/enhanced by JS) -->
+      <div class="settings-section" id="utilitiesSection">
+        <h4>Utilities</h4>
+        <div id="utilitiesContainer">
+          <!-- Reset to Defaults button will be injected here by js/settings.js with custom modal -->
+        </div>
+      </div>
+
+      <!-- Theme Section (at bottom) -->
+      <div class="settings-section" id="themeSection">
         <h4>Theme</h4>
         <div class="theme-selector">
-          <div class="theme-cards-container">
-            <div class="theme-card" data-theme="midnight">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #1a1a2e, #0f3460);"></div>
-              <div class="theme-name">Midnight</div>
-            </div>
-            <div class="theme-card" data-theme="ivory">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #f8f9fa, #dee2e6);"></div>
-              <div class="theme-name">Ivory</div>
-            </div>
-            <div class="theme-card" data-theme="champagne">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #fff8e7, #daa520);"></div>
-              <div class="theme-name">Champagne</div>
-            </div>
-            <div class="theme-card" data-theme="graphite">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #2c2c2c, #666666);"></div>
-              <div class="theme-name">Graphite</div>
-            </div>
-            <div class="theme-card" data-theme="aurora">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #0a0a0a, #00ff88);"></div>
-              <div class="theme-name">Aurora</div>
-            </div>
-            <div class="theme-card" data-theme="arcticSky">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #e6f2ff, #4da6ff);"></div>
-              <div class="theme-name">Arctic Sky</div>
-            </div>
-            <div class="theme-card" data-theme="emerald">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #0c4a3e, #2ecc71);"></div>
-              <div class="theme-name">Emerald</div>
-            </div>
-            <div class="theme-card" data-theme="sakura">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #fff5f5, #ff69b4);"></div>
-              <div class="theme-name">Sakura</div>
-            </div>
-            <div class="theme-card" data-theme="pearl">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #f8f8ff, #d4af37);"></div>
-              <div class="theme-name">Pearl</div>
-            </div>
-            <div class="theme-card" data-theme="mint">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #f0fff0, #2dd4bf);"></div>
-              <div class="theme-name">Mint</div>
-            </div>
-            <div class="theme-card" data-theme="coral">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #fff0f5, #ff7f50);"></div>
-              <div class="theme-name">Coral</div>
-            </div>
-            <div class="theme-card" data-theme="frost">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #f0f8ff, #22d3ee);"></div>
-              <div class="theme-name">Frost</div>
-            </div>
-            <div class="theme-card" data-theme="lavender">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #e6e6fa, #a78bfa);"></div>
-              <div class="theme-name">Lavender</div>
-            </div>
-            <div class="theme-card" data-theme="amethyst">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #4b0082, #9b59b6);"></div>
-              <div class="theme-name">Amethyst</div>
-            </div>
-            <div class="theme-card" data-theme="burgundy">
-              <div class="theme-preview" style="background: linear-gradient(135deg, #800020, #dc143c);"></div>
-              <div class="theme-name">Burgundy</div>
-            </div>
+          <div class="theme-cards-container" id="themeCardsContainer">
+            <!-- Theme cards dynamically rendered by js/settings.js -->
           </div>
         </div>
       </div>
@@ -339,6 +289,9 @@
   <!-- Version Script -->
   <script src="js/version.js"></script>
 
+  <!-- Environment Configuration -->
+  <script src="js/environment.js"></script>
+
   <!-- Scripts -->
   <script src="js/bus.js"></script>
   <script src="js/storage.js"></script>
@@ -348,6 +301,10 @@
   <script src="js/achievement-definitions.js"></script>
   <script src="js/gamification.js"></script>
   <script src="js/statistics.js"></script>
+
+  <!-- Ensure modal-manager is available before settings.js so the custom confirm is ready -->
+  <script src="js/modal-manager.js"></script>
+
   <script src="js/settings.js"></script>
   <script src="js/settings-loader.js"></script>
   <script src="js/quotes.js"></script>
@@ -355,7 +312,7 @@
   <script src="js/daily-summary.js"></script>
   <script src="js/swipe-gestures.js"></script>
   <script src="js/nebula-parallax.js"></script>
-  <script src="js/modal-manager.js"></script>
+  <script src="js/ai-providers.js"></script>
   <script src="js/app.js"></script>
 </body>
 

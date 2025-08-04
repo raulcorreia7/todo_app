@@ -1,105 +1,141 @@
-# Luxury Todo - Local Server Setup
+# Luxury Todo App
 
-A simple, no-frills local server for testing the Luxury Todo app with hot reload and mobile access support.
+A premium todo application with AI-powered text refactoring, glass-morphism design, and modern UI/UX.
 
 ## Features
 
-- 🔥 **Hot Reload**: Automatically refreshes the browser when files change
-- 📱 **Mobile Access**: Access the app from your phone on the same network
-- 🚀 **Minimal**: Uses `serve` - a lightweight, production-ready static server
-- 🌐 **PWA Ready**: Proper headers for Progressive Web App functionality
-- 🎯 **No Dependencies**: Just Node.js and npm
+- **AI Text Refactoring**: Enhance your task titles and descriptions with AI-powered suggestions
+- **Glass-morphism Design**: Modern, premium visual design with blur effects and transparency
+- **Responsive Layout**: Works seamlessly on desktop and mobile devices
+- **Task Management**: Create, edit, complete, and delete tasks with intuitive controls
+- **Theme System**: Multiple color themes to personalize your experience
+- **Statistics**: Track your productivity with visual progress indicators
+- **Gamification**: Achievements and rewards to motivate task completion
+- **Sound Effects**: Premium audio feedback for interactions
+- **Keyboard Shortcuts**: Efficient keyboard navigation for power users
 
-## Quick Start
+## AI Integration
 
-```bash
-# Install dependencies and start server (recommended)
-npm start
+The app includes a simple HTTP-based AI provider system that supports multiple AI services through standard API calls:
 
-# Or for development
-npm run dev
+### Supported AI Providers
+
+1. **OpenAI GPT-3.5/GPT-4**
+   - Requires API key from OpenAI
+   - High-quality text generation
+
+2. **Generic HTTP API**
+   - Works with any AI service that has a REST API
+   - Customizable request/response handling
+
+3. **Simple Rule-based Provider**
+   - Built-in text improvements
+   - No external dependencies
+   - Always available
+
+### Setting Up AI Providers
+
+To use AI refactoring, you need to configure your preferred provider:
+
+1. **For OpenAI**:
+   ```javascript
+   // Add this to your app initialization
+   AIProviders.aiProviderFactory.registerProvider('openai', new AIProviders.OpenAIProvider({
+     apiKey: 'your-openai-api-key'
+   }));
+   ```
+
+2. **For Custom API**:
+   ```javascript
+   AIProviders.aiProviderFactory.registerProvider('custom', new AIProviders.GenericHTTPProvider({
+     apiEndpoint: 'https://your-api-endpoint.com/refactor',
+     apiKey: 'your-api-key', // optional
+     preparePayload: (text, type, options) => {
+       return {
+         text: text,
+         type: type,
+         // your custom payload structure
+       };
+     },
+     extractResponse: (data) => {
+       // Extract the refactored text from your API's response
+       return data.refactoredText;
+     }
+   }));
+   ```
+
+### Using AI Refactoring
+
+1. Click the edit button on any task
+2. Click the AI refactor icon (diamond shape) next to the title or description
+3. The app will send your text to the configured AI provider
+4. The refactored text will automatically replace your original text
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/luxury-todo-app.git
+   cd luxury-todo-app
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser and navigate to `http://localhost:8080`
+
+## Project Structure
+
+```
+luxury-todo-app/
+├── index.html              # Main HTML file
+├── styles/                 # CSS styles
+│   ├── luxury-base.css     # Base styles and variables
+│   ├── luxury-components.css # Component styles
+│   ├── luxury-responsive.css # Responsive styles
+│   └── ...
+├── js/                     # JavaScript files
+│   ├── app.js              # Main application logic
+│   ├── ai-providers.js     # AI provider implementations
+│   ├── storage.js          # Local storage management
+│   ├── themes.js           # Theme management
+│   └── ...
+├── scripts/                # Utility scripts
+├── test/                   # Test files
+└── README.md               # This file
 ```
 
-## Access URLs
+## Browser Support
 
-Once the server is running, you can access the app at:
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
 
-- **Local**: http://localhost:8080
-- **Network**: http://[your-computer-ip]:8080
+## Contributing
 
-### Finding Your IP Address
-
-**Windows:**
-1. Open Command Prompt
-2. Run `ipconfig`
-3. Look for "IPv4 Address" under your active network adapter
-
-**macOS/Linux:**
-1. Open Terminal
-2. Run `ifconfig` or `ip addr`
-3. Look for your local IP (usually starts with 192.168.x.x or 10.x.x.x)
-
-## Mobile Access
-
-1. Make sure your phone and computer are on the same WiFi network
-2. Find your computer's local IP address (see above)
-3. On your phone's browser, navigate to: `http://[your-computer-ip]:8080`
-
-## Sound Files
-
-The app uses the following sound files in the `sounds/` directory:
-
-| Interaction | Filename |
-|-------------|----------|
-| Add Task | `add-task.mp3` |
-| Complete Task | `complete-task.mp3` |
-| Edit Task | `edit-task.mp3` |
-| Delete Task | `delete-task.mp3` |
-| Settings Open | `settings-open.mp3` |
-| Palette Change | `palette-change.mp3` |
-| Progress Open | `progress-open.mp3` |
-| Victory | `victory.mp3` |
-| Font Change | `font-change.mp3` |
-| Volume Adjust | `volume-adjust.mp3` |
-| Sound Toggle | `sound-toggle.mp3` |
-
-## Troubleshooting
-
-### Port Already in Use
-If you get an error about port 8080 being in use:
-1. Close any other programs using port 8080
-2. Or change the port in `package.json` (look for `"8080"`)
-
-### Mobile Connection Issues
-1. Ensure both devices are on the same network
-2. Check firewall settings on your computer
-3. Try using the IP address instead of hostname
-
-### File Not Found
-- Make sure all files are in the correct directory
-- Check file paths in your HTML/CSS/JS files
-- The server serves files relative to its location
-
-## Commands
-
-```bash
-# Install dependencies and start server (recommended)
-npm start
-
-# Install dependencies only
-npm run setup
-
-# Start server in development mode
-npm run dev
-
-# Stop server
-Press Ctrl+C in the terminal
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT - Feel free to use this setup for any project!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+## Acknowledgments
 
-**Happy coding! 🎉**
+- [Lucide Icons](https://lucide.dev/) for the beautiful icon set
+- [Glassmorphism](https://github.com/creativetimofficial/tailwind-glassmorphism) design inspiration
+
+## Support
+
+If you encounter any issues or have questions, please open an issue on the GitHub repository.

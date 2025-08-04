@@ -96,6 +96,11 @@ class GamificationManager {
     const completed = tasks.filter(t => t.completed).length;
     if (completed === tasks.length && tasks.length > 0) {
       this.celebrateVictory();
+      
+      // Play victory sound
+      if (typeof audioManager !== 'undefined') {
+        audioManager.play('victory');
+      }
     }
   }
 
