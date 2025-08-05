@@ -213,28 +213,344 @@ class TodoApp {
       });
     }
 
-    // Music button: toggle play/pause (do NOT toggle mute here)
-    const volumeBtn = document.getElementById('volumeBtn');
-    if (volumeBtn) {
-      volumeBtn.addEventListener('click', async () => {
+    // Music popover toggle button + transport wiring
+    const musicBtn = document.getElementById('musicBtn');
+    const musicPopover = document.getElementById('musicPopover');
+    if (musicBtn && musicPopover) {
+      musicBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Toggle display (does NOT affect playback)
+        const isOpen = musicPopover.classList.contains('open') || musicPopover.style.display === 'block';
+        if (isOpen) {
+          musicPopover.classList.remove('open');
+          musicPopover.style.display = 'none';
+        } else {
+          musicPopover.style.display = 'block';
+          requestAnimationFrame(() => musicPopover.classList.add('open'));
+        }
+      });
+
+      // Transport controls: decoupled from SFX sound button
+      const prevBtn = document.getElementById('musicPrev');
+      const playPauseBtn = document.getElementById('musicPlayPause');
+      const nextBtn = document.getElementById('musicNext');
+
+      // Micro UI elements for feedback
+      const transportEl = musicPopover.querySelector('.music-transport');
+      const trackIndicator = musicPopover.querySelector('.music-track-indicator');
+      const currentTrackEl = document.getElementById('currentTrack');
+      const totalTracksEl = document.getElementById('totalTracks');
+      const silenceIndicator = document.getElementById('silenceIndicator');
+      const silenceCountdownEl = document.getElementById('silenceCountdown');
+      const silenceProgressFill = document.getElementById('silenceProgressFill');
+
+      // Helper to ensure index is valid on first play (outside bounds -> set to 0)
+      const ensureIndexBeforePlay = () => {
         try {
           if (typeof musicManager !== 'undefined') {
-            await musicManager.togglePlay();
+            const idx = musicManager.getCurrentTrackIndex?.();
+            const tracks = musicManager.getTrackList?.() || [];
+            if (!(idx >= 0 && idx < tracks.length)) {
+              // Outside bounds: set to first track by toggling internal index
+              // MusicManager exposes next/prev; but we can coerce by saving and restoring
+              // Simpler: directly set to first by localStorage and re-init playing
+              // Fallback approach: call next until index becomes 0 or tracks.length === 0
+              if (tracks.length > 0) {
+                // Prefer a direct assignment if available
+                if (typeof musicManager.currentIndex === 'number') {
+                  musicManager.currentIndex = 0;
+                  try { localStorage.setItem('music.lastTrackIndex', '0'); } catch {}
+                }
+              }
+            }
           }
-          // Update transport icon with a subtle animation
+        } catch {}
+      };
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            if (typeof musicManager !== 'undefined' && typeof musicManager.prev === 'function') {
+              // brief press animation
+              transportEl?.classList.add('press-prev');
+              setTimeout(() => transportEl?.classList.remove('press-prev'), 120);
+              await musicManager.prev();
+            }
+          } catch (err) {
+            console.warn('Player prev failed:', err);
+          }
+        });
+      }
+
+      if (playPauseBtn) {
+        playPauseBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            if (typeof musicManager !== 'undefined' && typeof musicManager.togglePlay === 'function') {
+              // On first user play after reload and when index is out of bounds, set to first track
+              ensureIndexBeforePlay();
+
+              // no textual first-play messages per design preference
+
+              await musicManager.togglePlay();
+            }
+          } catch (err) {
+            console.warn('Player togglePlay failed:', err);
+          }
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            if (typeof musicManager !== 'undefined' && typeof musicManager.next === 'function') {
+              // brief press animation
+              transportEl?.classList.add('press-next');
+              setTimeout(() => transportEl?.classList.remove('press-next'), 120);
+              await musicManager.next();
+            }
+          } catch (err) {
+            console.warn('Player next failed:', err);
+          }
+        });
+      }
+
+      // Volume slider wiring (generic, independent from SFX mute)
+      const slider = document.getElementById('musicSlider');
+      const handle = document.getElementById('musicHandle');
+      const fill = document.getElementById('musicFill');
+
+      const setSlider = (pct) => {
+        const clamped = Math.max(0, Math.min(100, pct));
+        if (fill) fill.style.width = `${clamped}%`;
+        if (handle) handle.style.left = `${clamped}%`;
+      };
+
+      const valueFromEvent = (evt) => {
+        const rect = slider.getBoundingClientRect();
+        const x = evt.touches ? evt.touches[0].clientX : evt.clientX;
+        const pct = ((x - rect.left) / rect.width) * 100;
+        return Math.max(0, Math.min(100, pct));
+      };
+
+      const applyVolumePct = (pct) => {
+        setSlider(pct);
+        if (typeof musicManager !== 'undefined' && typeof musicManager.setVolume === 'function') {
+          musicManager.setVolume(pct / 100, { smooth: true });
+        }
+        // transient percent chip
+        const chip = document.getElementById('volumeFeedback');
+        if (chip) {
+          chip.textContent = `${Math.round(pct)}%`;
+          chip.style.left = `${Math.max(0, Math.min(100, pct))}%`;
+          chip.classList.add('show');
+          clearTimeout(chip._hideT);
+          chip._hideT = setTimeout(() => chip.classList.remove('show'), 900);
+        }
+      };
+
+      if (slider) {
+        let dragging = false;
+
+        const onStart = (e) => {
+          e.preventDefault();
+          dragging = true;
+          applyVolumePct(valueFromEvent(e));
+        };
+        const onMove = (e) => {
+          if (!dragging) return;
+          e.preventDefault();
+          applyVolumePct(valueFromEvent(e));
+        };
+        const onEnd = () => { dragging = false; };
+
+        slider.addEventListener('mousedown', onStart);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+
+        slider.addEventListener('touchstart', onStart, { passive: false });
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+
+        // Initialize slider from stored volume if available
+        try {
+          const vol = parseFloat(localStorage.getItem('music.volume'));
+          const pct = isFinite(vol) ? Math.max(0, Math.min(1, vol)) * 100 : 45;
+          setSlider(pct);
+        } catch {
+          setSlider(45);
+        }
+      }
+
+      // Reflect playing state on the floating music button (not the SFX volume button)
+      const reflectMusicBtn = (playing) => {
+        if (!musicBtn) return;
+        musicBtn.classList.toggle('is-playing', !!playing);
+        musicBtn.classList.toggle('is-paused', !playing);
+      };
+
+      // Update track counts initially
+      if (currentTrackEl && totalTracksEl && typeof musicManager !== 'undefined') {
+        const tracks = musicManager.getTrackList?.() || [];
+        totalTracksEl.textContent = String(tracks.length || 0);
+        const idx = musicManager.getCurrentTrackIndex?.();
+        currentTrackEl.textContent = String((typeof idx === 'number' ? idx : 0) + 1);
+      }
+
+      const bumpTrackIndicator = () => {
+        if (!trackIndicator) return;
+        trackIndicator.classList.add('highlight');
+        setTimeout(() => trackIndicator.classList.remove('highlight'), 240);
+      };
+
+      // Subtle highlight on play/pause button while music is playing
+      const setPlayButtonPlayingState = (isPlaying) => {
+        const playIcon = document.getElementById('musicPlayIcon');
+        const pauseIcon = document.getElementById('musicPauseIcon');
+        if (playPauseBtn) {
+          playPauseBtn.classList.toggle('is-playing', !!isPlaying);
+        }
+        // Ensure correct icon visibility is preserved
+        if (playIcon && pauseIcon) {
+          if (isPlaying) {
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = '';
+          } else {
+            playIcon.style.display = '';
+            pauseIcon.style.display = 'none';
+          }
+        }
+      };
+
+      let silenceTimer = null;
+      let silenceEndTs = 0;
+
+      if (typeof bus !== 'undefined') {
+        bus.addEventListener('music:started', () => {
+          reflectMusicBtn(true);
+          setPlayButtonPlayingState(true);
+        });
+        bus.addEventListener('music:playing', () => {
+          reflectMusicBtn(true);
+          setPlayButtonPlayingState(true);
+        });
+        bus.addEventListener('music:paused', () => {
+          reflectMusicBtn(false);
+          setPlayButtonPlayingState(false);
+        });
+
+        // Silence gap feedback without textual messages: keep progress bar only
+        bus.addEventListener('music:silenceStart', () => {
+          reflectMusicBtn(false);
+          if (silenceIndicator) silenceIndicator.style.display = 'grid';
+          const min = typeof musicManager !== 'undefined' ? musicManager.gapMinSeconds : 15;
+          const max = typeof musicManager !== 'undefined' ? musicManager.gapMaxSeconds : 90;
+          const dur = Math.max(min, Math.min(max, Math.round((min + max) / 2))) * 1000;
+          silenceEndTs = Date.now() + dur;
+          const tick = () => {
+            const remain = Math.max(0, silenceEndTs - Date.now());
+            if (silenceProgressFill) {
+              const pct = 100 - (remain / dur) * 100;
+              silenceProgressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+            }
+            if (remain > 0) {
+              silenceTimer = setTimeout(tick, 250);
+            }
+          };
+          clearTimeout(silenceTimer);
+          tick();
+        });
+        bus.addEventListener('music:silenceEnd', () => {
+          reflectMusicBtn(true);
+          clearTimeout(silenceTimer);
+          silenceTimer = null;
+          if (silenceIndicator) silenceIndicator.style.display = 'none';
+          if (silenceProgressFill) silenceProgressFill.style.width = '0%';
+        });
+
+        bus.addEventListener('music:buffering', (e) => {
+          const isBuf = !!(e.detail && e.detail.buffering);
+          musicBtn.classList.toggle('buffering', isBuf);
+          transportEl?.classList.toggle('buffering', isBuf);
+        });
+        // Remove tips/hints entirely per design request
+        // bus.addEventListener('music:hintStart', () => {});
+
+        // Track change feedback: bump indicator, no text messages
+        const syncTrack = () => {
+          if (!currentTrackEl || typeof musicManager === 'undefined') return;
+          const idx = musicManager.getCurrentTrackIndex?.() ?? 0;
+          currentTrackEl.textContent = String(idx + 1);
+          bumpTrackIndicator();
+        };
+        bus.addEventListener('music:playing', syncTrack);
+        bus.addEventListener('music:started', syncTrack);
+      }
+    }
+
+    // Sound button: global mute/unmute for sound effects ONLY (does not affect music play/pause)
+    const volumeBtn = document.getElementById('volumeBtn');
+    if (volumeBtn) {
+      volumeBtn.setAttribute('title', 'Mute/Unmute all sounds');
+      volumeBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          // Toggle global sound-enabled setting
+          if (typeof settingsManager !== 'undefined' && typeof settingsManager.toggleSoundEnabled === 'function') {
+            settingsManager.toggleSoundEnabled();
+          } else if (typeof audioManager !== 'undefined') {
+            // Fallback: flip AudioManager enabled state and persist via settings if available
+            const next = !audioManager.enabled;
+            audioManager.setEnabled(next);
+            if (typeof settingsManager !== 'undefined') {
+              settingsManager.soundEnabled = next;
+              if (typeof settingsManager.saveSettings === 'function') {
+                settingsManager.saveSettings();
+              }
+            }
+          }
+
+          // Do not toggle or influence music playback here.
+          // Only provide a subtle UI feedback if sounds are enabled now
+          if (typeof audioManager !== 'undefined' && audioManager.enabled) {
+            audioManager.play('toggle');
+          }
+
+          // Update icon animation state (handled by updateVolumeButtonState via settingsChanged)
           const volumeIcon = document.getElementById('volumeIcon');
           if (volumeIcon) {
             volumeIcon.classList.add('toggling');
-            setTimeout(() => {
-              volumeIcon.classList.remove('toggling');
-            }, 300);
-          }
-          // Provide a small UI sound feedback (optional)
-          if (typeof audioManager !== 'undefined') {
-            audioManager.play('toggle');
+            setTimeout(() => volumeIcon.classList.remove('toggling'), 300);
           }
         } catch (e) {
-          console.warn('Music toggle failed:', e);
+          console.warn('Sound mute toggle failed:', e);
+        }
+
+        // Emit a settingsChanged event so UI state syncs (provide detail to avoid null in listeners)
+        if (typeof bus !== 'undefined') {
+          let detail = null;
+          try {
+            if (typeof settingsManager !== 'undefined' && typeof settingsManager.getSettings === 'function') {
+              // Preferred: full settings snapshot
+              detail = { ...settingsManager.getSettings() };
+            } else if (typeof settingsManager !== 'undefined') {
+              // Best-effort snapshot of known props if getSettings not available
+              detail = {
+                soundEnabled: !!settingsManager.soundEnabled,
+                theme: typeof settingsManager.theme !== 'undefined' ? settingsManager.theme : undefined,
+                animations: typeof settingsManager.animations !== 'undefined' ? settingsManager.animations : undefined
+              };
+            } else {
+              // Fallback to avoid null detail consumers
+              detail = { soundEnabled: typeof audioManager !== 'undefined' ? !!audioManager.enabled : true };
+            }
+          } catch (err) {
+            console.warn('Failed to build settingsChanged detail payload:', err);
+            detail = { soundEnabled: typeof audioManager !== 'undefined' ? !!audioManager.enabled : true };
+          }
+          bus.dispatchEvent(new CustomEvent('settingsChanged', { detail }));
         }
       });
     }

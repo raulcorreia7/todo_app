@@ -57,15 +57,9 @@
         this.container = div;
       }
 
-      // Build bar elements
+      // Minimalist: no bars; keep container for layout and pin button
       this.container.innerHTML = '';
       this.bars = [];
-      for (let i = 0; i < this.barsCount; i++) {
-        const bar = document.createElement('span');
-        bar.className = 'bar';
-        this.container.appendChild(bar);
-        this.bars.push(bar);
-      }
 
       // Subscribe to bus events
       if (typeof bus !== 'undefined') {
@@ -214,45 +208,15 @@
       }
       if (this.container) this.container.classList.remove('is-playing');
 
-      if (decay && this.bars.length) {
-        this.bars.forEach((bar) => (bar.style.height = '16%'));
-      }
+      // Minimalist: no bar decay visuals
     }
 
     loop() {
       if (!this.isRendering) return;
       this.analyser.getByteFrequencyData(this.freqData);
 
-      // Map energy to bars
-      for (let i = 0; i < this.barsCount; i++) {
-        const [a, b] = this.barRanges[i] || [i, i];
-        let sum = 0;
-        const start = Math.max(0, a | 0);
-        const end = Math.max(start, b | 0);
-        const count = Math.max(1, end - start + 1);
-        for (let k = start; k <= end; k++) sum += this.freqData[k] || 0;
-        const avg = sum / count; // 0..255
-
-        // Perceptual shaping and normalization
-        // Slightly different shaping per region for a balanced visual:
-        //   Lows (0..2): stronger lift on low volume
-        //   Mids (3..5): moderate shaping
-        //   Highs (6..7): less shaping to avoid flicker
-        const normalized = Math.min(1, Math.max(0, avg / 255));
-        let gamma = 0.7;
-        if (i <= 2) gamma = 0.6;        // lows
-        else if (i <= 5) gamma = 0.7;   // mids
-        else gamma = 0.8;               // highs
-        const shaped = Math.pow(normalized, gamma);
-
-        const minH = 0.16; // 16% matches CSS baseline
-        const maxH = 0.92; // cap
-        const height = minH + (maxH - minH) * shaped;
-
-        // Apply via height (CSS animation is disabled; transform kept simple)
-        const bar = this.bars[i];
-        if (bar) bar.style.height = (height * 100).toFixed(2) + '%';
-      }
+      // Minimalist: do not render bars; we still sample to keep analyzer active if needed
+      // Could update a CSS var for subtle glow if ever desired, but keep pure minimal for now.
 
       this.rafId = requestAnimationFrame(() => this.loop());
     }
