@@ -326,36 +326,18 @@ class TodoApp {
       });
     });
 
-    // Clear completed (legacy footer button - no longer present)
+    // Legacy footer buttons have been removed from the UI
+    // These checks are kept for safety but can be removed in future refactoring
     const clearCompletedBtn = document.getElementById("clearCompleted");
-    if (clearCompletedBtn) {
-      // ensure no legacy double-binding
-      clearCompletedBtn.replaceWith(clearCompletedBtn.cloneNode(true));
-    }
-
-    // Delete all tasks (legacy footer button - no longer present)
     const deleteAllBtn = document.getElementById("deleteAllBtn");
-    if (deleteAllBtn) {
-      deleteAllBtn.replaceWith(deleteAllBtn.cloneNode(true));
-    }
-
-    // Test data (legacy footer button - no longer present)
     const testDataBtn = document.getElementById("testDataBtn");
-    if (testDataBtn) {
-      testDataBtn.replaceWith(testDataBtn.cloneNode(true));
+    
+    if (clearCompletedBtn || deleteAllBtn || testDataBtn) {
+      console.warn("Legacy footer buttons still present in DOM");
     }
 
     // CenterActionBar handles Test/Clear/Delete wiring now.
 
-    // Statistics button
-    const statisticsBtn = document.getElementById("statisticsBtn");
-    if (statisticsBtn) {
-      statisticsBtn.addEventListener("click", () => {
-        if (typeof statisticsManager !== "undefined") {
-          statisticsManager.toggleStatistics();
-        }
-      });
-    }
 
     // Music popover UI and transport are now owned by MusicPlayer (js/music-player.js).
     // The legacy creation and wiring in app.js has been removed to prevent duplication and conflicts.
@@ -1121,18 +1103,14 @@ class TodoApp {
    */
   render() {
     const taskList = document.getElementById("taskList");
-    const taskCount = document.getElementById("taskCount");
     const emptyState = document.getElementById("emptyState");
 
-    if (!taskList || !taskCount) return;
+    if (!taskList || !emptyState) return;
 
     const filteredTasks = this.getFilteredTasks();
 
-    // Update count
-    const activeCount = this.tasks.filter((t) => !t.completed).length;
-    taskCount.textContent = `${activeCount} task${
-      activeCount !== 1 ? "s" : ""
-    } remaining`;
+    // Legacy task count element no longer present
+    // Statistics are now handled by the header-stats component
 
     // Show/hide empty state
     if (filteredTasks.length === 0) {

@@ -51,6 +51,7 @@
           <p class="daily-quote" title="Click to change quote">
             Loading daily quote...
           </p>
+          <!-- Stats are now integrated with filter buttons -->
         </div>
       </header>
 
@@ -91,9 +92,9 @@
       <nav class="filter-group">
         <button class="btn btn--ghost active" data-filter="all">All</button>
         <button class="btn btn--ghost" data-filter="active">Active</button>
-        <button class="btn btn--ghost" data-filter="completed">
+          <button class="btn btn--ghost" data-filter="completed">
           Completed
-        </button>
+          </button>
       </nav>
 
       <!-- Task List -->
@@ -109,40 +110,6 @@
           <p>Add your first task to get started</p>
         </div>
       </main>
-
-      <!-- Task Count & Actions Footer -->
-      <footer class="task-footer">
-        <div class="task-footer-section">
-          <span id="taskCount" class="task-count">0 tasks remaining</span>
-          <div class="task-stats">
-            <span class="stat-item">
-              <span class="stat-value" id="footerTotalTasks">0</span>
-              <span class="stat-label">Total</span>
-            </span>
-            <span class="stat-divider">•</span>
-            <span class="stat-item">
-              <span class="stat-value" id="footerCompletedTasks">0</span>
-              <span class="stat-label">Done</span>
-            </span>
-            <span class="stat-divider">•</span>
-            <span class="stat-item">
-              <span class="stat-value" id="footerKarmaScore">0</span>
-              <span class="stat-label">Karma</span>
-            </span>
-          </div>
-        </div>
-        
-        <div class="task-footer-actions">
-          <button id="footerStatsBtn" class="btn btn--ghost btn--small" aria-label="View statistics">
-            <i data-lucide="bar-chart-3" class="lucide-icon" aria-hidden="true"></i>
-            <span class="btn-text">Stats</span>
-          </button>
-          <button id="footerSettingsBtn" class="btn btn--ghost btn--small" aria-label="Open settings">
-            <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
-            <span class="btn-text">Settings</span>
-          </button>
-        </div>
-      </footer>
     </div>
 
     <!-- Settings Panel (Floating - single source of truth) -->
@@ -278,48 +245,6 @@
       </div>
     </div>
 
-    <!-- Statistics Panel -->
-    <div id="statisticsPanel" class="statistics-panel">
-      <div class="statistics-header">
-        <h3>Statistics</h3>
-        <button class="close-btn" onclick="statisticsManager.closeStatistics()">
-          ×
-        </button>
-      </div>
-
-      <div class="statistics-content">
-        <div class="stats-progress-ring">
-          <svg class="stats-progress-svg" viewBox="0 0 140 140">
-            <circle class="stats-progress-bg" cx="70" cy="70" r="60"></circle>
-            <circle
-              id="statsProgressRing"
-              class="stats-progress-fill"
-              cx="70"
-              cy="70"
-              r="60"
-            ></circle>
-          </svg>
-          <div class="stats-percentage">
-            <span id="statsPercentage">0%</span>
-          </div>
-        </div>
-
-        <div class="stats-info">
-          <div class="stat-item">
-            <span class="stat-value" id="statsTotal">0</span>
-            <span class="stat-label">Total</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value" id="statsCompleted">0</span>
-            <span class="stat-label">Done</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value" id="statsKarma">0</span>
-            <span class="stat-label">Karma</span>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Modal Overlay -->
     <div id="modalOverlay" class="modal-overlay" aria-hidden="true" style="z-index: 10050;"></div>

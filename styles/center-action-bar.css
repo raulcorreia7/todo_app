@@ -32,15 +32,42 @@
   position: relative;     /* keep icon above any pseudo/background */
   z-index: 1;
   
-  /* Ensure consistent round shape */
-  border-radius: 9999px; /* ensure perfectly round even if slight size variance */
-  width: 40px;  /* mobile-first more compact */
-  height: 40px; /* mobile-first more compact */
+  /* Ensure consistent round shape and exact proportions */
+  border-radius: 50%;     /* ensures perfect circle */
+  width: 40px;            /* explicit width */
+  height: 40px;           /* explicit height */
+  min-width: 40px;        /* prevent expansion */
+  min-height: 40px;       /* prevent expansion */
+  max-width: 40px;        /* prevent contraction */
+  max-height: 40px;       /* prevent contraction */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   box-sizing: border-box;
+  flex-shrink: 0;         /* prevent flex items from shrinking */
+  flex-grow: 0;          /* prevent flex items from growing */
+}
+
+/* Floating action buttons for mobile (40x40) */
+@media (max-width: 768px) {
+  .center-action-bar .btn--floating-action {
+    width: 40px;
+    height: 40px;
+    min-height: 40px; /* Ensure buttons don't grow taller */
+    min-width: 40px;  /* Ensure buttons don't grow wider */
+  }
+  .center-action-bar .btn--floating-action svg {
+    width: 18px;
+    height: 18px;
+  }
+  /* Ensure action groups and subgroups also respect the 40px height */
+  .center-action-bar .action-subgroup {
+    gap: 8px; /* Adjust gap if needed for 40px buttons */
+  }
+  .center-action-bar .action-group {
+    padding: 4px; /* Adjust padding to contain 40px buttons */
+  }
 }
 
 /* Icons: explicit stroke so visibility does not rely on inherited currentColor */

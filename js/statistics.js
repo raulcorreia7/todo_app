@@ -1,19 +1,16 @@
 /**
  * Statistics tracking and visualization
- * Handles statistics ring, statistics, and insights
+ * Handles header statistics display
  */
 
 class StatisticsManager {
   constructor() {
-    this.isOpen = false;
     this.isInitialized = false;
-    this.statisticsPanel = null;
     
     this.init();
   }
 
   init() {
-    this.statisticsPanel = document.getElementById('statisticsPanel');
     this.setupEventListeners();
     this.isInitialized = true;
   }
@@ -27,60 +24,36 @@ class StatisticsManager {
     }
   }
 
-  toggleStatistics() {
-    if (this.isOpen) {
-      this.closeStatistics();
-    } else {
-      this.openStatistics();
-    }
-  }
-
-  openStatistics() {
-    this.isOpen = true;
-    this.statisticsPanel.classList.add('open');
-    this.updateStatistics();
-    
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play('progress');
-    }
-  }
-
-  closeStatistics() {
-    this.isOpen = false;
-    this.statisticsPanel.classList.remove('open');
-  }
-
   updateStatistics() {
     const tasks = storageManager.getTasks();
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    // Update progress ring
-    const progressFill = document.getElementById('statsProgressRing');
-    const progressText = document.getElementById('statsPercentage');
-    
-    if (progressFill) {
-      const circumference = 2 * Math.PI * 60;
-      const offset = circumference - (percentage / 100) * circumference;
-      progressFill.style.strokeDasharray = `${circumference} ${circumference}`;
-      progressFill.style.strokeDashoffset = offset;
-    }
-    
-    if (progressText) {
-      progressText.textContent = `${percentage}%`;
-    }
-
-    // Update stats
-    const totalEl = document.getElementById('statsTotal');
-    const completedEl = document.getElementById('statsCompleted');
-    const karmaEl = document.getElementById('statsKarma');
+    // Update header statistics
+    const totalEl = document.getElementById('headerTotalTasks');
+    const completedEl = document.getElementById('headerCompletedTasks');
+    const progressText = document.getElementById('headerProgressText');
+    const progressFill = document.getElementById('headerProgressRing');
     
     if (totalEl) totalEl.textContent = total;
     if (completedEl) completedEl.textContent = completed;
+    if (progressText) progressText.textContent = `${percentage}%`;
     
-    if (karmaEl && typeof gamificationManager !== 'undefined') {
-      karmaEl.textContent = gamificationManager.karmaPoints;
+    // Update progress ring
+    if (progressFill) {
+      const circumference = 2 * Math.PI * 10;
+      const offset = circumference - (percentage / 100) * circumference;
+      progressFill.style.strokeDasharray = `${circumference}`;
+      progressFill.style.strokeDashoffset = offset;
+    }
+
+    // Update karma if available
+    if (typeof gamificationManager !== 'undefined') {
+      const karmaEl = document.getElementById('headerKarmaScore');
+      if (karmaEl) {
+        karmaEl.textContent = gamificationManager.karmaPoints;
+      }
     }
   }
 
