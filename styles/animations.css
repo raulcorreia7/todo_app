@@ -4,6 +4,48 @@
   --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* CenterActionBar: subtle theme-aware glow pulse */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px var(--color-glow); }
+  50%      { box-shadow: 0 0 30px var(--color-glow); }
+}
+
+/* Micro-interactions for CAB buttons */
+@keyframes gear-rotate { 
+  0%{transform:rotate(0)} 
+  50%{transform:rotate(15deg)} 
+  100%{transform:rotate(0)} 
+}
+
+@keyframes note-bounce {
+  0%,100% { transform: translateY(0); }
+  30%     { transform: translateY(-3px); }
+  60%     { transform: translateY(1px); }
+}
+
+@keyframes ripple-wave {
+  0%   { opacity: 0.5; transform: scale(0.8); }
+  100% { opacity: 0;   transform: scale(1.6); }
+}
+
+@keyframes bars-pulse {
+  0%,100% { transform: scaleY(0.6); }
+  50%     { transform: scaleY(1); }
+}
+
+@keyframes shake-x {
+  0%,100% { transform: translateX(0); }
+  25%     { transform: translateX(-2px); }
+  75%     { transform: translateX(2px); }
+}
+
+/* Reduce motion support */
+@media (prefers-reduced-motion: reduce) {
+  .center-action-bar { animation: none !important; }
+  #cabSettings:hover svg,
+  #cabDelete:active { animation: none !important; }
+}
+
 /* Luxury Animations - Premium Task Entry & Micro-interactions */
 
 /* Add Todo Button Animation */
@@ -39,7 +81,8 @@
   }
 }
 
-.task-item.new {
+/* Prefer zen-interactions taskEnter keyframe when present; keep luxuryTaskEntry as legacy fallback */
+.task-item.new:not(.use-zen-enter) {
   animation: luxuryTaskEntry 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
@@ -76,13 +119,19 @@
   transition: box-shadow 0.3s ease;
 }
 
+/* CAB hover/active hooks (kept minimal; detailed triggers in zen-interactions.css) */
+#cabSettings:hover svg { animation: gear-rotate 0.6s ease-in-out; transform-origin: center; }
+#cabDelete:active { animation: shake-x 0.3s linear; }
+
 .hover-glow:hover {
   box-shadow: 0 0 25px var(--glow-color);
 }
 
-/* Smooth transitions for all interactive elements */
+/* Smooth transitions for all interactive elements
+   IMPORTANT: keep transitions scoped to avoid clashing with specialized micro-interactions.
+   We remove global transform transitions to not fight zen-interactions task/item/btn rules. */
 * {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease;
 }
 
 /* Edit Mode Animations - Removed to prevent twitching */

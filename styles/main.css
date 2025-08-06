@@ -1,0 +1,12 @@
+/* Consolidated entry point: minimal/invasive approach using @import */
+/* Order: theme-system, base, components, animations, responsive, modals, achievements, interactions */
+
+@import url("./theme-system.css");
+@import url("./base.css");
+@import url("./components.css");
+@import url("./animations.css");
+@import url("./responsive.css");
+@import url("./modals.css");
+@import url("./achievements.css");
+@import url("./interactions.css");
+@import url("./center-action-bar.css");

@@ -1,0 +1,111 @@
+/* Center Action Bar Component
+   Scope: only styles for the centered floating actions toolbar
+   Goal: keep icon visibility independent of currentColor regressions
+*/
+
+/* Container and groups (minimal structure hooks) */
+.center-action-bar {}
+.center-action-bar .action-group {}
+.center-action-bar .action-subgroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Buttons: adopt glass look consistent with the design system */
+.center-action-bar .btn--floating-action {
+  /* Ensure the button "color" also drives SVG currentColor where used */
+  /* Use theme text color for icons */
+  color: var(--color-text, #e8f8f5) !important; /* Fallback to emerald theme color */
+  background: color-mix(in oklab, var(--color-glass, rgba(0,0,0,0.35)) 85%, transparent);
+  border: 1px solid var(--color-border, rgba(255,255,255,0.22));
+  position: relative;     /* keep icon above any pseudo/background */
+  z-index: 1;
+  
+  /* Ensure consistent round shape */
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Icons: explicit stroke so visibility does not rely on inherited currentColor */
+.center-action-bar .btn--floating-action svg {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  /* Force the stroke color to use the theme text color */
+  stroke: var(--color-text, #e8f8f5) !important;
+  fill: none;
+  stroke-width: 2;
+  opacity: 1;
+  filter: none;
+  pointer-events: none;     /* ensure clicks go to the button */
+  position: relative;
+  z-index: 2;               /* ensure icon sits above button surface */
+}
+
+/* Override global hover behavior for center action bar icons */
+.center-action-bar .btn--floating-action:hover svg {
+  stroke: var(--color-text, #e8f8f5) !important;
+  transform: none;
+}
+
+.center-action-bar .btn--floating-action:disabled svg {
+  opacity: 0.6;
+}
+
+/* Add focus states for accessibility */
+.center-action-bar .btn--floating-action:focus {
+  outline: 2px solid var(--color-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+/* Sound button animations */
+.center-action-bar .btn--floating-action[data-action="sound"] {
+  transition: all 0.3s ease;
+}
+
+/* Sound enabled animation */
+.center-action-bar .btn--floating-action[data-action="sound"].sound-enabled {
+  animation: soundEnabledPulse 0.6s ease-out;
+}
+
+@keyframes soundEnabledPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+  }
+}
+
+/* Sound disabled animation */
+.center-action-bar .btn--floating-action[data-action="sound"].sound-disabled {
+  animation: soundDisabledPulse 0.6s ease-out;
+}
+
+@keyframes soundDisabledPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+  }
+  70% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+  }
+}

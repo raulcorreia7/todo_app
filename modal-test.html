@@ -6,10 +6,7 @@
   <title>Luxury Modal Previews</title>
 
   <!-- Import existing app styles -->
-  <link rel="stylesheet" href="styles/design-system.css">
-  <link rel="stylesheet" href="styles/luxury-base.css">
-  <link rel="stylesheet" href="styles/luxury-components.css">
-  <link rel="stylesheet" href="styles/animations.css">
+  <link rel="stylesheet" href="styles/main.css">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,11 +19,11 @@
       --primary-color: #1a1a2e;
       --secondary-color: #16213e;
       --accent-color: #0f3460;
-      --text-color: #e94560;
+      --color-text: #e94560;
       --glow-color: #e94560;
       --shadow-color: rgba(233, 69, 96, 0.3);
       --glass-bg: rgba(26, 26, 46, 0.8);
-      --border-color: rgba(233, 69, 96, 0.2);
+      --color-border: rgba(233, 69, 96, 0.2);
       --gradient-start: rgba(26, 26, 46, 0.4);
       --gradient-end: rgba(26, 26, 46, 0.8);
       --glass-bg-alt: rgba(26, 26, 46, 0.9);
@@ -36,11 +33,11 @@
       --primary-color: #1a1a2e;
       --secondary-color: #16213e;
       --accent-color: #0f3460;
-      --text-color: #e94560;
+      --color-text: #e94560;
       --glow-color: #e94560;
       --shadow-color: rgba(233, 69, 96, 0.3);
       --glass-bg: rgba(26, 26, 46, 0.8);
-      --border-color: rgba(233, 69, 96, 0.2);
+      --color-border: rgba(233, 69, 96, 0.2);
       --gradient-start: rgba(26, 26, 46, 0.4);
       --gradient-end: rgba(26, 26, 46, 0.8);
       --glass-bg-alt: rgba(26, 26, 46, 0.9);
@@ -50,11 +47,11 @@
       --primary-color: #f8f9fa;
       --secondary-color: #e9ecef;
       --accent-color: #495057;
-      --text-color: #495057;
+      --color-text: #495057;
       --glow-color: #6c757d;
       --shadow-color: rgba(108, 117, 125, 0.2);
       --glass-bg: rgba(248, 249, 250, 0.8);
-      --border-color: rgba(108, 117, 125, 0.1);
+      --color-border: rgba(108, 117, 125, 0.1);
       --gradient-start: rgba(248, 249, 250, 0.4);
       --gradient-end: rgba(248, 249, 250, 0.8);
       --glass-bg-alt: rgba(248, 249, 250, 0.9);
@@ -64,11 +61,11 @@
       --primary-color: #fff8e7;
       --secondary-color: #f3e5ab;
       --accent-color: #daa520;
-      --text-color: #8b4513;
+      --color-text: #8b4513;
       --glow-color: #daa520;
       --shadow-color: rgba(218, 165, 32, 0.3);
       --glass-bg: rgba(255, 248, 231, 0.8);
-      --border-color: rgba(218, 165, 32, 0.2);
+      --color-border: rgba(218, 165, 32, 0.2);
       --gradient-start: rgba(255, 248, 231, 0.4);
       --gradient-end: rgba(255, 248, 231, 0.8);
       --glass-bg-alt: rgba(255, 248, 231, 0.9);
@@ -78,11 +75,11 @@
       --primary-color: #2c2c2c;
       --secondary-color: #404040;
       --accent-color: #666666;
-      --text-color: #cccccc;
+      --color-text: #cccccc;
       --glow-color: #999999;
       --shadow-color: rgba(153, 153, 153, 0.3);
       --glass-bg: rgba(44, 44, 44, 0.8);
-      --border-color: rgba(153, 153, 153, 0.2);
+      --color-border: rgba(153, 153, 153, 0.2);
       --gradient-start: rgba(44, 44, 44, 0.4);
       --gradient-end: rgba(44, 44, 44, 0.8);
       --glass-bg-alt: rgba(44, 44, 44, 0.9);
@@ -102,7 +99,7 @@
       text-align: center;
       margin-bottom: 3rem;
       background: linear-gradient(135deg, 
-        var(--text-color, #fff) 0%,
+        var(--color-text, #fff) 0%,
         var(--accent-color, rgba(255,255,255,0.8)) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -121,7 +118,7 @@
       border-radius: 20px;
       padding: 2rem;
       backdrop-filter: blur(10px);
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
@@ -132,7 +129,7 @@
       transform: translateY(-4px);
       box-shadow: 
         0 12px 32px var(--shadow-color, rgba(0, 0, 0, 0.2)),
-        0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.15)),
+        0 0 0 1px var(--color-border, rgba(255, 255, 255, 0.15)),
         0 0 40px var(--glow-color, rgba(99, 102, 241, 0.1));
     }
 
@@ -142,7 +139,7 @@
       font-weight: 600;
       margin: 0;
       background: linear-gradient(135deg, 
-        var(--text-color, #fff) 0%,
+        var(--color-text, #fff) 0%,
         var(--accent-color, rgba(255,255,255,0.8)) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -151,7 +148,7 @@
     .preview-card p {
       font-size: 0.95rem;
       line-height: 1.6;
-      color: var(--text-color, rgba(255, 255, 255, 0.8));
+      color: var(--color-text, rgba(255, 255, 255, 0.8));
       margin: 0;
       flex-grow: 1;
     }
@@ -164,17 +161,17 @@
       background: var(--glass-bg, rgba(255, 255, 255, 0.08));
       border-radius: 16px;
       backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
       box-shadow: 
         0 8px 32px rgba(0, 0, 0, 0.2),
-        0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.1));
+        0 0 0 1px var(--color-border, rgba(255, 255, 255, 0.1));
       z-index: 100;
     }
 
     .select {
       background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-      color: var(--text-color, #fff);
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+      color: var(--color-text, #fff);
       font-family: 'Inter', sans-serif;
       font-size: 0.95rem;
       padding: 0.75rem 2rem 0.75rem 1rem;
@@ -232,7 +229,7 @@
       font-weight: 600;
       margin: 0 0 1rem;
       background: linear-gradient(135deg, 
-        var(--text-color, #fff) 0%,
+        var(--color-text, #fff) 0%,
         var(--accent-color, rgba(255,255,255,0.8)) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -241,7 +238,7 @@
     .modal-content p {
       font-size: 1.05rem;
       line-height: 1.6;
-      color: var(--text-color, rgba(255, 255, 255, 0.8));
+      color: var(--color-text, rgba(255, 255, 255, 0.8));
       margin: 0;
     }
 
@@ -276,13 +273,13 @@
 
     .btn--ghost {
       background: transparent;
-      color: var(--text-color, #fff);
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+      color: var(--color-text, #fff);
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.2));
     }
 
     .btn--ghost:hover {
       background: var(--glass-bg, rgba(255, 255, 255, 0.05));
-      border-color: var(--border-color, rgba(255, 255, 255, 0.3));
+      border-color: var(--color-border, rgba(255, 255, 255, 0.3));
     }
 
     /* 1. Floating Glass Card Modal */
@@ -297,10 +294,10 @@
       background: var(--glass-bg, rgba(255, 255, 255, 0.1));
       backdrop-filter: blur(12px);
       border-radius: 24px;
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
       box-shadow: 
         0 0 40px var(--glow-color, rgba(99, 102, 241, 0.1)),
-        inset 0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.1));
+        inset 0 0 0 1px var(--color-border, rgba(255, 255, 255, 0.1));
       animation: slideUpCenter 0.4s ease;
       transition: all 0.3s ease;
       transform: translateY(-60%);
@@ -310,7 +307,7 @@
       transform: translateY(-2px);
       box-shadow: 
         0 0 60px var(--glow-color, rgba(99, 102, 241, 0.15)),
-        inset 0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.2));
+        inset 0 0 0 1px var(--color-border, rgba(255, 255, 255, 0.2));
     }
 
     /* 2. Radial Gradient Modal */
@@ -326,7 +323,7 @@
       background: var(--glass-bg, rgba(255, 255, 255, 0.05));
       backdrop-filter: blur(12px);
       border-radius: 16px;
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
       box-shadow: 0 0 30px var(--glow-color, rgba(255, 255, 255, 0.1));
       animation: scaleIn 0.3s ease;
       transition: all 0.3s ease;
@@ -356,7 +353,7 @@
       );
       backdrop-filter: blur(12px);
       border-radius: 20px;
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
       box-shadow: 
         0 0 50px var(--glow-color, rgba(99, 102, 241, 0.2)),
         inset 0 0 20px var(--glow-color, rgba(99, 102, 241, 0.1));
@@ -402,7 +399,7 @@
       background: var(--glass-bg, rgba(255, 255, 255, 0.08));
       backdrop-filter: blur(16px);
       border-radius: 12px;
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
       animation: slideFromTop 0.3s ease;
       transition: all 0.3s ease;
@@ -410,11 +407,11 @@
 
     .minimalist-modal .modal-content:hover {
       background: var(--glass-bg, rgba(255, 255, 255, 0.1));
-      border-color: var(--border-color, rgba(255, 255, 255, 0.12));
+      border-color: var(--color-border, rgba(255, 255, 255, 0.12));
       transform: translateY(-1px);
       box-shadow: 
         0 8px 40px rgba(0, 0, 0, 0.12),
-        0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.12));
+        0 0 0 1px var(--color-border, rgba(255, 255, 255, 0.12));
     }
 
     /* 5. Premium Card Modal */
@@ -429,10 +426,10 @@
       background: var(--glass-bg, rgba(255, 255, 255, 0.12));
       backdrop-filter: blur(20px);
       border-radius: 16px;
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+      border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
       box-shadow: 
         0 8px 32px rgba(0, 0, 0, 0.2),
-        0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.1)),
+        0 0 0 1px var(--color-border, rgba(255, 255, 255, 0.1)),
         0 0 40px var(--glow-color, rgba(99, 102, 241, 0.2));
       animation: bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -463,7 +460,7 @@
       transform: translateY(-2px);
       box-shadow: 
         0 12px 40px rgba(0, 0, 0, 0.3),
-        0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.2)),
+        0 0 0 1px var(--color-border, rgba(255, 255, 255, 0.2)),
         0 0 60px var(--glow-color, rgba(99, 102, 241, 0.3));
     }
 

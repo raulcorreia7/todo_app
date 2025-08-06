@@ -27,7 +27,7 @@ class DailySummaryManager {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
-            background: var(--glass-color);
+            background: var(--color-glass);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
@@ -43,7 +43,7 @@ class DailySummaryManager {
 
         summary.innerHTML = `
             <div class="daily-summary-header">
-                <h2 style="font-size: 28px; margin-bottom: 8px; color: var(--text-color);">Daily Summary</h2>
+                <h2 style="font-size: 28px; margin-bottom: 8px; color: var(--color-text);">Daily Summary</h2>
                 <p style="opacity: 0.7; margin-bottom: 30px;">Your achievements for today</p>
             </div>
             

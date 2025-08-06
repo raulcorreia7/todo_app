@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Center Bar Events</title>
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #e8f8f5;
+        }
+        .center-action-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(12, 74, 62, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .btn {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            color: #e8f8f5;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background: rgba(46, 204, 113, 0.3);
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .debug-log {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            height: 600px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            padding: 16px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 2000;
+        }
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .log-info {
+            background: rgba(46, 204, 113, 0.2);
+        }
+        .log-warn {
+            background: rgba(241, 196, 15, 0.2);
+        }
+        .log-error {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        .clear-log {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(239, 68, 68, 0.8);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            z-index: 2001;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Center Bar Events</h1>
+    
+    <!-- Center Action Bar -->
+    <div id="centerActionBar" class="center-action-bar">
+        <button id="cabSettings" class="btn" data-action="settings">
+            <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
+            Settings
+        </button>
+        <button id="cabMusic" class="btn" data-action="music">
+            <i data-lucide="music" class="lucide-icon" aria-hidden="true"></i>
+            Music
+        </button>
+        <button id="cabSound" class="btn" data-action="sound">
+            <i data-lucide="volume-2" class="lucide-icon" aria-hidden="true"></i>
+            Sound
+        </button>
+    </div>
+
+    <!-- Debug Log -->
+    <div id="debugLog" class="debug-log"></div>
+    <button id="clearLog" class="clear-log">Clear Log</button>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/bus.js"></script>
+    <script>
+        // Debug logging
+        const debugLog = document.getElementById('debugLog');
+        const clearLogBtn = document.getElementById('clearLog');
+        
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugLog.appendChild(entry);
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(`[Debug] ${message}`);
+        }
+        
+        clearLogBtn.addEventListener('click', () => {
+            debugLog.innerHTML = '';
+            log('Log cleared', 'info');
+        });
+        
+        // Initialize Lucide
+        lucide.createIcons();
+        
+        // Initialize bus
+        log('Bus initialized', 'info');
+        
+        // Test event listeners
+        log('Setting up event listeners', 'info');
+        
+        // Test settings event
+        bus.addEventListener('centerbar:settings', (event) => {
+            log(`Received centerbar:settings event: ${JSON.stringify(event.detail)}`, 'info');
+        });
+        
+        // Test music event
+        bus.addEventListener('centerbar:music', (event) => {
+            log(`Received centerbar:music event: ${JSON.stringify(event.detail)}`, 'info');
+        });
+        
+        // Test sound event
+        bus.addEventListener('centerbar:sound', (event) => {
+            log(`Received centerbar:sound event: ${JSON.stringify(event.detail)}`, 'info');
+        });
+        
+        // Test manual event dispatch
+        document.getElementById('clearLog').addEventListener('click', () => {
+            log('Manual test: Dispatching centerbar:settings', 'info');
+            bus.dispatchEvent(new CustomEvent('centerbar:settings', { detail: { test: true } }));
+        });
+        
+        // Simulate center bar button clicks
+        document.getElementById('cabSettings').addEventListener('click', () => {
+            log('Settings button clicked', 'info');
+            bus.dispatchEvent(new CustomEvent('centerbar:settings', { detail: { source: 'button' } }));
+        });
+        
+        document.getElementById('cabMusic').addEventListener('click', () => {
+            log('Music button clicked', 'info');
+            bus.dispatchEvent(new CustomEvent('centerbar:music', { detail: { source: 'button' } }));
+        });
+        
+        document.getElementById('cabSound').addEventListener('click', () => {
+            log('Sound button clicked', 'info');
+            bus.dispatchEvent(new CustomEvent('centerbar:sound', { detail: { source: 'button' } }));
+        });
+        
+        log('Debug interface ready', 'info');
+    </script>
+</body>
+</html>

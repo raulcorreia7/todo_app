@@ -8,6 +8,8 @@ class EventBus {
         this.events = new Map();
         this.componentReady = new Map();
         this.isInitialized = false;
+        // Debug flag to trace events in console. Toggle at runtime: bus.debug = true/false
+        this.debug = false;
     }
 
     /**
@@ -53,6 +55,8 @@ class EventBus {
      * @param {Object} options - Event options
      */
     addEventListener(type, listener, options = {}) {
+        console.log(`[Bus] Adding listener for event: ${type}`);
+        
         if (!this.isReady()) {
             console.warn(`Event bus not ready, queuing listener for: ${type}`);
             // Queue the listener for when bus is ready
@@ -63,8 +67,10 @@ class EventBus {
 
         if (!this.events.has(type)) {
             this.events.set(type, []);
+            console.log(`[Bus] Created new event array for type: ${type}`);
         }
         this.events.get(type).push({ listener, options });
+        console.log(`[Bus] Total listeners for ${type}: ${this.events.get(type).length}`);
     }
 
     /**
@@ -88,6 +94,8 @@ class EventBus {
      * @returns {boolean} Whether the event was handled
      */
     dispatchEvent(event) {
+        console.log(`[Bus] Dispatching event: ${event.type}`, event.detail);
+        
         if (!this.isReady()) {
             console.warn(`Event bus not ready, queuing event: ${event.type}`);
             if (!this._queuedEvents) this._queuedEvents = [];
@@ -96,11 +104,48 @@ class EventBus {
         }
 
         const type = event.type;
+
+        // Debug trace: log every dispatched event with safe-cloned detail snapshot
+        if (this.debug) {
+            let snapshot = undefined;
+            try {
+                // Avoid cloning large/complex objects; shallow copy only
+                if (event && typeof event.detail !== 'undefined') {
+                    if (event.detail && typeof event.detail === 'object') {
+                        const maxKeys = 12;
+                        const keys = Object.keys(event.detail).slice(0, maxKeys);
+                        snapshot = {};
+                        for (const k of keys) {
+                            const v = event.detail[k];
+                            snapshot[k] = (typeof v === 'object') ? '[object]' : v;
+                        }
+                        if (Object.keys(event.detail).length > maxKeys) {
+                            snapshot.__truncated = true;
+                        }
+                    } else {
+                        snapshot = event.detail;
+                    }
+                }
+            } catch (_) {
+                snapshot = '[unserializable]';
+            }
+            try {
+                console.debug('[bus] dispatch', {
+                    type,
+                    detail: snapshot,
+                    t: new Date().toISOString()
+                });
+            } catch (_) {}
+        }
+
         if (!this.events.has(type)) {
+            console.log(`[Bus] No listeners for event type: ${type}`);
             return true; // No listeners, but not an error
         }
 
         const listeners = this.events.get(type);
+        console.log(`[Bus] Found ${listeners.length} listeners for event: ${type}`);
+        
         listeners.forEach(({ listener, options }) => {
             try {
                 listener.call(this, event);

@@ -17,10 +17,13 @@ class SettingsManager {
   }
 
   init() {
+    console.log('[Settings] init called');
     this.settingsPanel = document.getElementById('settingsPanel');
+    console.log('[Settings] Settings panel element found:', !!this.settingsPanel);
 
     // Ensure DOM is ready
     const onReady = () => {
+      console.log('[Settings] DOM ready callback executed');
       // Enhance the static panel sections dynamically
       this.enhanceStaticPanel();
       this.setupEventListeners();
@@ -28,74 +31,138 @@ class SettingsManager {
       this.renderPaletteSelector();
       this.setupHeaderButtons();
       this.isInitialized = true;
+      console.log('[Settings] Settings manager initialized successfully');
     };
 
     if (document.readyState === 'loading') {
+      console.log('[Settings] DOM still loading, adding DOMContentLoaded listener');
       document.addEventListener('DOMContentLoaded', onReady);
     } else {
+      console.log('[Settings] DOM already ready, executing onReady immediately');
       onReady();
     }
+    console.log('[Settings] init completed');
   }
 
-  setupEventListeners() {
-    // Close on outside click
-    document.addEventListener('click', (e) => {
-      if (this.isOpen && !this.settingsPanel.contains(e.target) && !e.target.closest('#settingsBtn')) {
-        this.closeSettings();
-      }
-    });
+    setupEventListeners() {
+        console.log('[SettingsManager] Setting up event listeners');
+        
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (this.isOpen && !this.settingsPanel.contains(e.target) && !e.target.closest('#cabSettings')) {
+                this.closeSettings();
+            }
+        });
 
-    // Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isOpen) {
-        this.closeSettings();
-      }
-    });
+        // Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.closeSettings();
+            }
+        });
 
-    // Theme toggle
-    document.querySelectorAll('.theme-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        const themeName = e.currentTarget.dataset.theme;
-        if (themeName) {
-          this.setTheme(themeName);
+        // Theme toggle
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const themeName = e.currentTarget.dataset.theme;
+                if (themeName) {
+                    this.setTheme(themeName);
+                }
+            });
+        });
+
+        // Font selector
+        document.querySelectorAll('[data-font]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.setFont(e.target.dataset.font);
+            });
+        });
+
+        // Sound toggle
+        const soundToggle = document.getElementById('soundToggle');
+        if (soundToggle) {
+            soundToggle.addEventListener('change', (e) => {
+                this.setSoundEnabled(e.target.checked);
+                // Play sound toggle sound
+                if (typeof audioManager !== 'undefined') {
+                    audioManager.play('toggle');
+                }
+            });
         }
-      });
-    });
 
-    // Font selector
-    document.querySelectorAll('[data-font]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        this.setFont(e.target.dataset.font);
-      });
-    });
-
-    // Sound toggle
-    const soundToggle = document.getElementById('soundToggle');
-    if (soundToggle) {
-      soundToggle.addEventListener('change', (e) => {
-        this.setSoundEnabled(e.target.checked);
-        // Play sound toggle sound
-        if (typeof audioManager !== 'undefined') {
-          audioManager.play('toggle');
+        // Volume slider
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeHandle = document.getElementById('volumeHandle');
+        if (volumeSlider && volumeHandle) {
+            this.setupVolumeSlider(volumeSlider, volumeHandle);
         }
-      });
-    }
+        
+        // Listen for theme ready event to update UI properly
+        document.addEventListener('themeReady', () => {
+            this.updateUI();
+        });
 
-    // Volume slider
-    const volumeSlider = document.getElementById('volumeSlider');
-    const volumeHandle = document.getElementById('volumeHandle');
-    if (volumeSlider && volumeHandle) {
-      this.setupVolumeSlider(volumeSlider, volumeHandle);
+        // Listen for settingsChanged event to update UI when settings change from other components
+        document.addEventListener('settingsChanged', (e) => {
+            if (e.detail && e.detail.soundEnabled !== undefined) {
+                this.soundEnabled = e.detail.soundEnabled;
+                this.updateUI();
+            }
+        });
+
+        // Listen for centerbar:ready event before setting up other listeners
+        if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+            console.log('[SettingsManager] Adding centerbar:ready event listener');
+            bus.addEventListener('centerbar:ready', (event) => {
+                console.log('[SettingsManager] Center bar is ready, setting up event listeners');
+                // Now that center bar is ready, set up the actual event listeners
+                this.setupCenterBarEventListeners();
+            });
+        } else {
+            console.warn('[SettingsManager] Bus not available for centerbar:ready event');
+            // Fallback: set up event listeners immediately if bus is not available
+            this.setupCenterBarEventListeners();
+        }
+        
+        // Also listen for settingsChanged event to update UI when settings change
+        if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+            console.log('[SettingsManager] Adding settingsChanged event listener');
+            bus.addEventListener('settingsChanged', (event) => {
+                console.log('[SettingsManager] Received settingsChanged event', event.detail);
+                if (event.detail && event.detail.soundEnabled !== undefined) {
+                    this.soundEnabled = event.detail.soundEnabled;
+                    this.updateUI();
+                }
+                if (event.detail && event.detail.volume !== undefined) {
+                    this.volume = event.detail.volume;
+                    this.updateUI();
+                }
+            });
+        } else {
+            console.warn('[SettingsManager] Bus not available for settingsChanged event');
+        }
     }
-    
-    // Listen for theme ready event to update UI properly
-    document.addEventListener('themeReady', () => {
-      this.updateUI();
-    });
-  }
 
   setupHeaderButtons() {
     // No header buttons needed anymore
+  }
+
+  /**
+   * Setup event listeners for center bar actions
+   */
+  setupCenterBarEventListeners() {
+    console.log('[SettingsManager] Setting up center bar event listeners');
+    
+    // Listen for centerbar:sound event from center bar
+    if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+      console.log('[SettingsManager] Adding centerbar:sound event listener');
+      bus.addEventListener('centerbar:sound', (event) => {
+        console.log('[SettingsManager] Received centerbar:sound event', event.detail);
+        this.toggleSoundEnabled();
+      });
+    } else {
+      console.warn('[SettingsManager] Bus not available for centerbar:sound event');
+    }
   }
 
   /**
@@ -106,8 +173,13 @@ class SettingsManager {
    * - Ensure Theme cards container exists (rendered separately)
    */
   enhanceStaticPanel() {
+    console.log('[Settings] Enhancing static settings panel');
     const panel = document.getElementById('settingsPanel');
-    if (!panel) return;
+    if (!panel) {
+      console.warn('[Settings] Settings panel not found for enhancement');
+      return;
+    }
+    console.log('[Settings] Settings panel found, proceeding with enhancement');
 
     // Font options (ensure active state reflects current)
     const fontSelector = document.getElementById('fontSelector');
@@ -253,10 +325,13 @@ class SettingsManager {
   }
 
   loadSettings() {
+    console.log('[Settings] loadSettings called');
     const settings = storageManager.getSettings();
+    console.log('[Settings] Retrieved settings from storage:', settings);
 
     // Check if we have actual saved settings (not just defaults)
     const hasSavedSettings = localStorage.getItem('luxury-todo-settings') !== null;
+    console.log('[Settings] Has saved settings:', hasSavedSettings);
 
     if (hasSavedSettings) {
       // Use the actual saved settings
@@ -264,66 +339,103 @@ class SettingsManager {
       this.currentFont = settings.font;
       this.soundEnabled = settings.soundEnabled;
       this.volume = settings.volume;
+      console.log('[Settings] Using saved settings:', settings);
     } else {
       // Only use defaults if no settings exist
       this.currentTheme = settings.theme || 'emerald';
       this.currentFont = settings.font || 'inter';
       this.soundEnabled = settings.soundEnabled !== false;
       this.volume = settings.volume || 50;
+      console.log('[Settings] Using default settings:', { theme: this.currentTheme, font: this.currentFont, soundEnabled: this.soundEnabled, volume: this.volume });
 
       // Save the defaults as actual settings
       this.saveSettings();
     }
 
     // Apply theme immediately (this will be called before DOM is ready)
+    console.log('[Settings] Applying theme immediately');
     this.applyTheme(this.currentTheme);
     
     // Apply other settings after DOM is ready
     if (document.readyState === 'loading') {
+      console.log('[Settings] DOM still loading, will apply other settings on DOMContentLoaded');
       document.addEventListener('DOMContentLoaded', () => {
+        console.log('[Settings] DOM loaded, applying font and sound settings');
         this.applyFont(this.currentFont);
         this.applySoundSettings();
         // Also make sure theme is applied properly when DOM is ready
         this.updateUI();
       });
     } else {
+      console.log('[Settings] DOM already loaded, applying font and sound settings immediately');
       this.applyFont(this.currentFont);
       this.applySoundSettings();
       // Also make sure theme is applied properly when DOM is ready
       this.updateUI();
     }
+    console.log('[Settings] loadSettings completed');
   }
 
   saveSettings() {
+    console.log('[Settings] Saving settings:', this.getSettings());
     storageManager.setSettings({
       theme: this.currentTheme,
       font: this.currentFont,
       soundEnabled: this.soundEnabled,
       volume: this.volume
     });
+    console.log('[Settings] Settings saved successfully');
   }
 
-  toggleSettings() {
+  toggleSettings(anchor) {
+    console.log('[Settings] toggleSettings called with anchor:', anchor, 'current state:', this.isOpen);
+    
     if (this.isOpen) {
+      console.log('[Settings] Panel is open, closing it');
       this.closeSettings();
     } else {
-      this.openSettings();
+      console.log('[Settings] Panel is closed, opening it with anchor:', anchor);
+      this.openSettings(anchor);
     }
+    
+    console.log('[Settings] toggleSettings completed');
   }
 
-  openSettings() {
+  openSettings(anchor) {
+    console.log('[Settings] openSettings called with anchor:', anchor);
+    
     // Static panel exists; ensure it's enhanced before showing
     if (!this.settingsPanel) {
+      console.log('[Settings] Settings panel not cached, getting from DOM');
       this.settingsPanel = document.getElementById('settingsPanel');
+      if (!this.settingsPanel) {
+        console.error('[Settings] Settings panel element not found in DOM!');
+        return;
+      }
     }
+    console.log('[Settings] Settings panel element found:', !!this.settingsPanel);
     this.enhanceStaticPanel();
 
     // Render theme cards into existing container
+    console.log('[Settings] Rendering palette selector');
     this.renderPaletteSelector();
 
     this.isOpen = true;
+    console.log('[Settings] Adding open class to settings panel');
     this.settingsPanel.classList.add('open');
     this.updateUI();
+
+    // Center the settings panel in the viewport
+    console.log('[Settings] Applying positioning styles to settings panel');
+    this.settingsPanel.style.position = 'fixed';
+    this.settingsPanel.style.top = '50%';
+    this.settingsPanel.style.left = '50%';
+    this.settingsPanel.style.transform = 'translate(-50%, -50%)';
+    this.settingsPanel.style.maxWidth = '480px';
+    this.settingsPanel.style.width = '90%';
+    this.settingsPanel.style.maxHeight = '80vh';
+    this.settingsPanel.style.overflowY = 'auto';
+    this.settingsPanel.style.zIndex = '11000'; // Ensure highest priority
 
     // Proactively warn once if modalManager is not ready to help debugging
     if (!(typeof modalManager !== 'undefined' && typeof modalManager.confirm === 'function')) {
@@ -333,11 +445,38 @@ class SettingsManager {
     if (typeof audioManager !== 'undefined') {
       audioManager.play('settings');
     }
+    
+    console.log('[Settings] Settings panel opened successfully');
   }
 
   closeSettings() {
+    console.log('[Settings] closeSettings called');
+    if (!this.settingsPanel) {
+      console.warn('[Settings] Settings panel not cached, getting from DOM');
+      this.settingsPanel = document.getElementById('settingsPanel');
+      if (!this.settingsPanel) {
+        console.error('[Settings] Settings panel element not found in DOM!');
+        return;
+      }
+    }
+    
+    console.log('[Settings] Removing open class from settings panel');
     this.isOpen = false;
     this.settingsPanel.classList.remove('open');
+    
+    // Reset positioning styles to avoid affecting layout when closed
+    console.log('[Settings] Resetting positioning styles');
+    this.settingsPanel.style.position = '';
+    this.settingsPanel.style.top = '';
+    this.settingsPanel.style.left = '';
+    this.settingsPanel.style.transform = '';
+    this.settingsPanel.style.maxWidth = '';
+    this.settingsPanel.style.width = '';
+    this.settingsPanel.style.maxHeight = '';
+    this.settingsPanel.style.overflowY = '';
+    this.settingsPanel.style.zIndex = '';
+    
+    console.log('[Settings] Settings panel closed successfully');
   }
 
   setTheme(theme) {
@@ -375,63 +514,125 @@ class SettingsManager {
   }
 
   setSoundEnabled(enabled) {
+    console.log('[Settings] setSoundEnabled called with:', enabled);
     this.soundEnabled = enabled;
     this.saveSettings();
 
     if (typeof audioManager !== 'undefined') {
       audioManager.setEnabled(enabled);
+      // Also update audioManager.enabled to ensure consistency
+      audioManager.enabled = enabled;
+      console.log('[Settings] audioManager.setEnabled called with:', enabled);
+    } else {
+      console.warn('[Settings] audioManager not available for setSoundEnabled');
     }
     
-    // Dispatch settingsChanged event to notify other components
+    // Dispatch settingsChanged event to notify other components (always send payload)
     if (typeof bus !== 'undefined') {
-      bus.dispatchEvent(new CustomEvent('settingsChanged'));
+      bus.dispatchEvent(new CustomEvent('settingsChanged', { 
+        detail: { 
+          soundEnabled: enabled,
+          volume: this.volume
+        } 
+      }));
+      console.log('[Settings] settingsChanged event dispatched with:', { soundEnabled: enabled, volume: this.volume });
+    } else {
+      console.warn('[Settings] bus not available for settingsChanged event');
     }
     
     // Update volume button state
     if (typeof todoApp !== 'undefined' && todoApp.updateVolumeButtonState) {
       todoApp.updateVolumeButtonState(enabled);
+      console.log('[Settings] todoApp.updateVolumeButtonState called with:', enabled);
+    } else {
+      console.warn('[Settings] todoApp not available for updateVolumeButtonState');
     }
+    
+    // Update center action bar sound button
+    if (typeof centerBar !== 'undefined' && typeof centerBar.updateSoundButtonState === 'function') {
+      centerBar.updateSoundButtonState();
+      console.log('[Settings] centerBar.updateSoundButtonState called');
+    } else {
+      console.warn('[Settings] centerBar not available for updateSoundButtonState');
+    }
+    
+    console.log('[Settings] setSoundEnabled completed');
+  }
+
+  toggleSoundEnabled() {
+    console.log('[Settings] toggleSoundEnabled called, current state:', this.soundEnabled);
+    this.setSoundEnabled(!this.soundEnabled);
+    console.log('[Settings] toggleSoundEnabled completed');
   }
 
   setVolume(volume) {
+    console.log('[Settings] setVolume called with:', volume);
     this.volume = volume;
     this.saveSettings();
 
     if (typeof audioManager !== 'undefined') {
       audioManager.setVolume(volume);
       audioManager.play('volume');
+      console.log('[Settings] audioManager.setVolume called with:', volume);
+    } else {
+      console.warn('[Settings] audioManager not available for setVolume');
     }
     
-    // Dispatch settingsChanged event to notify other components
+    // Dispatch settingsChanged event to notify other components (always send payload)
     if (typeof bus !== 'undefined') {
-      bus.dispatchEvent(new CustomEvent('settingsChanged'));
+      bus.dispatchEvent(new CustomEvent('settingsChanged', { detail: this.getSettings() }));
+      console.log('[Settings] settingsChanged event dispatched with:', this.getSettings());
+    } else {
+      console.warn('[Settings] bus not available for settingsChanged event');
     }
+    
+    console.log('[Settings] setVolume completed');
   }
 
   applyTheme(theme) {
-    // Apply theme immediately to prevent flash
-    document.body.className = document.body.className.replace(/theme-\w+/g, '');
-    document.body.classList.add(`theme-${theme}`);
+    console.log('[Settings] Applying theme:', theme);
+    // Apply theme using the new ThemeManager system
+    if (typeof themeManager !== 'undefined' && typeof themeManager.changeTheme === 'function') {
+      console.log('[Settings] Using ThemeManager to apply theme');
+      themeManager.changeTheme(theme);
+    } else {
+      // Fallback to old system if ThemeManager not available
+      console.log('[Settings] ThemeManager not available, using fallback system');
+      document.body.className = document.body.className.replace(/theme-\w+/g, '');
+      document.body.classList.add(`theme-${theme}`);
+    }
     
     // Also update the settings manager's current theme
     this.currentTheme = theme;
+    console.log('[Settings] Theme applied successfully');
   }
 
   applyFont(font) {
+    console.log('[Settings] Applying font:', font);
     document.body.className = document.body.className.replace(/font-\w+/g, '');
     document.body.classList.add(`font-${font}`);
+    console.log('[Settings] Font applied successfully');
   }
 
   applySoundSettings() {
+    console.log('[Settings] Applying sound settings - enabled:', this.soundEnabled, 'volume:', this.volume);
     if (typeof audioManager !== 'undefined') {
       audioManager.setEnabled(this.soundEnabled);
       audioManager.setVolume(this.volume);
+      console.log('[Settings] Sound settings applied to audioManager');
+    } else {
+      console.warn('[Settings] audioManager not available for applying sound settings');
     }
   }
 
   renderPaletteSelector() {
+    console.log('[Settings] Rendering palette selector');
     const container = document.getElementById('themeCardsContainer');
-    if (!container) return;
+    if (!container) {
+      console.warn('[Settings] Theme cards container not found');
+      return;
+    }
+    console.log('[Settings] Theme cards container found, proceeding with rendering');
 
     // Clear existing content
     container.innerHTML = '';
@@ -565,6 +766,7 @@ class SettingsManager {
   }
 
   setupVolumeSlider(slider, handle) {
+    console.log('[Settings] Setting up volume slider');
     let isDragging = false;
     let tempVolume = this.volume; // Store current volume as temp
 
@@ -647,26 +849,39 @@ class SettingsManager {
     slider.addEventListener('touchstart', onTouchStart, { passive: false });
     document.addEventListener('touchmove', onTouchMove, { passive: false });
     document.addEventListener('touchend', onTouchEnd);
+    
+    console.log('[Settings] Volume slider setup completed');
   }
 
   updateVolumeUI(volume) {
+    console.log('[Settings] updateVolumeUI called with:', volume);
     const fill = document.getElementById('volumeFill');
     const handle = document.getElementById('volumeHandle');
 
     if (fill && handle) {
       fill.style.width = `${volume}%`;
       handle.style.left = `${volume}%`;
+      console.log('[Settings] Volume UI elements updated successfully');
+    } else {
+      console.warn('[Settings] Volume UI elements not found - fill:', !!fill, 'handle:', !!handle);
     }
+    console.log('[Settings] updateVolumeUI completed');
   }
 
   updateUI() {
+    console.log('[Settings] updateUI called with current settings:', this.getSettings());
+    
     // Update theme buttons
-    document.querySelectorAll('[data-theme]').forEach(btn => {
+    const themeButtons = document.querySelectorAll('[data-theme]');
+    console.log('[Settings] Found', themeButtons.length, 'theme buttons');
+    themeButtons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.theme === this.currentTheme);
     });
 
     // Update font buttons
-    document.querySelectorAll('[data-font]').forEach(btn => {
+    const fontButtons = document.querySelectorAll('[data-font]');
+    console.log('[Settings] Found', fontButtons.length, 'font buttons');
+    fontButtons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.font === this.currentFont);
     });
 
@@ -674,10 +889,16 @@ class SettingsManager {
     const soundToggle = document.getElementById('soundToggle');
     if (soundToggle) {
       soundToggle.checked = this.soundEnabled;
+      console.log('[Settings] Sound toggle updated to:', this.soundEnabled);
+    } else {
+      console.warn('[Settings] Sound toggle element not found');
     }
 
     // Update volume
+    console.log('[Settings] Calling updateVolumeUI with volume:', this.volume);
     this.updateVolumeUI(this.volume);
+    
+    console.log('[Settings] UI update completed');
   }
 
   isReady() {

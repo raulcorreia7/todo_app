@@ -4,6 +4,28 @@
  */
 class ModalManager {
   constructor() {
+    this.modal = null;
+    this.overlay = null;
+    this.titleElement = null;
+    this.descriptionElement = null;
+    this.cancelButton = null;
+    this.confirmButton = null;
+    this.closeButton = null;
+    
+    this.currentResolve = null;
+    this.currentReject = null;
+    this.soundPlayed = false;
+    this.isProcessing = false;
+    
+    // Initialize after a short delay to ensure DOM is ready
+    setTimeout(() => this.init(), 100);
+  }
+  
+  /**
+   * Initialize the modal manager
+   */
+  init() {
+    // Find modal elements
     this.modal = document.getElementById('modal');
     this.overlay = document.getElementById('modalOverlay');
     this.titleElement = document.getElementById('modalTitle');
@@ -12,18 +34,15 @@ class ModalManager {
     this.confirmButton = document.getElementById('modalConfirmButton');
     this.closeButton = document.querySelector('.modal-close');
     
-    this.currentResolve = null;
-    this.currentReject = null;
-    this.soundPlayed = false;
-    this.isProcessing = false;
+    // Check if elements exist before adding event listeners
+    if (!this.overlay || !this.closeButton || !this.cancelButton || !this.confirmButton || !this.modal) {
+      console.warn('Modal elements not found, retrying...');
+      setTimeout(() => this.init(), 100);
+      return;
+    }
     
-    this.init();
-  }
-  
-  /**
-   * Initialize the modal manager
-   */
-  init() {
+    console.log('Modal elements found, initializing...');
+    
     // Setup event listeners
     this.overlay.addEventListener('click', () => this.close());
     this.closeButton.addEventListener('click', () => this.close());
@@ -36,6 +55,33 @@ class ModalManager {
         this.close();
       }
     });
+    
+    // Listen for centerbar:settings event from center bar
+    if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+      bus.addEventListener('centerbar:settings', (event) => {
+        console.log('[ModalManager] Received centerbar:settings event', event.detail);
+        // Settings panel is handled by settingsManager
+        if (typeof settingsManager !== 'undefined' && typeof settingsManager.toggleSettings === 'function') {
+          settingsManager.toggleSettings(event.detail?.anchor);
+        }
+      });
+    }
+    
+    // Also listen for settingsChanged event to update UI when settings change
+    if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+      bus.addEventListener('settingsChanged', (event) => {
+        console.log('[ModalManager] Received settingsChanged event', event.detail);
+        // Update UI if needed
+        if (typeof settingsManager !== 'undefined') {
+          settingsManager.updateUI();
+        }
+      });
+    }
+    
+    // Mark modal as ready
+    if (typeof bus !== 'undefined') {
+      bus.markReady('modal');
+    }
   }
   
   /**

@@ -7,17 +7,20 @@ class TodoApp {
   constructor() {
     this.tasks = [];
     this.isInitialized = false;
-    this.currentFilter = 'all';
+    this.currentFilter = "all";
     this.editingTaskId = null;
     this.isDirty = false;
     this.renderTimeout = null;
+    
+    // Initialize CenterBar instance
+    this.centerBar = null;
 
     this.CONFIG = {
       maxTitleLength: 100,
       maxDescriptionLength: 500,
       autoSaveDelay: 500,
       animationDuration: 300,
-      debounceDelay: 50
+      debounceDelay: 50,
     };
 
     this.init();
@@ -31,39 +34,71 @@ class TodoApp {
 
     await this.waitForDependencies();
     this.setupEventListeners();
+    // Subtle ready cue (if supported)
+    this.vibrate?.("subtle");
     this.loadTasks();
     this.render();
     this.setupFooterVisibility();
-    
+
     // Initialize volume button state
     this.initializeVolumeButtonState();
-    
+
     // Setup settings change listener for volume button
     this.setupSettingsChangeListener();
 
     // Initialize statistics manager
-    if (typeof statisticsManager !== 'undefined' && statisticsManager.isReady()) {
-      console.log('Statistics manager initialized');
+    if (
+      typeof statisticsManager !== "undefined" &&
+      statisticsManager.isReady()
+    ) {
+      console.log("Statistics manager initialized");
     }
 
     // Initialize audio manager
-    if (typeof audioManager !== 'undefined' && audioManager.isInitialized) {
-      console.log('Audio manager initialized');
+    if (typeof audioManager !== "undefined" && audioManager.isInitialized) {
+      console.log("Audio manager initialized");
     }
+    // Light haptic on app init completion
+    this.vibrate?.("subtle");
 
     this.isInitialized = true;
-    console.log('Todo app initialized');
+    console.log("Todo app initialized");
 
-    // Signal globally that the app is fully ready for dependent systems (e.g., music delayed start)
+    // Signal globally that the app is fully ready for dependent systems (e.g. music delayed start)
     try {
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-        bus.dispatchEvent(new CustomEvent('app:ready'));
+      if (
+        typeof bus !== "undefined" &&
+        typeof bus.dispatchEvent === "function"
+      ) {
+        console.log("Dispatching app:ready event via bus");
+        bus.dispatchEvent(new CustomEvent("app:ready"));
       } else {
         // Fallback: also fire a DOM event so listeners without the bus can hook in
-        document.dispatchEvent(new CustomEvent('app:ready'));
+        console.log("Dispatching app:ready event via DOM");
+        document.dispatchEvent(new CustomEvent("app:ready"));
       }
     } catch (e) {
-      console.warn('Failed to dispatch app:ready event', e);
+      console.warn("Failed to dispatch app:ready event", e);
+    }
+  }
+
+  /**
+   * Attempt a subtle haptic vibration if supported
+   * Premium patterns, minimal and respectful of device settings.
+   * @param {'subtle'|'add'|'complete'|'delete'} kind
+   */
+  vibrate(kind = "subtle") {
+    try {
+      if (!("vibrate" in navigator)) return;
+      const patterns = {
+        subtle: [15],
+        add: [50],
+        complete: [30, 50, 30],
+        delete: [100],
+      };
+      navigator.vibrate(patterns[kind] || patterns.subtle);
+    } catch (_) {
+      // no-op
     }
   }
 
@@ -73,181 +108,343 @@ class TodoApp {
    * @param {string} type - Type of text to refactor ('title' or 'description')
    * @returns {Promise<string>} - The refactored text
    */
-  async refactorTextWithAI(text, type = 'general') {
+  async refactorTextWithAI(text, type = "general") {
     try {
       // Check if AI features are enabled
       if (!window.AI_CONFIG || !window.AI_CONFIG.enabled) {
-        console.warn('AI features are disabled');
+        console.warn("AI features are disabled");
         return text;
       }
 
       // Check if we have API keys
-      const hasOpenAIKey = window.OPENAI_API_KEY && window.OPENAI_API_KEY.trim() !== '';
-      const hasAnthropicKey = window.ANTHROPIC_API_KEY && window.ANTHROPIC_API_KEY.trim() !== '';
-      
+      const hasOpenAIKey =
+        window.OPENAI_API_KEY && window.OPENAI_API_KEY.trim() !== "";
+      const hasAnthropicKey =
+        window.ANTHROPIC_API_KEY && window.ANTHROPIC_API_KEY.trim() !== "";
+
       if (!hasOpenAIKey && !hasAnthropicKey) {
-        console.warn('No AI API keys configured');
+        console.warn("No AI API keys configured");
         return text;
       }
 
       // Show loading state
-      const refactorBtn = document.querySelector('.ai-refactor-btn');
+      const refactorBtn = document.querySelector(".ai-refactor-btn");
       if (refactorBtn) {
-        refactorBtn.classList.add('loading');
+        refactorBtn.classList.add("loading");
       }
 
       // Check if AI providers are available
-      if (typeof AIProviders !== 'undefined' && AIProviders.refactorText) {
+      if (typeof AIProviders !== "undefined" && AIProviders.refactorText) {
         // Use the AI provider factory
-        return await AIProviders.refactorText(text, window.AI_CONFIG.defaultStyle, { 
-          type,
-          maxTokens: window.AI_CONFIG.maxTokens,
-          temperature: window.AI_CONFIG.temperature
-        });
+        return await AIProviders.refactorText(
+          text,
+          window.AI_CONFIG.defaultStyle,
+          {
+            type,
+            maxTokens: window.AI_CONFIG.maxTokens,
+            temperature: window.AI_CONFIG.temperature,
+          }
+        );
       } else {
         // Fallback to simple transformation
         const refactored = text
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+
         return refactored;
       }
     } catch (error) {
-      console.error('Error refactoring text:', error);
+      console.error("Error refactoring text:", error);
       // Fallback: return a simple improvement
       return text
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
     } finally {
       // Hide loading state
       if (refactorBtn) {
-        refactorBtn.classList.remove('loading');
+        refactorBtn.classList.remove("loading");
       }
     }
   }
 
   /**
-   * Wait for all dependencies to load, including settings
+   * Wait for all dependencies to load, including settings and UI subsystems
+   * Guarantees ordering: bus -> storage -> themes -> modal -> settings-loader -> settings -> audio -> music -> statistics
+   * Falls back after a max wait to avoid hard-lock.
    */
   async waitForDependencies() {
+    const ready = (obj, method) => {
+      try {
+        if (typeof obj === "undefined" || obj === null) return false;
+        if (!method) return true;
+        const m = obj[method];
+        return typeof m === "function" ? !!m.call(obj) : !!m;
+      } catch {
+        return false;
+      }
+    };
+
     const checkDependencies = () => {
-      return (
-        typeof storageManager !== 'undefined' && storageManager.isReady() &&
-        typeof themeManager !== 'undefined' && (typeof themeManager.isReady === 'function' ? themeManager.isReady() : !!themeManager.isReady) &&
-        typeof settingsManager !== 'undefined' && settingsManager.isReady() &&
-        typeof settingsLoader !== 'undefined' && settingsLoader.isReady()
-      );
+      // Event bus
+      const busReady =
+        typeof bus !== "undefined" &&
+        typeof bus.addEventListener === "function" &&
+        typeof bus.dispatchEvent === "function";
+
+      // Core storage + theme
+      const storageReady =
+        typeof storageManager !== "undefined" &&
+        ready(storageManager, "isReady");
+      const themeReady =
+        typeof themeManager !== "undefined" &&
+        (typeof themeManager.isReady === "function"
+          ? themeManager.isReady()
+          : !!themeManager.isReady);
+
+      // Modal should exist before settings so confirms work
+      const modalReady =
+        typeof modalManager !== "undefined" &&
+        (typeof modalManager.show === "function" ||
+          typeof modalManager.showDeleteConfirm === "function");
+
+      // Settings loader then settings
+      const settingsLoaderReady =
+        typeof settingsLoader !== "undefined" &&
+        ready(settingsLoader, "isReady");
+      const settingsReady =
+        typeof settingsManager !== "undefined" &&
+        ready(settingsManager, "isReady");
+
+      // Audio + Music (optional but preferred)
+      const audioReady =
+        typeof audioManager !== "undefined"
+          ? audioManager.isInitialized === true ||
+            typeof audioManager.play === "function"
+          : true;
+      const musicReady =
+        typeof musicManager !== "undefined"
+          ? typeof musicManager.togglePlay === "function" ||
+            typeof musicManager.next === "function"
+          : true;
+
+      // Statistics (optional)
+      const statsReady =
+        typeof statisticsManager !== "undefined"
+          ? typeof statisticsManager.isReady === "function"
+            ? statisticsManager.isReady()
+            : true
+          : true;
+
+      return {
+        busReady,
+        storageReady,
+        themeReady,
+        modalReady,
+        settingsLoaderReady,
+        settingsReady,
+        audioReady,
+        musicReady,
+        statsReady,
+        all:
+          busReady &&
+          storageReady &&
+          themeReady &&
+          modalReady &&
+          settingsLoaderReady &&
+          settingsReady &&
+          audioReady &&
+          musicReady &&
+          statsReady,
+      };
     };
 
     return new Promise((resolve) => {
-      const maxWait = 10000; // 10 seconds max
+      const maxWait = 12000; // 12 seconds max
       const startTime = Date.now();
+      const warnAt = 4000; // surface intermediate readiness after 4s
 
-      const check = () => {
-        if (checkDependencies()) {
+      const tick = () => {
+        const st = checkDependencies();
+        if (st.all) {
           resolve();
-        } else if (Date.now() - startTime > maxWait) {
-          console.warn('Dependency loading timeout, proceeding anyway');
-          resolve();
-        } else {
-          setTimeout(check, 100);
+          return;
         }
+        const elapsed = Date.now() - startTime;
+        if (elapsed > maxWait) {
+          console.warn(
+            "Dependency loading timeout, proceeding anyway with state:",
+            st
+          );
+          resolve();
+          return;
+        }
+        if (elapsed > warnAt && (elapsed - warnAt) % 1000 < 100) {
+          // Periodic status log after warning threshold
+          console.debug("[deps] waiting...", st);
+        }
+        setTimeout(tick, 100);
       };
-      check();
+
+      tick();
     });
   }
+
+  // Removed legacy toolbar wiring helpers (now centralized in CenterBar class)
 
   /**
    * Setup event listeners
    */
   setupEventListeners() {
+    // Center bar wiring handled by App.CenterBar (class in js/center-bar.js)
     // Add task form
-    const addTaskForm = document.getElementById('addTaskForm');
+    const addTaskForm = document.getElementById("addTaskForm");
     if (addTaskForm) {
-      addTaskForm.addEventListener('submit', (e) => {
+      addTaskForm.addEventListener("submit", (e) => {
         e.preventDefault();
         this.addTask();
       });
     }
 
     // Filter buttons
-    document.querySelectorAll('[data-filter]').forEach(button => {
-      button.addEventListener('click', (e) => {
+    document.querySelectorAll("[data-filter]").forEach((button) => {
+      button.addEventListener("click", (e) => {
         this.setFilter(e.target.dataset.filter);
       });
     });
 
-    // Clear completed
-    const clearCompletedBtn = document.getElementById('clearCompleted');
+    // Clear completed (legacy footer button - no longer present)
+    const clearCompletedBtn = document.getElementById("clearCompleted");
     if (clearCompletedBtn) {
-      clearCompletedBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.clearCompleted();
-      });
+      // ensure no legacy double-binding
+      clearCompletedBtn.replaceWith(clearCompletedBtn.cloneNode(true));
     }
 
-    // Delete all tasks
-    const deleteAllBtn = document.getElementById('deleteAllBtn');
+    // Delete all tasks (legacy footer button - no longer present)
+    const deleteAllBtn = document.getElementById("deleteAllBtn");
     if (deleteAllBtn) {
-      deleteAllBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.deleteAll();
-      });
+      deleteAllBtn.replaceWith(deleteAllBtn.cloneNode(true));
     }
 
-    // Test data button
-    const testDataBtn = document.getElementById('testDataBtn');
+    // Test data (legacy footer button - no longer present)
+    const testDataBtn = document.getElementById("testDataBtn");
     if (testDataBtn) {
-      testDataBtn.addEventListener('click', () => this.addTestData());
+      testDataBtn.replaceWith(testDataBtn.cloneNode(true));
     }
+
+    // CenterActionBar handles Test/Clear/Delete wiring now.
 
     // Statistics button
-    const statisticsBtn = document.getElementById('statisticsBtn');
+    const statisticsBtn = document.getElementById("statisticsBtn");
     if (statisticsBtn) {
-      statisticsBtn.addEventListener('click', () => {
-        if (typeof statisticsManager !== 'undefined') {
+      statisticsBtn.addEventListener("click", () => {
+        if (typeof statisticsManager !== "undefined") {
           statisticsManager.toggleStatistics();
         }
       });
     }
 
-    // Music popover toggle button + transport wiring
-    const musicBtn = document.getElementById('musicBtn');
-    const musicPopover = document.getElementById('musicPopover');
+    // Music popover toggle button + transport wiring (ensure presence; create if missing)
+    let musicBtn = document.getElementById("musicBtn");
+    let musicPopover = document.getElementById("musicPopover");
+
+    // Optional cleanup: auto-create a minimal popover container if markup is missing
+    if (!musicPopover) {
+      const pop = document.createElement("div");
+      pop.id = "musicPopover";
+      pop.className = "music-popover";
+      pop.style.display = "none";
+      pop.innerHTML = `
+        <div class="music-transport">
+          <button id="musicPrev" aria-label="Previous">&#9664;</button>
+          <button id="musicPlayPause" aria-label="Play/Pause">
+            <span id="musicPlayIcon">▶</span><span id="musicPauseIcon" style="display:none;">⏸</span>
+          </button>
+          <button id="musicNext" aria-label="Next">&#9654;</button>
+        </div>
+        <div class="music-track-indicator">
+          <span id="currentTrack">1</span>/<span id="totalTracks">0</span>
+        </div>
+        <div id="silenceIndicator" class="silence-indicator" style="display:none;">
+          <div class="silence-progress"><div id="silenceProgressFill"></div></div>
+        </div>
+        <div class="music-volume">
+          <div id="musicSlider" class="music-slider">
+            <div id="musicFill" class="music-fill"></div>
+            <div id="musicHandle" class="music-handle"></div>
+          </div>
+          <div id="volumeFeedback" class="volume-feedback"></div>
+        </div>
+      `;
+      document.body.appendChild(pop);
+      musicPopover = pop;
+    }
+    // Do NOT create a duplicate music button; CenterBar is the single source of truth for music button
+
     if (musicBtn && musicPopover) {
-      musicBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        // Toggle display (does NOT affect playback)
-        const isOpen = musicPopover.classList.contains('open') || musicPopover.style.display === 'block';
+      // Centralized toggle for popover
+      const toggleMusicUI = () => {
+        const pop = document.getElementById("musicPopover");
+        if (!pop) return;
+        const isOpen =
+          pop.classList.contains("open") || pop.style.display === "block";
         if (isOpen) {
-          musicPopover.classList.remove('open');
-          musicPopover.style.display = 'none';
+          pop.classList.remove("open");
+          pop.style.display = "none";
         } else {
-          musicPopover.style.display = 'block';
-          requestAnimationFrame(() => musicPopover.classList.add('open'));
+          // Position above the music button centered
+          try {
+            const btn = document.getElementById("musicBtn");
+            const rect = btn?.getBoundingClientRect();
+            const prect = pop.getBoundingClientRect();
+            if (rect) {
+              const centerX = rect.left + rect.width / 2;
+              const left = Math.max(
+                8,
+                Math.min(
+                  window.innerWidth - prect.width - 8,
+                  centerX - prect.width / 2
+                )
+              );
+              const bottom = Math.max(8, window.innerHeight - rect.top + 10);
+              pop.style.left = `${left + prect.width / 2}px`; // translateX(-50%) friendly
+              pop.style.bottom = `${bottom}px`;
+            }
+          } catch {}
+          pop.style.display = "block";
+          requestAnimationFrame(() => pop.classList.add("open"));
         }
+      };
+
+      // Keep local click for direct UI toggle
+      musicBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        toggleMusicUI();
       });
 
       // Transport controls: decoupled from SFX sound button
-      const prevBtn = document.getElementById('musicPrev');
-      const playPauseBtn = document.getElementById('musicPlayPause');
-      const nextBtn = document.getElementById('musicNext');
+      const prevBtn = document.getElementById("musicPrev");
+      const playPauseBtn = document.getElementById("musicPlayPause");
+      const nextBtn = document.getElementById("musicNext");
 
       // Micro UI elements for feedback
-      const transportEl = musicPopover.querySelector('.music-transport');
-      const trackIndicator = musicPopover.querySelector('.music-track-indicator');
-      const currentTrackEl = document.getElementById('currentTrack');
-      const totalTracksEl = document.getElementById('totalTracks');
-      const silenceIndicator = document.getElementById('silenceIndicator');
-      const silenceCountdownEl = document.getElementById('silenceCountdown');
-      const silenceProgressFill = document.getElementById('silenceProgressFill');
+      const transportEl = musicPopover.querySelector(".music-transport");
+      const trackIndicator = musicPopover.querySelector(
+        ".music-track-indicator"
+      );
+      const currentTrackEl = document.getElementById("currentTrack");
+      const totalTracksEl = document.getElementById("totalTracks");
+      const silenceIndicator = document.getElementById("silenceIndicator");
+      const silenceCountdownEl = document.getElementById("silenceCountdown");
+      const silenceProgressFill = document.getElementById(
+        "silenceProgressFill"
+      );
 
       // Helper to ensure index is valid on first play (outside bounds -> set to 0)
       const ensureIndexBeforePlay = () => {
         try {
-          if (typeof musicManager !== 'undefined') {
+          if (typeof musicManager !== "undefined") {
             const idx = musicManager.getCurrentTrackIndex?.();
             const tracks = musicManager.getTrackList?.() || [];
             if (!(idx >= 0 && idx < tracks.length)) {
@@ -257,9 +454,11 @@ class TodoApp {
               // Fallback approach: call next until index becomes 0 or tracks.length === 0
               if (tracks.length > 0) {
                 // Prefer a direct assignment if available
-                if (typeof musicManager.currentIndex === 'number') {
+                if (typeof musicManager.currentIndex === "number") {
                   musicManager.currentIndex = 0;
-                  try { localStorage.setItem('music.lastTrackIndex', '0'); } catch {}
+                  try {
+                    localStorage.setItem("music.lastTrackIndex", "0");
+                  } catch {}
                 }
               }
             }
@@ -268,26 +467,35 @@ class TodoApp {
       };
 
       if (prevBtn) {
-        prevBtn.addEventListener('click', async (e) => {
+        prevBtn.addEventListener("click", async (e) => {
           e.preventDefault();
           try {
-            if (typeof musicManager !== 'undefined' && typeof musicManager.prev === 'function') {
+            if (
+              typeof musicManager !== "undefined" &&
+              typeof musicManager.prev === "function"
+            ) {
               // brief press animation
-              transportEl?.classList.add('press-prev');
-              setTimeout(() => transportEl?.classList.remove('press-prev'), 120);
+              transportEl?.classList.add("press-prev");
+              setTimeout(
+                () => transportEl?.classList.remove("press-prev"),
+                120
+              );
               await musicManager.prev();
             }
           } catch (err) {
-            console.warn('Player prev failed:', err);
+            console.warn("Player prev failed:", err);
           }
         });
       }
 
       if (playPauseBtn) {
-        playPauseBtn.addEventListener('click', async (e) => {
+        playPauseBtn.addEventListener("click", async (e) => {
           e.preventDefault();
           try {
-            if (typeof musicManager !== 'undefined' && typeof musicManager.togglePlay === 'function') {
+            if (
+              typeof musicManager !== "undefined" &&
+              typeof musicManager.togglePlay === "function"
+            ) {
               // On first user play after reload and when index is out of bounds, set to first track
               ensureIndexBeforePlay();
 
@@ -296,31 +504,37 @@ class TodoApp {
               await musicManager.togglePlay();
             }
           } catch (err) {
-            console.warn('Player togglePlay failed:', err);
+            console.warn("Player togglePlay failed:", err);
           }
         });
       }
 
       if (nextBtn) {
-        nextBtn.addEventListener('click', async (e) => {
+        nextBtn.addEventListener("click", async (e) => {
           e.preventDefault();
           try {
-            if (typeof musicManager !== 'undefined' && typeof musicManager.next === 'function') {
+            if (
+              typeof musicManager !== "undefined" &&
+              typeof musicManager.next === "function"
+            ) {
               // brief press animation
-              transportEl?.classList.add('press-next');
-              setTimeout(() => transportEl?.classList.remove('press-next'), 120);
+              transportEl?.classList.add("press-next");
+              setTimeout(
+                () => transportEl?.classList.remove("press-next"),
+                120
+              );
               await musicManager.next();
             }
           } catch (err) {
-            console.warn('Player next failed:', err);
+            console.warn("Player next failed:", err);
           }
         });
       }
 
       // Volume slider wiring (generic, independent from SFX mute)
-      const slider = document.getElementById('musicSlider');
-      const handle = document.getElementById('musicHandle');
-      const fill = document.getElementById('musicFill');
+      const slider = document.getElementById("musicSlider");
+      const handle = document.getElementById("musicHandle");
+      const fill = document.getElementById("musicFill");
 
       const setSlider = (pct) => {
         const clamped = Math.max(0, Math.min(100, pct));
@@ -337,17 +551,20 @@ class TodoApp {
 
       const applyVolumePct = (pct) => {
         setSlider(pct);
-        if (typeof musicManager !== 'undefined' && typeof musicManager.setVolume === 'function') {
+        if (
+          typeof musicManager !== "undefined" &&
+          typeof musicManager.setVolume === "function"
+        ) {
           musicManager.setVolume(pct / 100, { smooth: true });
         }
         // transient percent chip
-        const chip = document.getElementById('volumeFeedback');
+        const chip = document.getElementById("volumeFeedback");
         if (chip) {
           chip.textContent = `${Math.round(pct)}%`;
           chip.style.left = `${Math.max(0, Math.min(100, pct))}%`;
-          chip.classList.add('show');
+          chip.classList.add("show");
           clearTimeout(chip._hideT);
-          chip._hideT = setTimeout(() => chip.classList.remove('show'), 900);
+          chip._hideT = setTimeout(() => chip.classList.remove("show"), 900);
         }
       };
 
@@ -364,19 +581,21 @@ class TodoApp {
           e.preventDefault();
           applyVolumePct(valueFromEvent(e));
         };
-        const onEnd = () => { dragging = false; };
+        const onEnd = () => {
+          dragging = false;
+        };
 
-        slider.addEventListener('mousedown', onStart);
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onEnd);
+        slider.addEventListener("mousedown", onStart);
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onEnd);
 
-        slider.addEventListener('touchstart', onStart, { passive: false });
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('touchend', onEnd);
+        slider.addEventListener("touchstart", onStart, { passive: false });
+        document.addEventListener("touchmove", onMove, { passive: false });
+        document.addEventListener("touchend", onEnd);
 
         // Initialize slider from stored volume if available
         try {
-          const vol = parseFloat(localStorage.getItem('music.volume'));
+          const vol = parseFloat(localStorage.getItem("music.volume"));
           const pct = isFinite(vol) ? Math.max(0, Math.min(1, vol)) * 100 : 45;
           setSlider(pct);
         } catch {
@@ -387,39 +606,45 @@ class TodoApp {
       // Reflect playing state on the floating music button (not the SFX volume button)
       const reflectMusicBtn = (playing) => {
         if (!musicBtn) return;
-        musicBtn.classList.toggle('is-playing', !!playing);
-        musicBtn.classList.toggle('is-paused', !playing);
+        musicBtn.classList.toggle("is-playing", !!playing);
+        musicBtn.classList.toggle("is-paused", !playing);
       };
 
       // Update track counts initially
-      if (currentTrackEl && totalTracksEl && typeof musicManager !== 'undefined') {
+      if (
+        currentTrackEl &&
+        totalTracksEl &&
+        typeof musicManager !== "undefined"
+      ) {
         const tracks = musicManager.getTrackList?.() || [];
         totalTracksEl.textContent = String(tracks.length || 0);
         const idx = musicManager.getCurrentTrackIndex?.();
-        currentTrackEl.textContent = String((typeof idx === 'number' ? idx : 0) + 1);
+        currentTrackEl.textContent = String(
+          (typeof idx === "number" ? idx : 0) + 1
+        );
       }
 
       const bumpTrackIndicator = () => {
         if (!trackIndicator) return;
-        trackIndicator.classList.add('highlight');
-        setTimeout(() => trackIndicator.classList.remove('highlight'), 240);
+        trackIndicator.classList.add("highlight");
+        setTimeout(() => trackIndicator.classList.remove("highlight"), 240);
       };
 
       // Subtle highlight on play/pause button while music is playing
       const setPlayButtonPlayingState = (isPlaying) => {
-        const playIcon = document.getElementById('musicPlayIcon');
-        const pauseIcon = document.getElementById('musicPauseIcon');
+        const playIcon = document.getElementById("musicPlayIcon");
+        const pauseIcon = document.getElementById("musicPauseIcon");
         if (playPauseBtn) {
-          playPauseBtn.classList.toggle('is-playing', !!isPlaying);
+          playPauseBtn.classList.toggle("is-playing", !!isPlaying);
         }
         // Ensure correct icon visibility is preserved
         if (playIcon && pauseIcon) {
           if (isPlaying) {
-            playIcon.style.display = 'none';
-            pauseIcon.style.display = '';
+            playIcon.style.display = "none";
+            pauseIcon.style.display = "";
           } else {
-            playIcon.style.display = '';
-            pauseIcon.style.display = 'none';
+            playIcon.style.display = "";
+            pauseIcon.style.display = "none";
           }
         }
       };
@@ -427,33 +652,43 @@ class TodoApp {
       let silenceTimer = null;
       let silenceEndTs = 0;
 
-      if (typeof bus !== 'undefined') {
-        bus.addEventListener('music:started', () => {
+      if (typeof bus !== "undefined") {
+        bus.addEventListener("music:started", () => {
           reflectMusicBtn(true);
           setPlayButtonPlayingState(true);
         });
-        bus.addEventListener('music:playing', () => {
+        bus.addEventListener("music:playing", () => {
           reflectMusicBtn(true);
           setPlayButtonPlayingState(true);
         });
-        bus.addEventListener('music:paused', () => {
+        bus.addEventListener("music:paused", () => {
           reflectMusicBtn(false);
           setPlayButtonPlayingState(false);
         });
 
         // Silence gap feedback without textual messages: keep progress bar only
-        bus.addEventListener('music:silenceStart', () => {
+        bus.addEventListener("music:silenceStart", () => {
           reflectMusicBtn(false);
-          if (silenceIndicator) silenceIndicator.style.display = 'grid';
-          const min = typeof musicManager !== 'undefined' ? musicManager.gapMinSeconds : 15;
-          const max = typeof musicManager !== 'undefined' ? musicManager.gapMaxSeconds : 90;
-          const dur = Math.max(min, Math.min(max, Math.round((min + max) / 2))) * 1000;
+          if (silenceIndicator) silenceIndicator.style.display = "grid";
+          const min =
+            typeof musicManager !== "undefined"
+              ? musicManager.gapMinSeconds
+              : 15;
+          const max =
+            typeof musicManager !== "undefined"
+              ? musicManager.gapMaxSeconds
+              : 90;
+          const dur =
+            Math.max(min, Math.min(max, Math.round((min + max) / 2))) * 1000;
           silenceEndTs = Date.now() + dur;
           const tick = () => {
             const remain = Math.max(0, silenceEndTs - Date.now());
             if (silenceProgressFill) {
               const pct = 100 - (remain / dur) * 100;
-              silenceProgressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+              silenceProgressFill.style.width = `${Math.max(
+                0,
+                Math.min(100, pct)
+              )}%`;
             }
             if (remain > 0) {
               silenceTimer = setTimeout(tick, 250);
@@ -462,51 +697,56 @@ class TodoApp {
           clearTimeout(silenceTimer);
           tick();
         });
-        bus.addEventListener('music:silenceEnd', () => {
+        bus.addEventListener("music:silenceEnd", () => {
           reflectMusicBtn(true);
           clearTimeout(silenceTimer);
           silenceTimer = null;
-          if (silenceIndicator) silenceIndicator.style.display = 'none';
-          if (silenceProgressFill) silenceProgressFill.style.width = '0%';
+          if (silenceIndicator) silenceIndicator.style.display = "none";
+          if (silenceProgressFill) silenceProgressFill.style.width = "0%";
         });
 
-        bus.addEventListener('music:buffering', (e) => {
+        bus.addEventListener("music:buffering", (e) => {
           const isBuf = !!(e.detail && e.detail.buffering);
-          musicBtn.classList.toggle('buffering', isBuf);
-          transportEl?.classList.toggle('buffering', isBuf);
+          musicBtn.classList.toggle("buffering", isBuf);
+          transportEl?.classList.toggle("buffering", isBuf);
         });
         // Remove tips/hints entirely per design request
         // bus.addEventListener('music:hintStart', () => {});
 
         // Track change feedback: bump indicator, no text messages
         const syncTrack = () => {
-          if (!currentTrackEl || typeof musicManager === 'undefined') return;
+          if (!currentTrackEl || typeof musicManager === "undefined") return;
           const idx = musicManager.getCurrentTrackIndex?.() ?? 0;
           currentTrackEl.textContent = String(idx + 1);
           bumpTrackIndicator();
         };
-        bus.addEventListener('music:playing', syncTrack);
-        bus.addEventListener('music:started', syncTrack);
+        bus.addEventListener("music:playing", syncTrack);
+        bus.addEventListener("music:started", syncTrack);
       }
     }
 
     // Sound button: global mute/unmute for sound effects ONLY (does not affect music play/pause)
-    const volumeBtn = document.getElementById('volumeBtn');
+    // Ensure there is a visible SFX toggle button in DOM (fallback if theme omitted it)
+    // Do NOT create a duplicate sound button; CenterBar is the single source of truth for sound button
+    let volumeBtn = document.getElementById("volumeBtn");
     if (volumeBtn) {
-      volumeBtn.setAttribute('title', 'Mute/Unmute all sounds');
-      volumeBtn.addEventListener('click', async (e) => {
+      volumeBtn.setAttribute("title", "Mute/Unmute all sounds");
+      volumeBtn.addEventListener("click", async (e) => {
         e.preventDefault();
         try {
           // Toggle global sound-enabled setting
-          if (typeof settingsManager !== 'undefined' && typeof settingsManager.toggleSoundEnabled === 'function') {
+          if (
+            typeof settingsManager !== "undefined" &&
+            typeof settingsManager.toggleSoundEnabled === "function"
+          ) {
             settingsManager.toggleSoundEnabled();
-          } else if (typeof audioManager !== 'undefined') {
+          } else if (typeof audioManager !== "undefined") {
             // Fallback: flip AudioManager enabled state and persist via settings if available
             const next = !audioManager.enabled;
             audioManager.setEnabled(next);
-            if (typeof settingsManager !== 'undefined') {
+            if (typeof settingsManager !== "undefined") {
               settingsManager.soundEnabled = next;
-              if (typeof settingsManager.saveSettings === 'function') {
+              if (typeof settingsManager.saveSettings === "function") {
                 settingsManager.saveSettings();
               }
             }
@@ -514,49 +754,71 @@ class TodoApp {
 
           // Do not toggle or influence music playback here.
           // Only provide a subtle UI feedback if sounds are enabled now
-          if (typeof audioManager !== 'undefined' && audioManager.enabled) {
-            audioManager.play('toggle');
+          if (typeof audioManager !== "undefined" && audioManager.enabled) {
+            audioManager.play("toggle");
           }
 
           // Update icon animation state (handled by updateVolumeButtonState via settingsChanged)
-          const volumeIcon = document.getElementById('volumeIcon');
+          const volumeIcon = document.getElementById("volumeIcon");
           if (volumeIcon) {
-            volumeIcon.classList.add('toggling');
-            setTimeout(() => volumeIcon.classList.remove('toggling'), 300);
+            volumeIcon.classList.add("toggling");
+            setTimeout(() => volumeIcon.classList.remove("toggling"), 300);
           }
         } catch (e) {
-          console.warn('Sound mute toggle failed:', e);
+          console.warn("Sound mute toggle failed:", e);
         }
 
         // Emit a settingsChanged event so UI state syncs (provide detail to avoid null in listeners)
-        if (typeof bus !== 'undefined') {
+        if (typeof bus !== "undefined") {
           let detail = null;
           try {
-            if (typeof settingsManager !== 'undefined' && typeof settingsManager.getSettings === 'function') {
+            if (
+              typeof settingsManager !== "undefined" &&
+              typeof settingsManager.getSettings === "function"
+            ) {
               // Preferred: full settings snapshot
               detail = { ...settingsManager.getSettings() };
-            } else if (typeof settingsManager !== 'undefined') {
+            } else if (typeof settingsManager !== "undefined") {
               // Best-effort snapshot of known props if getSettings not available
               detail = {
                 soundEnabled: !!settingsManager.soundEnabled,
-                theme: typeof settingsManager.theme !== 'undefined' ? settingsManager.theme : undefined,
-                animations: typeof settingsManager.animations !== 'undefined' ? settingsManager.animations : undefined
+                theme:
+                  typeof settingsManager.theme !== "undefined"
+                    ? settingsManager.theme
+                    : undefined,
+                animations:
+                  typeof settingsManager.animations !== "undefined"
+                    ? settingsManager.animations
+                    : undefined,
               };
             } else {
               // Fallback to avoid null detail consumers
-              detail = { soundEnabled: typeof audioManager !== 'undefined' ? !!audioManager.enabled : true };
+              detail = {
+                soundEnabled:
+                  typeof audioManager !== "undefined"
+                    ? !!audioManager.enabled
+                    : true,
+              };
             }
           } catch (err) {
-            console.warn('Failed to build settingsChanged detail payload:', err);
-            detail = { soundEnabled: typeof audioManager !== 'undefined' ? !!audioManager.enabled : true };
+            console.warn(
+              "Failed to build settingsChanged detail payload:",
+              err
+            );
+            detail = {
+              soundEnabled:
+                typeof audioManager !== "undefined"
+                  ? !!audioManager.enabled
+                  : true,
+            };
           }
-          bus.dispatchEvent(new CustomEvent('settingsChanged', { detail }));
+          bus.dispatchEvent(new CustomEvent("settingsChanged", { detail }));
         }
       });
     }
 
     // Event delegation for task interactions
-    document.addEventListener('change', (e) => {
+    document.addEventListener("change", (e) => {
       // Handle checkbox changes
       if (e.target.matches('.task-checkbox input[type="checkbox"]')) {
         e.preventDefault();
@@ -567,108 +829,266 @@ class TodoApp {
       }
     });
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener("click", (e) => {
       const target = e.target;
 
+      // Subtle haptic for general button interactions
+      if (target.closest('button,.btn,[role="button"]')) {
+        this.vibrate("subtle");
+      }
+
       // Handle clear completed via data-action attribute
-      if (target.matches('[data-action="clear-completed"]')) {
+      if (target.matches('[data-action="clear"]')) {
         e.preventDefault();
         this.clearCompleted();
       }
 
       // Handle delete all via data-action attribute
-      if (target.matches('[data-action="delete-all"]')) {
+      if (target.matches('[data-action="delete"]')) {
         e.preventDefault();
         this.deleteAll();
       }
 
       // Handle test data via data-action attribute
-      if (target.matches('[data-action="test-data"]')) {
+      if (target.matches('[data-action="test"]')) {
         e.preventDefault();
         this.addTestData();
       }
 
       // Handle task edit buttons
-      if (target.closest('.task-edit-btn')) {
+      if (target.closest(".task-edit-btn")) {
         e.preventDefault();
-        const taskId = target.closest('.task-edit-btn').dataset.taskId;
+        const taskId = target.closest(".task-edit-btn").dataset.taskId;
         if (taskId) {
           this.startEdit(taskId);
         }
       }
 
       // Handle task delete buttons
-      if (target.closest('.task-delete-btn')) {
+      if (target.closest(".task-delete-btn")) {
         e.preventDefault();
-        const taskId = target.closest('.task-delete-btn').dataset.taskId;
+        const taskId = target.closest(".task-delete-btn").dataset.taskId;
         if (taskId) {
           this.deleteTask(taskId);
         }
       }
 
       // Handle task save buttons
-      if (target.closest('.task-save')) {
+      if (target.closest(".task-save")) {
         e.preventDefault();
-        const taskId = target.closest('.task-save').dataset.taskId;
+        const taskId = target.closest(".task-save").dataset.taskId;
         if (taskId) {
           this.saveEdit(taskId);
         }
       }
 
       // Handle task cancel buttons
-      if (target.closest('.task-cancel')) {
+      if (target.closest(".task-cancel")) {
         e.preventDefault();
         this.cancelEdit();
       }
     });
 
     // Event bus listeners
-    if (typeof bus !== 'undefined') {
-      bus.addEventListener('tasksUpdated', () => this.render());
-      bus.addEventListener('settingsChanged', () => this.render());
+    if (typeof bus !== "undefined") {
+      // Center bar events wiring (idempotent)
+      try {
+        // Settings button is handled by modal-manager.js
+
+        // Open/toggle music UI popover (not playback) — handle via explicit toggle to avoid styles issues
+        bus.addEventListener("centerbar:music", () => {
+          try {
+            const pop = document.getElementById("musicPopover");
+            if (!pop) return;
+            // Reuse the same positioning/toggle logic as button click
+            const btn = document.getElementById("musicBtn");
+            if (!btn) return;
+            const isOpen =
+              pop.classList.contains("open") || pop.style.display === "block";
+            if (isOpen) {
+              pop.classList.remove("open");
+              pop.style.display = "none";
+            } else {
+              // Position above and center on the button
+              const rect = btn.getBoundingClientRect();
+              const prect = pop.getBoundingClientRect();
+              const centerX = rect.left + rect.width / 2;
+              const left = Math.max(
+                8,
+                Math.min(
+                  window.innerWidth - prect.width - 8,
+                  centerX - prect.width / 2
+                )
+              );
+              const bottom = Math.max(8, window.innerHeight - rect.top + 10);
+              pop.style.left = `${left + prect.width / 2}px`;
+              pop.style.bottom = `${bottom}px`;
+              pop.style.display = "block";
+              requestAnimationFrame(() => pop.classList.add("open"));
+            }
+          } catch (err) {
+            console.warn("[bus] centerbar:music failed", err);
+          }
+        });
+
+        // Add test data
+        bus.addEventListener("centerbar:test", () => {
+          try {
+            if (typeof this.addTestData === "function") {
+              this.addTestData();
+              return;
+            }
+            if (
+              window.todoApp &&
+              typeof window.todoApp.addTestData === "function"
+            ) {
+              window.todoApp.addTestData();
+              return;
+            }
+            document.querySelector('[data-action="test"]')?.click();
+          } catch (err) {
+            console.warn("[bus] centerbar:test failed", err);
+          }
+        });
+
+        // Clear completed
+        bus.addEventListener("centerbar:clear", () => {
+          try {
+            if (typeof this.clearCompleted === "function") {
+              this.clearCompleted();
+              return;
+            }
+            if (
+              window.todoApp &&
+              typeof window.todoApp.clearCompleted === "function"
+            ) {
+              window.todoApp.clearCompleted();
+              return;
+            }
+            document.querySelector('[data-action="clear"]')?.click();
+          } catch (err) {
+            console.warn("[bus] centerbar:clear failed", err);
+          }
+        });
+
+        // Toggle global sound effects (does not affect music transport)
+        bus.addEventListener("centerbar:sound", () => {
+          try {
+            let toggled = false;
+            if (
+              typeof settingsManager !== "undefined" &&
+              typeof settingsManager.toggleSoundEnabled === "function"
+            ) {
+              settingsManager.toggleSoundEnabled();
+              toggled = true;
+            } else if (
+              typeof audioManager !== "undefined" &&
+              typeof audioManager.setEnabled === "function"
+            ) {
+              const next = !audioManager.enabled;
+              audioManager.setEnabled(next);
+              toggled = true;
+            }
+            // After toggling, emit settingsChanged so UI syncs and icon updates
+            if (toggled) {
+              let detail = null;
+              try {
+                if (
+                  typeof settingsManager !== "undefined" &&
+                  typeof settingsManager.getSettings === "function"
+                ) {
+                  detail = { ...settingsManager.getSettings() };
+                } else if (typeof settingsManager !== "undefined") {
+                  detail = { soundEnabled: !!settingsManager.soundEnabled };
+                } else if (typeof audioManager !== "undefined") {
+                  detail = { soundEnabled: !!audioManager.enabled };
+                }
+              } catch {}
+              if (typeof bus !== "undefined") {
+                bus.dispatchEvent(
+                  new CustomEvent("settingsChanged", { detail })
+                );
+              }
+              // Optional subtle feedback when enabling
+              if (typeof audioManager !== "undefined" && audioManager.enabled) {
+                try {
+                  audioManager.play("toggle");
+                } catch {}
+              }
+            }
+          } catch (err) {
+            console.warn("[bus] centerbar:sound failed", err);
+          }
+        });
+
+        // Delete all
+        bus.addEventListener("centerbar:delete", () => {
+          try {
+            if (typeof this.deleteAll === "function") {
+              this.deleteAll();
+              return;
+            }
+            if (
+              window.todoApp &&
+              typeof window.todoApp.deleteAll === "function"
+            ) {
+              window.todoApp.deleteAll();
+              return;
+            }
+            document.querySelector('[data-action="delete"]')?.click();
+          } catch (err) {
+            console.warn("[bus] centerbar:delete failed", err);
+          }
+        });
+      } catch (err) {
+        console.warn("[bus] centerbar wiring failed", err);
+      }
+
+      bus.addEventListener("tasksUpdated", () => this.render());
+      bus.addEventListener("settingsChanged", () => this.render());
 
       // Keep music button state in sync with actual playback
       const syncMusicBtn = (playing) => {
-        const btn = document.getElementById('volumeBtn');
+        const btn = document.getElementById("volumeBtn");
         if (!btn) return;
-        btn.classList.toggle('is-playing', !!playing);
-        btn.classList.toggle('is-paused', !playing);
+        btn.classList.toggle("is-playing", !!playing);
+        btn.classList.toggle("is-paused", !playing);
       };
-      bus.addEventListener('music:started', () => syncMusicBtn(true));
-      bus.addEventListener('music:playing', () => syncMusicBtn(true));
-      bus.addEventListener('music:paused', () => syncMusicBtn(false));
-      bus.addEventListener('music:silenceStart', () => syncMusicBtn(false));
-      bus.addEventListener('music:buffering', (e) => {
-        const btn = document.getElementById('volumeBtn');
+      bus.addEventListener("music:started", () => syncMusicBtn(true));
+      bus.addEventListener("music:playing", () => syncMusicBtn(true));
+      bus.addEventListener("music:paused", () => syncMusicBtn(false));
+      bus.addEventListener("music:silenceStart", () => syncMusicBtn(false));
+      bus.addEventListener("music:buffering", (e) => {
+        const btn = document.getElementById("volumeBtn");
         if (!btn) return;
-        btn.classList.toggle('buffering', !!(e.detail && e.detail.buffering));
+        btn.classList.toggle("buffering", !!(e.detail && e.detail.buffering));
       });
-      bus.addEventListener('music:hintStart', () => {
-        const btn = document.getElementById('volumeBtn');
+      bus.addEventListener("music:hintStart", () => {
+        const btn = document.getElementById("volumeBtn");
         if (!btn) return;
-        btn.classList.add('hint');
-        setTimeout(() => btn.classList.remove('hint'), 3000);
+        btn.classList.add("hint");
+        setTimeout(() => btn.classList.remove("hint"), 3000);
       });
     }
 
     // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener("keydown", (e) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
-          case 'n':
+          case "n":
             e.preventDefault();
-            document.getElementById('newTaskInput')?.focus();
+            document.getElementById("newTaskInput")?.focus();
             break;
-          case 'a':
+          case "a":
             e.preventDefault();
-            this.setFilter('all');
+            this.setFilter("all");
             break;
-          case 'Enter':
+          case "Enter":
             if (this.editingTaskId) {
               this.saveEdit(this.editingTaskId);
             }
             break;
-          case 'Escape':
+          case "Escape":
             if (this.editingTaskId) {
               this.cancelEdit();
             }
@@ -679,7 +1099,7 @@ class TodoApp {
 
     // Character counters
     this.setupCharacterCounters();
-    
+
     // AI refactor button listeners
     this.setupAIRefactorListeners();
   }
@@ -694,7 +1114,7 @@ class TodoApp {
 
     // Mark as dirty if task count changed during load
     if (oldTaskCount !== newTaskCount) {
-      this.markDirty('load');
+      this.markDirty("load");
     }
   }
 
@@ -703,11 +1123,11 @@ class TodoApp {
    */
   saveTasks() {
     storageManager.setTasks(this.tasks);
-    this.markDirty('save');
+    this.markDirty("save");
 
     // Dispatch tasksUpdated event to notify other components
-    if (typeof bus !== 'undefined') {
-      bus.dispatchEvent(new CustomEvent('tasksUpdated'));
+    if (typeof bus !== "undefined") {
+      bus.dispatchEvent(new CustomEvent("tasksUpdated"));
     }
   }
 
@@ -715,7 +1135,7 @@ class TodoApp {
    * Mark the task list as dirty and trigger re-render
    * @param {string} source - Source of the change for debugging
    */
-  markDirty(source = 'unknown') {
+  markDirty(source = "unknown") {
     this.isDirty = true;
     console.log(`Tasks marked dirty from: ${source}`);
     this.scheduleRender();
@@ -740,36 +1160,61 @@ class TodoApp {
    * Force a re-render of the task list
    */
   forceRender() {
-    if (typeof this.render === 'function') {
+    if (typeof this.render === "function") {
       this.render();
     } else {
-      console.error('forceRender: render method is not a function');
+      console.error("forceRender: render method is not a function");
     }
   }
 
+  /**
+   * Attempt a subtle haptic vibration if supported
+   * Uses minimal, premium patterns and respects user/device support.
+   * @param {('subtle'|'add'|'complete'|'delete')} kind
+   */
+  vibrate(kind = "subtle") {
+    try {
+      if (!("vibrate" in navigator)) return;
+      // Avoid overly aggressive patterns; keep it zen
+      const patterns = {
+        subtle: [15],
+        add: [50],
+        complete: [30, 50, 30],
+        delete: [100],
+      };
+      const pattern = patterns[kind] || patterns.subtle;
+      navigator.vibrate(pattern);
+    } catch (_) {
+      // no-op
+    }
+  }
 
   /**
    * Add a new task
    */
   addTask() {
-    const input = document.getElementById('newTaskInput');
-    const descriptionInput = document.getElementById('newTaskDescription');
-    
+    const input = document.getElementById("newTaskInput");
+    const descriptionInput = document.getElementById("newTaskDescription");
+
     if (!input) return;
-    
+
     const text = input.value.trim();
-    const description = descriptionInput ? descriptionInput.value.trim() : '';
-    
+    const description = descriptionInput ? descriptionInput.value.trim() : "";
+
     if (!text) return;
-    
+
     // Validate lengths
     if (text.length > this.CONFIG.maxTitleLength) {
-      this.showValidationError(`Task title too long! Maximum ${this.CONFIG.maxTitleLength} characters.`);
+      this.showValidationError(
+        `Task title too long! Maximum ${this.CONFIG.maxTitleLength} characters.`
+      );
       return;
     }
 
     if (description.length > this.CONFIG.maxDescriptionLength) {
-      this.showValidationError(`Description too long! Maximum ${this.CONFIG.maxDescriptionLength} characters.`);
+      this.showValidationError(
+        `Description too long! Maximum ${this.CONFIG.maxDescriptionLength} characters.`
+      );
       return;
     }
 
@@ -779,29 +1224,33 @@ class TodoApp {
       description: description,
       completed: false,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     this.tasks.unshift(task);
     this.saveTasks();
 
-    input.value = '';
+    input.value = "";
 
     // Play sound
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play('add');
+    if (typeof audioManager !== "undefined") {
+      audioManager.play("add");
     }
+    // Haptic: add task confirmation
+    this.vibrate("add");
 
     // Update gamification
-    if (typeof gamificationManager !== 'undefined') {
+    if (typeof gamificationManager !== "undefined") {
       gamificationManager.addTask();
     }
 
     // Add animation class to the newly added task
     setTimeout(() => {
-      const newTaskElement = document.querySelector(`[data-task-id="${task.id}"]`);
+      const newTaskElement = document.querySelector(
+        `[data-task-id="${task.id}"]`
+      );
       if (newTaskElement) {
-        newTaskElement.classList.add('new');
+        newTaskElement.classList.add("new");
       }
     }, 10);
   }
@@ -810,7 +1259,7 @@ class TodoApp {
    * Toggle task completion
    */
   toggleTask(id) {
-    const task = this.tasks.find(t => t.id === id);
+    const task = this.tasks.find((t) => t.id === id);
     if (!task) {
       console.warn(`Task with ID ${id} not found`);
       return;
@@ -822,12 +1271,14 @@ class TodoApp {
     this.saveTasks();
 
     // Play sound
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play(task.completed ? 'complete' : 'edit');
+    if (typeof audioManager !== "undefined") {
+      audioManager.play(task.completed ? "complete" : "edit");
     }
+    // Haptic: completion gets a gentle triplet
+    if (task.completed) this.vibrate("complete");
 
     // Update gamification
-    if (typeof gamificationManager !== 'undefined') {
+    if (typeof gamificationManager !== "undefined") {
       if (task.completed) {
         gamificationManager.completeTask();
       }
@@ -838,18 +1289,20 @@ class TodoApp {
    * Delete a task
    */
   async deleteTask(id) {
-    const task = this.tasks.find(t => t.id === id);
+    const task = this.tasks.find((t) => t.id === id);
     if (!task) return;
 
     const confirmed = await modalManager.showDeleteConfirm(task.text);
 
     if (!confirmed) return;
 
-    this.tasks = this.tasks.filter(t => t.id !== id);
+    this.tasks = this.tasks.filter((t) => t.id !== id);
     this.saveTasks();
+    // Haptic: a single longer pulse for delete
+    this.vibrate("delete");
 
     // Update gamification
-    if (typeof gamificationManager !== 'undefined') {
+    if (typeof gamificationManager !== "undefined") {
       gamificationManager.deleteTask();
     }
   }
@@ -859,24 +1312,24 @@ class TodoApp {
    */
   startEdit(id) {
     this.editingTaskId = id;
-    
+
     // Add animation class to the task item
     const taskElement = document.querySelector(`[data-task-id="${id}"]`);
     if (taskElement) {
-      taskElement.classList.add('edit-mode');
-      taskElement.classList.remove('exit-edit-mode');
-      
+      taskElement.classList.add("edit-mode");
+      taskElement.classList.remove("exit-edit-mode");
+
       // Ensure AI refactor buttons are positioned correctly after animation
       setTimeout(() => {
-        const refactorBtns = taskElement.querySelectorAll('.ai-refactor-btn');
-        refactorBtns.forEach(btn => {
-          btn.style.right = '1rem';
-          btn.style.top = '50%';
-          btn.style.transform = 'translateY(-50%)';
+        const refactorBtns = taskElement.querySelectorAll(".ai-refactor-btn");
+        refactorBtns.forEach((btn) => {
+          btn.style.right = "1rem";
+          btn.style.top = "50%";
+          btn.style.transform = "translateY(-50%)";
         });
       }, 400); // Match the animation duration
     }
-    
+
     this.forceRender();
 
     const input = document.querySelector(`[data-edit-input="${id}"]`);
@@ -893,7 +1346,7 @@ class TodoApp {
    * Save edited task
    */
   saveEdit(id) {
-    const task = this.tasks.find(t => t.id === id);
+    const task = this.tasks.find((t) => t.id === id);
     if (!task) return;
 
     const input = document.querySelector(`[data-edit-input="${id}"]`);
@@ -901,7 +1354,9 @@ class TodoApp {
     if (!input) return;
 
     const newText = input.value.trim();
-    const newDescription = descriptionInput ? descriptionInput.value.trim() : '';
+    const newDescription = descriptionInput
+      ? descriptionInput.value.trim()
+      : "";
 
     if (!newText) {
       this.deleteTask(id);
@@ -909,12 +1364,16 @@ class TodoApp {
     }
 
     if (newText.length > this.CONFIG.maxTitleLength) {
-      alert(`Task title too long! Maximum ${this.CONFIG.maxTitleLength} characters.`);
+      alert(
+        `Task title too long! Maximum ${this.CONFIG.maxTitleLength} characters.`
+      );
       return;
     }
 
     if (newDescription.length > this.CONFIG.maxDescriptionLength) {
-      alert(`Description too long! Maximum ${this.CONFIG.maxDescriptionLength} characters.`);
+      alert(
+        `Description too long! Maximum ${this.CONFIG.maxDescriptionLength} characters.`
+      );
       return;
     }
 
@@ -925,33 +1384,37 @@ class TodoApp {
     // Add exit animation class to the task item
     const taskElement = document.querySelector(`[data-task-id="${id}"]`);
     if (taskElement) {
-      taskElement.classList.add('exit-edit-mode');
-      taskElement.classList.remove('edit-mode');
+      taskElement.classList.add("exit-edit-mode");
+      taskElement.classList.remove("edit-mode");
     }
-    
+
     // Find and animate the save button
-    const saveButton = document.querySelector(`.task-save[data-task-id="${id}"]`);
+    const saveButton = document.querySelector(
+      `.task-save[data-task-id="${id}"]`
+    );
     if (saveButton) {
-      saveButton.classList.add('success');
-      
+      saveButton.classList.add("success");
+
       // Remove the success class after the animation completes
       setTimeout(() => {
-        saveButton.classList.remove('success');
+        saveButton.classList.remove("success");
       }, 600);
     }
-    
+
     // Wait for the animation to complete before clearing the editing state
     setTimeout(() => {
       this.editingTaskId = null;
       this.saveTasks();
 
       // Play sound
-      if (typeof audioManager !== 'undefined') {
-        audioManager.play('edit');
+      if (typeof audioManager !== "undefined") {
+        audioManager.play("edit");
       }
+      // Haptic: subtle feedback on save
+      this.vibrate("subtle");
 
       // Update gamification
-      if (typeof gamificationManager !== 'undefined') {
+      if (typeof gamificationManager !== "undefined") {
         gamificationManager.editTask();
       }
     }, this.CONFIG.animationDuration);
@@ -962,16 +1425,20 @@ class TodoApp {
    */
   cancelEdit() {
     // Add exit animation class to the task item
-    const taskElement = document.querySelector(`[data-task-id="${this.editingTaskId}"]`);
+    const taskElement = document.querySelector(
+      `[data-task-id="${this.editingTaskId}"]`
+    );
     if (taskElement) {
-      taskElement.classList.add('exit-edit-mode');
-      taskElement.classList.remove('edit-mode');
+      taskElement.classList.add("exit-edit-mode");
+      taskElement.classList.remove("edit-mode");
     }
-    
+
     // Wait for the animation to complete before clearing the editing state
     setTimeout(() => {
       this.editingTaskId = null;
       this.forceRender();
+      // Haptic: subtle feedback on cancel
+      this.vibrate("subtle");
     }, this.CONFIG.animationDuration);
   }
 
@@ -982,14 +1449,16 @@ class TodoApp {
     this.currentFilter = filter;
 
     // Update active state
-    document.querySelectorAll('[data-filter]').forEach(button => {
-      button.classList.toggle('active', button.dataset.filter === filter);
+    document.querySelectorAll("[data-filter]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.filter === filter);
     });
 
     // Play sound
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play('settings');
+    if (typeof audioManager !== "undefined") {
+      audioManager.play("settings");
     }
+    // Haptic: subtle cue when switching filters
+    this.vibrate("subtle");
 
     this.forceRender();
   }
@@ -998,20 +1467,22 @@ class TodoApp {
    * Clear completed tasks
    */
   async clearCompleted() {
-    const completedCount = this.tasks.filter(t => t.completed).length;
+    const completedCount = this.tasks.filter((t) => t.completed).length;
     if (completedCount === 0) return;
 
     const confirmed = await modalManager.show({
-      title: 'Confirm Deletion',
-      message: `Are you sure you want to clear ${completedCount} completed task${completedCount !== 1 ? 's' : ''}? This cannot be undone.`,
-      confirmText: 'Clear',
-      cancelText: 'Cancel',
-      confirmStyle: 'danger'
+      title: "Confirm Deletion",
+      message: `Are you sure you want to clear ${completedCount} completed task${
+        completedCount !== 1 ? "s" : ""
+      }? This cannot be undone.`,
+      confirmText: "Clear",
+      cancelText: "Cancel",
+      confirmStyle: "danger",
     });
 
     if (!confirmed) return;
 
-    this.tasks = this.tasks.filter(t => !t.completed);
+    this.tasks = this.tasks.filter((t) => !t.completed);
     this.saveTasks();
   }
 
@@ -1022,11 +1493,13 @@ class TodoApp {
     if (this.tasks.length === 0) return;
 
     const confirmed = await modalManager.show({
-      title: 'Confirm Deletion',
-      message: `Are you sure you want to delete all ${this.tasks.length} task${this.tasks.length !== 1 ? 's' : ''}? This cannot be undone.`,
-      confirmText: 'Delete All',
-      cancelText: 'Cancel',
-      confirmStyle: 'danger'
+      title: "Confirm Deletion",
+      message: `Are you sure you want to delete all ${this.tasks.length} task${
+        this.tasks.length !== 1 ? "s" : ""
+      }? This cannot be undone.`,
+      confirmText: "Delete All",
+      cancelText: "Cancel",
+      confirmStyle: "danger",
     });
 
     if (!confirmed) return;
@@ -1035,7 +1508,7 @@ class TodoApp {
     this.saveTasks();
 
     // Update gamification
-    if (typeof gamificationManager !== 'undefined') {
+    if (typeof gamificationManager !== "undefined") {
       gamificationManager.resetStats();
     }
   }
@@ -1045,10 +1518,10 @@ class TodoApp {
    */
   getFilteredTasks() {
     switch (this.currentFilter) {
-      case 'active':
-        return this.tasks.filter(t => !t.completed);
-      case 'completed':
-        return this.tasks.filter(t => t.completed);
+      case "active":
+        return this.tasks.filter((t) => !t.completed);
+      case "completed":
+        return this.tasks.filter((t) => t.completed);
       default:
         return this.tasks;
     }
@@ -1058,32 +1531,43 @@ class TodoApp {
    * Render the todo list
    */
   render() {
-    const taskList = document.getElementById('taskList');
-    const taskCount = document.getElementById('taskCount');
-    const emptyState = document.getElementById('emptyState');
+    const taskList = document.getElementById("taskList");
+    const taskCount = document.getElementById("taskCount");
+    const emptyState = document.getElementById("emptyState");
 
     if (!taskList || !taskCount) return;
 
     const filteredTasks = this.getFilteredTasks();
 
     // Update count
-    const activeCount = this.tasks.filter(t => !t.completed).length;
-    taskCount.textContent = `${activeCount} task${activeCount !== 1 ? 's' : ''} remaining`;
+    const activeCount = this.tasks.filter((t) => !t.completed).length;
+    taskCount.textContent = `${activeCount} task${
+      activeCount !== 1 ? "s" : ""
+    } remaining`;
 
     // Show/hide empty state
     if (filteredTasks.length === 0) {
-      emptyState.style.display = 'block';
-      taskList.innerHTML = '';
+      emptyState.style.display = "block";
+      taskList.innerHTML = "";
       return;
     }
 
-    emptyState.style.display = 'none';
+    emptyState.style.display = "none";
 
     // Render tasks
-    taskList.innerHTML = filteredTasks.map(task => this.renderTask(task)).join('');
+    taskList.innerHTML = filteredTasks
+      .map((task) => this.renderTask(task))
+      .join("");
 
     // Setup task event listeners
     this.setupTaskEventListeners();
+
+    // Hydrate Lucide icons for dynamically rendered task buttons
+    try {
+      if (window.lucide && typeof lucide.createIcons === "function") {
+        lucide.createIcons();
+      }
+    } catch (_) {}
   }
 
   /**
@@ -1093,16 +1577,22 @@ class TodoApp {
     const isEditing = this.editingTaskId === task.id;
 
     return `
-      <div class="task-item ${task.completed ? 'completed' : ''} ${isEditing ? 'edit-mode' : ''}" data-task-id="${task.id}">
+      <div class="task-item ${task.completed ? "completed" : ""} ${
+      isEditing ? "edit-mode" : ""
+    }" data-task-id="${task.id}">
         <div class="task-content">
-          <label class="task-checkbox luxury-checkbox" data-task-id="${task.id}">
-            <input type="checkbox" ${task.completed ? 'checked' : ''} 
+          <label class="task-checkbox luxury-checkbox" data-task-id="${
+            task.id
+          }">
+            <input type="checkbox" ${task.completed ? "checked" : ""} 
                    data-task-id="${task.id}">
             <span class="checkmark"></span>
           </label>
           
           <div class="task-text-content">
-            ${isEditing ? `
+            ${
+              isEditing
+                ? `
               <div class="task-edit">
                 <div class="edit-input-group">
                   <div class="ai-refactor-container">
@@ -1125,7 +1615,9 @@ class TodoApp {
                     </button>
                   </div>
                   <div class="char-counter">
-                    <span class="char-count">${task.text.length}/${this.CONFIG.maxTitleLength}</span>
+                    <span class="char-count">${task.text.length}/${
+                    this.CONFIG.maxTitleLength
+                  }</span>
                   </div>
                 </div>
                 <div class="edit-input-group">
@@ -1134,7 +1626,9 @@ class TodoApp {
                               data-edit-desc="${task.id}"
                               maxlength="500"
                               placeholder="Task description (optional)"
-                              rows="2">${this.escapeHtml(task.description)}</textarea>
+                              rows="2">${this.escapeHtml(
+                                task.description
+                              )}</textarea>
                     <button class="ai-refactor-btn" 
                             data-refactor-type="description" 
                             data-task-id="${task.id}"
@@ -1148,44 +1642,55 @@ class TodoApp {
                     </button>
                   </div>
                   <div class="char-counter">
-                    <span class="desc-count">${task.description.length}/500</span>
+                    <span class="desc-count">${
+                      task.description.length
+                    }/500</span>
                   </div>
                 </div>
                 <div class="edit-actions">
-                  <button class="task-save btn btn--primary" data-task-id="${task.id}">Save</button>
-                  <button class="task-cancel btn btn--ghost" data-task-id="${task.id}">Cancel</button>
+                  <button class="task-save btn btn--primary" data-task-id="${
+                    task.id
+                  }">Save</button>
+                  <button class="task-cancel btn btn--ghost" data-task-id="${
+                    task.id
+                  }">Cancel</button>
                 </div>
               </div>
-            ` : `
+            `
+                : `
               <div class="task-display" data-task-id="${task.id}">
                 <div class="task-title">${this.escapeHtml(task.text)}</div>
-                ${task.description ? `
-                  <div class="task-description">${this.escapeHtml(task.description)}</div>
-                ` : ''}
+                ${
+                  task.description
+                    ? `
+                  <div class="task-description">${this.escapeHtml(
+                    task.description
+                  )}</div>
+                `
+                    : ""
+                }
               </div>
-            `}
+            `
+            }
           </div>
           
           <div class="task-actions">
-            <button class="task-edit-btn" data-task-id="${task.id}" title="Edit">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-              </svg>
+            <button class="task-edit-btn" data-task-id="${
+              task.id
+            }" title="Edit">
+              <i data-lucide="pencil" class="lucide-icon" aria-hidden="true"></i>
             </button>
             
-            <button class="task-ai-refactor-btn" data-task-id="${task.id}" title="Refactor with AI">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"></path>
-                <path d="M9 12l2 2 4-4"></path>
-              </svg>
+            <button class="task-ai-refactor-btn" data-task-id="${
+              task.id
+            }" title="Refactor with AI">
+              <i data-lucide="wand-2" class="lucide-icon" aria-hidden="true"></i>
             </button>
             
-            <button class="task-delete-btn" data-task-id="${task.id}" title="Delete">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
+            <button class="task-delete-btn" data-task-id="${
+              task.id
+            }" title="Delete">
+              <i data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -1198,13 +1703,13 @@ class TodoApp {
    */
   setupTaskEventListeners() {
     // Task hover effects
-    document.querySelectorAll('.task-item').forEach(taskEl => {
-      taskEl.addEventListener('mouseenter', () => {
-        taskEl.classList.add('hover');
+    document.querySelectorAll(".task-item").forEach((taskEl) => {
+      taskEl.addEventListener("mouseenter", () => {
+        taskEl.classList.add("hover");
       });
 
-      taskEl.addEventListener('mouseleave', () => {
-        taskEl.classList.remove('hover');
+      taskEl.addEventListener("mouseleave", () => {
+        taskEl.classList.remove("hover");
       });
     });
   }
@@ -1213,41 +1718,41 @@ class TodoApp {
    * Setup AI refactor button listeners
    */
   setupAIRefactorListeners() {
-    document.addEventListener('click', (e) => {
+    document.addEventListener("click", (e) => {
       // Handle AI refactor buttons
-      if (e.target.closest('.ai-refactor-btn')) {
+      if (e.target.closest(".ai-refactor-btn")) {
         e.preventDefault();
-        const button = e.target.closest('.ai-refactor-btn');
+        const button = e.target.closest(".ai-refactor-btn");
         const taskId = button.dataset.taskId;
         const refactorType = button.dataset.refactorType;
-        
+
         if (taskId && refactorType) {
           this.refactorWithAI(taskId, refactorType, button);
         }
       }
-      
+
       // Handle task AI refactor button (for entire task)
-      if (e.target.closest('.task-ai-refactor-btn')) {
+      if (e.target.closest(".task-ai-refactor-btn")) {
         e.preventDefault();
-        const button = e.target.closest('.task-ai-refactor-btn');
+        const button = e.target.closest(".task-ai-refactor-btn");
         const taskId = button.dataset.taskId;
-        
+
         if (taskId) {
           this.refactorEntireTaskWithAI(taskId, button);
         }
       }
     });
-    
+
     // Handle AI refactor button positioning when entering/exiting edit mode
-    document.addEventListener('animationend', (e) => {
-      if (e.target.classList.contains('task-item')) {
-        if (e.target.classList.contains('edit-mode')) {
+    document.addEventListener("animationend", (e) => {
+      if (e.target.classList.contains("task-item")) {
+        if (e.target.classList.contains("edit-mode")) {
           // Position AI refactor buttons properly when entering edit mode
-          const refactorBtns = e.target.querySelectorAll('.ai-refactor-btn');
-          refactorBtns.forEach(btn => {
-            btn.style.right = '1rem';
-            btn.style.top = '50%';
-            btn.style.transform = 'translateY(-50%)';
+          const refactorBtns = e.target.querySelectorAll(".ai-refactor-btn");
+          refactorBtns.forEach((btn) => {
+            btn.style.right = "1rem";
+            btn.style.top = "50%";
+            btn.style.transform = "translateY(-50%)";
           });
         }
       }
@@ -1258,65 +1763,64 @@ class TodoApp {
    * Refactor task text with AI
    */
   async refactorWithAI(taskId, type, button) {
-    const task = this.tasks.find(t => t.id === taskId);
+    const task = this.tasks.find((t) => t.id === taskId);
     if (!task) return;
 
     // Show charging effect
-    button.classList.add('charging');
-    
+    button.classList.add("charging");
+
     // Show loading state
-    button.classList.add('loading');
+    button.classList.add("loading");
     button.disabled = true;
 
     try {
       // Get the current text
-      const currentText = type === 'title' ? task.text : task.description;
-      
+      const currentText = type === "title" ? task.text : task.description;
+
       // Use the refactorTextWithAI method which can be customized for different AI providers
       const refactoredText = await this.refactorTextWithAI(currentText);
-      
+
       // Update the task with the refactored text
-      if (type === 'title') {
+      if (type === "title") {
         task.text = refactoredText;
       } else {
         task.description = refactoredText;
       }
-      
+
       task.updatedAt = new Date().toISOString();
-      
+
       // Save and re-render
       this.saveTasks();
       this.forceRender();
-      
+
       // Show success effect
-      button.classList.remove('loading', 'charging');
-      button.classList.add('success');
-      
+      button.classList.remove("loading", "charging");
+      button.classList.add("success");
+
       // Focus on the updated field
       setTimeout(() => {
         const input = document.querySelector(`[data-edit-input="${taskId}"]`);
         const textarea = document.querySelector(`[data-edit-desc="${taskId}"]`);
-        
-        if (type === 'title' && input) {
+
+        if (type === "title" && input) {
           input.focus();
           input.select();
-        } else if (type === 'description' && textarea) {
+        } else if (type === "description" && textarea) {
           textarea.focus();
           textarea.select();
         }
-        
+
         // Remove success effect after animation
         setTimeout(() => {
-          button.classList.remove('success');
+          button.classList.remove("success");
         }, 600);
       }, 100);
-      
     } catch (error) {
-      console.error('AI refactor error:', error);
-      alert('Failed to refactor text with AI. Please try again later.');
+      console.error("AI refactor error:", error);
+      alert("Failed to refactor text with AI. Please try again later.");
     } finally {
       // Remove loading and charging states
-      button.classList.remove('loading', 'charging');
+      button.classList.remove("loading", "charging");
       button.disabled = false;
     }
   }
@@ -1325,40 +1829,40 @@ class TodoApp {
    * Refactor entire task with AI
    */
   async refactorEntireTaskWithAI(taskId, button) {
-    const task = this.tasks.find(t => t.id === taskId);
+    const task = this.tasks.find((t) => t.id === taskId);
     if (!task) return;
 
     // Show loading state
-    button.classList.add('loading');
+    button.classList.add("loading");
     button.disabled = true;
 
     try {
       // Combine title and description for AI processing
       const fullText = `${task.text}\n${task.description}`;
-      
+
       // Use the refactorTextWithAI method
-      const refactoredText = await this.refactorTextWithAI(fullText, 'full');
-      
+      const refactoredText = await this.refactorTextWithAI(fullText, "full");
+
       // Split the refactored text back into title and description
       // Try to find a natural break point
-      const lines = refactoredText.split('\n').filter(line => line.trim());
-      
+      const lines = refactoredText.split("\n").filter((line) => line.trim());
+
       if (lines.length > 1) {
         // If there are multiple lines, use the first as title and the rest as description
         task.text = lines[0].trim();
-        task.description = lines.slice(1).join('\n').trim();
+        task.description = lines.slice(1).join("\n").trim();
       } else {
         // If only one line, use it as title and leave description empty
         task.text = lines[0].trim();
-        task.description = '';
+        task.description = "";
       }
-      
+
       task.updatedAt = new Date().toISOString();
-      
+
       // Save and re-render
       this.saveTasks();
       this.forceRender();
-      
+
       // Focus on the title field
       setTimeout(() => {
         const input = document.querySelector(`[data-edit-input="${taskId}"]`);
@@ -1367,13 +1871,12 @@ class TodoApp {
           input.select();
         }
       }, 100);
-      
     } catch (error) {
-      console.error('AI refactor error:', error);
-      alert('Failed to refactor task with AI. Please try again later.');
+      console.error("AI refactor error:", error);
+      alert("Failed to refactor task with AI. Please try again later.");
     } finally {
       // Remove loading state
-      button.classList.remove('loading');
+      button.classList.remove("loading");
       button.disabled = false;
     }
   }
@@ -1382,24 +1885,29 @@ class TodoApp {
    * Escape HTML to prevent XSS
    */
   escapeHtml(text) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
+
+  /**
+   * Lucide Broom Icon SVG
+   */
+  LUCIDE_BROOM_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-broom-icon lucide-broom"><path d="m13 11 9-9"/><path d="M14.6 12.6c.8.8.9 2.1.2 3L10 22l-8-8 6.4-4.8c.9-.7 2.2-.6 3 .2Z"/><path d="m6.8 10.4 6.8 6.8"/><path d="m5 17 1.4-1.4"/></svg>`;
 
   /**
    * Get task statistics
    */
   getStats() {
     const total = this.tasks.length;
-    const completed = this.tasks.filter(t => t.completed).length;
+    const completed = this.tasks.filter((t) => t.completed).length;
     const active = total - completed;
 
     return {
       total,
       completed,
       active,
-      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
     };
   }
 
@@ -1408,8 +1916,8 @@ class TodoApp {
    */
   showValidationError(message) {
     // Create elegant error notification
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'validation-error';
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "validation-error";
     errorDiv.style.cssText = `
       position: fixed;
       top: 20px;
@@ -1440,56 +1948,67 @@ class TodoApp {
     const loremTasks = [
       {
         text: "Lorem ipsum dolor sit amet consectetur",
-        description: "Adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        description:
+          "Adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       },
       {
         text: "Ut enim ad minim veniam quis nostrud",
-        description: "Exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+        description:
+          "Exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
       },
       {
         text: "Duis aute irure dolor in reprehenderit",
-        description: "In voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+        description:
+          "In voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
       },
       {
         text: "Excepteur sint occaecat cupidatat non proident",
-        description: "Sunt in culpa qui officia deserunt mollit anim id est laborum."
+        description:
+          "Sunt in culpa qui officia deserunt mollit anim id est laborum.",
       },
       {
         text: "Sed ut perspiciatis unde omnis iste natus",
-        description: "Error sit voluptatem accusantium doloremque laudantium totam rem aperiam."
+        description:
+          "Error sit voluptatem accusantium doloremque laudantium totam rem aperiam.",
       },
       {
         text: "Eaque ipsa quae ab illo inventore veritatis",
-        description: "Et quasi architecto beatae vitae dicta sunt explicabo."
+        description: "Et quasi architecto beatae vitae dicta sunt explicabo.",
       },
       {
         text: "Nemo enim ipsam voluptatem quia voluptas",
-        description: "Sit aspernatur aut odit aut fugit sed quia consequuntur magni."
+        description:
+          "Sit aspernatur aut odit aut fugit sed quia consequuntur magni.",
       },
       {
         text: "Neque porro quisquam est qui dolorem ipsum",
-        description: "Quia dolor sit amet consectetur adipisci velit sed quia non numquam."
+        description:
+          "Quia dolor sit amet consectetur adipisci velit sed quia non numquam.",
       },
       {
         text: "Ut enim ad minima veniam nostrum",
-        description: "Exercitationem ullam corporis suscipit laboriosam nisi ut aliquid ex ea commodi."
+        description:
+          "Exercitationem ullam corporis suscipit laboriosam nisi ut aliquid ex ea commodi.",
       },
       {
         text: "At vero eos et accusamus et iusto odio",
-        description: "Dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti."
-      }
+        description:
+          "Dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti.",
+      },
     ];
 
     // Generate 10 test tasks with robust IDs
     const timestamp = Date.now();
     loremTasks.forEach((taskData, index) => {
       const task = {
-        id: `test-${timestamp}-${index}-${Math.random().toString(36).substr(2, 4)}`,
+        id: `test-${timestamp}-${index}-${Math.random()
+          .toString(36)
+          .substr(2, 4)}`,
         text: taskData.text,
         description: taskData.description,
         completed: Math.random() > 0.7, // 30% chance of being completed
         createdAt: new Date(timestamp - index * 60000).toISOString(), // Stagger creation times
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       this.tasks.unshift(task);
@@ -1498,15 +2017,15 @@ class TodoApp {
     this.saveTasks();
 
     // Update gamification for each task added
-    if (typeof gamificationManager !== 'undefined') {
+    if (typeof gamificationManager !== "undefined") {
       loremTasks.forEach(() => {
         gamificationManager.addTask();
       });
     }
 
     // Play sound
-    if (typeof audioManager !== 'undefined') {
-      audioManager.play('add');
+    if (typeof audioManager !== "undefined") {
+      audioManager.play("add");
     }
   }
 
@@ -1514,41 +2033,41 @@ class TodoApp {
    * Setup character counters for input fields
    */
   setupCharacterCounters() {
-    const taskInput = document.getElementById('newTaskInput');
-    const descInput = document.getElementById('newTaskDescription');
-    const descCounter = document.getElementById('descCounter');
+    const taskInput = document.getElementById("newTaskInput");
+    const descInput = document.getElementById("newTaskDescription");
+    const descCounter = document.getElementById("descCounter");
 
     if (taskInput) {
-      taskInput.addEventListener('input', (e) => {
+      taskInput.addEventListener("input", (e) => {
         const length = e.target.value.length;
         const maxLength = this.CONFIG.maxTitleLength;
 
         // Update any visible counter
-        const counter = e.target.parentElement.querySelector('.char-counter');
+        const counter = e.target.parentElement.querySelector(".char-counter");
         if (counter) {
           counter.textContent = `${length}/${maxLength}`;
-          counter.className = 'char-counter';
+          counter.className = "char-counter";
 
           if (length > maxLength * 0.9) {
-            counter.classList.add('warning');
+            counter.classList.add("warning");
           } else if (length > maxLength * 0.7) {
-            counter.classList.add('success');
+            counter.classList.add("success");
           }
         }
       });
     }
 
     if (descInput && descCounter) {
-      descInput.addEventListener('input', (e) => {
+      descInput.addEventListener("input", (e) => {
         const length = e.target.value.length;
         const maxLength = 500;
         descCounter.textContent = `${length}/${maxLength}`;
-        descCounter.parentElement.className = 'char-counter';
+        descCounter.parentElement.className = "char-counter";
 
         if (length > maxLength * 0.9) {
-          descCounter.parentElement.classList.add('error');
+          descCounter.parentElement.classList.add("error");
         } else if (length > maxLength * 0.7) {
-          descCounter.parentElement.classList.add('warning');
+          descCounter.parentElement.classList.add("warning");
         }
       });
     }
@@ -1559,35 +2078,35 @@ class TodoApp {
    * @param {boolean} isEnabled - Whether sound is enabled
    */
   updateVolumeButtonState(isEnabled) {
-    const volumeBtn = document.getElementById('volumeBtn');
-    const volumeIcon = document.getElementById('volumeIcon');
-    
+    const volumeBtn = document.getElementById("volumeBtn");
+    const volumeIcon = document.getElementById("volumeIcon");
+
     if (volumeBtn) {
       // Add or remove disabled class based on sound state
       if (isEnabled) {
-        volumeBtn.classList.remove('disabled');
-        volumeBtn.classList.add('enabled');
+        volumeBtn.classList.remove("disabled");
+        volumeBtn.classList.add("enabled");
         // Add a subtle pulse effect when sound is enabled
-        volumeBtn.style.animation = 'pulseGlow 2s ease-in-out infinite';
+        volumeBtn.style.animation = "pulseGlow 2s ease-in-out infinite";
       } else {
-        volumeBtn.classList.remove('enabled');
-        volumeBtn.classList.add('disabled');
+        volumeBtn.classList.remove("enabled");
+        volumeBtn.classList.add("disabled");
         // Remove animation when sound is disabled
-        volumeBtn.style.animation = 'none';
+        volumeBtn.style.animation = "none";
       }
     }
-    
+
     // Update the icon to reflect the state
     if (volumeIcon && settingsManager) {
       settingsManager.updateVolumeIcon(volumeIcon, isEnabled);
     }
-    
+
     // Update the settings panel's sound toggle to match
-    const soundToggle = document.getElementById('soundToggle');
+    const soundToggle = document.getElementById("soundToggle");
     if (soundToggle) {
       soundToggle.checked = isEnabled;
     }
-    
+
     // Store the current state for comparison
     this.lastSoundEnabledState = isEnabled;
   }
@@ -1596,7 +2115,7 @@ class TodoApp {
    * Initialize volume button state based on current settings
    */
   initializeVolumeButtonState() {
-    if (typeof settingsManager !== 'undefined') {
+    if (typeof settingsManager !== "undefined") {
       this.updateVolumeButtonState(settingsManager.soundEnabled);
       // Store initial state for comparison
       this.lastSoundEnabledState = settingsManager.soundEnabled;
@@ -1607,30 +2126,30 @@ class TodoApp {
    * Listen for settings changes to update volume button state
    */
   setupSettingsChangeListener() {
-    if (typeof settingsManager === 'undefined') return;
-    
+    if (typeof settingsManager === "undefined") return;
+
     // Store the last known state
     this.lastSoundEnabledState = settingsManager.soundEnabled;
-    
+
     // Listen for settings changes via the event bus
-    if (typeof bus !== 'undefined') {
-      bus.addEventListener('settingsChanged', () => {
+    if (typeof bus !== "undefined") {
+      bus.addEventListener("settingsChanged", () => {
         // Update volume button state whenever settings change
         this.updateVolumeButtonState(settingsManager.soundEnabled);
         this.lastSoundEnabledState = settingsManager.soundEnabled;
       });
     }
-    
+
     // Also listen for storage changes as a backup
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'luxury-todo-settings') {
+    window.addEventListener("storage", (e) => {
+      if (e.key === "luxury-todo-settings") {
         try {
           const settings = JSON.parse(e.newValue);
           // Update volume button state whenever settings change
           this.updateVolumeButtonState(settings.soundEnabled);
           this.lastSoundEnabledState = settings.soundEnabled;
         } catch (error) {
-          console.warn('Failed to parse settings from storage:', error);
+          console.warn("Failed to parse settings from storage:", error);
         }
       }
     });
@@ -1640,42 +2159,95 @@ class TodoApp {
    * Setup footer visibility based on scroll
    */
   setupFooterVisibility() {
-    const footer = document.querySelector('.app-footer');
+    const footer = document.querySelector(".app-footer");
     if (!footer) return;
 
     // Make footer initially visible
-    footer.classList.add('visible');
+    footer.classList.add("visible");
 
     // Handle footer visibility based on scroll position
     const updateFooterVisibility = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-      const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
+      const scrollPercentage =
+        (scrollTop / (documentHeight - windowHeight)) * 100;
 
       // Show footer when within 10% of the bottom
       if (scrollPercentage >= 90) {
-        footer.classList.add('visible');
-        footer.classList.remove('hidden');
+        footer.classList.add("visible");
+        footer.classList.remove("hidden");
       } else {
-        footer.classList.remove('visible');
-        footer.classList.add('hidden');
+        footer.classList.remove("visible");
+        footer.classList.add("hidden");
       }
     };
 
     // Call on scroll and resize
-    window.addEventListener('scroll', updateFooterVisibility, { passive: true });
-    window.addEventListener('resize', updateFooterVisibility);
+    window.addEventListener("scroll", updateFooterVisibility, {
+      passive: true,
+    });
+    window.addEventListener("resize", updateFooterVisibility);
 
     // Initial check
     updateFooterVisibility();
   }
 }
 
-// Create global todo app
-const todoApp = new TodoApp();
+/**
+ * Initialize Center Bar and Tooltips after app is ready
+ * Also create global app instance safely after DOM is ready to avoid early errors.
+ */
+document.addEventListener("DOMContentLoaded", function () {
+  // Create global todo app
+  try {
+    if (!window.todoApp) {
+      window.todoApp = new TodoApp();
+    }
+  } catch (e) {
+    console.warn("TodoApp init failed:", e);
+  }
 
-// Export for debugging
-if (window.DEV) {
-  window.todoApp = todoApp;
-}
+  // Initialize Center Bar (prefer class-based controller)
+  try {
+    if (
+      window.App &&
+      App.CenterBarClass &&
+      typeof App.CenterBarClass === "function"
+    ) {
+      if (!App.CenterBar || !(App.CenterBar instanceof App.CenterBarClass)) {
+        App.CenterBar = new App.CenterBarClass({ debug: false });
+      }
+      App.CenterBar.init();
+    } else if (
+      window.App &&
+      App.CenterBar &&
+      typeof App.CenterBar.init === "function"
+    ) {
+      App.CenterBar.init();
+    }
+  } catch (e) {
+    console.warn("CenterBar init failed:", e);
+  }
+
+  // Bind tooltips
+  try {
+    if (
+      window.App &&
+      App.TooltipService &&
+      typeof App.TooltipService.bindAll === "function"
+    ) {
+      App.TooltipService.bindAll();
+    }
+  } catch (e) {
+    console.warn("TooltipService bindAll failed:", e);
+  }
+
+  // Initial Lucide hydration on first load
+  try {
+    if (window.lucide && typeof lucide.createIcons === "function") {
+      lucide.createIcons();
+    }
+  } catch (_) {}
+});

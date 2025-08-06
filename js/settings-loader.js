@@ -199,8 +199,20 @@ class SettingsLoader {
   async applySoundSettings(settings) {
     try {
       if (typeof audioManager !== 'undefined') {
-        audioManager.setEnabled(settings.soundEnabled !== false);
+        const soundEnabled = settings.soundEnabled !== false;
+        audioManager.setEnabled(soundEnabled);
+        audioManager.enabled = soundEnabled; // Ensure consistency
         audioManager.setVolume(settings.volume || 50);
+        
+        // Dispatch settingsChanged event to notify other components
+        if (typeof bus !== 'undefined') {
+          bus.dispatchEvent(new CustomEvent('settingsChanged', { 
+            detail: { 
+              soundEnabled: soundEnabled,
+              volume: settings.volume || 50
+            } 
+          }));
+        }
       }
     } catch (error) {
       console.warn('Failed to apply sound settings:', error);

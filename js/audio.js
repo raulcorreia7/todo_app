@@ -7,7 +7,7 @@ class AudioManager {
   constructor() {
     this.audioContext = null;
     this.masterGain = null;
-    this.volume = 50;
+    this.volume = 42; // lowered ~15% for subtler baseline
     this.enabled = true;
     this.isInitialized = false;
     this.sounds = new Map();
@@ -15,7 +15,7 @@ class AudioManager {
 
     // Pitch variation properties for gamified audio
     this.currentStep = 0;
-    this.maxSteps = 10; // Increased to 10 steps for more gradual progression
+    this.maxSteps = 10; // keep progression length; harmonics/envelopes refined below
     this.rewardSoundEnabled = true;
 
     // Harmonic evolution properties
@@ -59,8 +59,8 @@ class AudioManager {
     this.settingsSound = {
       frequency: 180,
       type: 'sine',
-      duration: 0.15,
-      volume: 0.08
+      duration: 0.12, // slightly shorter for crispness
+      volume: 0.07   // slightly reduced for subtlety
     };
 
     // Random pitch variation parameters
@@ -79,13 +79,45 @@ class AudioManager {
       this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
       this.masterGain = this.audioContext.createGain();
       this.masterGain.connect(this.audioContext.destination);
-      this.masterGain.gain.value = this.volume / 100;
+      // Subtlety polish: slightly lower perceived loudness by default
+      this.masterGain.gain.value = (this.volume / 100) * 0.85;
 
       this.isInitialized = true;
       console.log('Audio manager initialized');
 
       // Audio context will be initialized on first user interaction
       this.audioInitialized = false;
+
+      // Listen for centerbar:sound event from center bar
+      if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+        bus.addEventListener('centerbar:sound', (event) => {
+          console.log('[AudioManager] Received centerbar:sound event', event.detail);
+          this.toggleSoundEnabled();
+          
+          // Dispatch settingsChanged event to notify other components
+          if (typeof bus !== 'undefined') {
+            bus.dispatchEvent(new CustomEvent('settingsChanged', { 
+              detail: { 
+                soundEnabled: this.enabled,
+                volume: this.volume
+              } 
+            }));
+          }
+        });
+      }
+      
+      // Also listen for settingsChanged event to update UI when settings change
+      if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+        bus.addEventListener('settingsChanged', (event) => {
+          console.log('[AudioManager] Received settingsChanged event', event.detail);
+          if (event.detail && event.detail.soundEnabled !== undefined) {
+            this.setEnabled(event.detail.soundEnabled);
+          }
+          if (event.detail && event.detail.volume !== undefined) {
+            this.setVolume(event.detail.volume);
+          }
+        });
+      }
     } catch (error) {
       console.warn('Audio initialization failed:', error);
       this.enabled = false;
@@ -130,7 +162,7 @@ class AudioManager {
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(100, volume));
     if (this.masterGain) {
-      this.masterGain.gain.value = this.volume / 100;
+      this.masterGain.gain.value = (this.volume / 100) * 0.85;
     }
   }
 
@@ -144,6 +176,40 @@ class AudioManager {
       this.audioContext.suspend();
     } else if (enabled && this.audioContext) {
       this.audioContext.resume();
+    }
+  }
+
+  /**
+   * Toggle sound enabled state
+   */
+  toggleSoundEnabled() {
+    const newState = !this.enabled;
+    this.setEnabled(newState);
+    
+    // Dispatch settingsChanged event to notify other components
+    if (typeof bus !== 'undefined') {
+      bus.dispatchEvent(new CustomEvent('settingsChanged', { 
+        detail: { 
+          soundEnabled: newState,
+          volume: this.volume
+        } 
+      }));
+    }
+    
+    // Update UI if settings manager is available
+    if (typeof settingsManager !== 'undefined') {
+      settingsManager.soundEnabled = newState;
+      settingsManager.updateUI();
+    }
+    
+    // Play toggle sound if enabled
+    if (newState) {
+      this.play('toggle');
+    }
+    
+    // Update center bar sound button state
+    if (typeof centerBar !== 'undefined' && typeof centerBar.updateSoundButtonState === 'function') {
+      centerBar.updateSoundButtonState();
     }
   }
 
@@ -286,8 +352,9 @@ class AudioManager {
     mainOsc.frequency.exponentialRampToValueAtTime(frequency * 1.5, now + 0.1);
 
     mainGain.gain.setValueAtTime(0, now);
-    mainGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
-    mainGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    // Slightly faster, softer envelope for polish
+    mainGain.gain.linearRampToValueAtTime(0.26, now + 0.04);
+    mainGain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
 
     mainOsc.connect(mainGain);
     mainGain.connect(this.masterGain);
@@ -304,10 +371,10 @@ class AudioManager {
       harmonicOsc.frequency.exponentialRampToValueAtTime(harmonicFreq * 1.2, now + 0.1);
 
       // Lower volume for harmonics
-      const harmonicVolume = 0.1 / (i + 1);
+      const harmonicVolume = 0.085 / (i + 1);
       harmonicGain.gain.setValueAtTime(0, now);
-      harmonicGain.gain.linearRampToValueAtTime(harmonicVolume, now + 0.05);
-      harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      harmonicGain.gain.linearRampToValueAtTime(harmonicVolume, now + 0.04);
+      harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
 
       harmonicOsc.connect(harmonicGain);
       harmonicGain.connect(this.masterGain);
@@ -317,7 +384,7 @@ class AudioManager {
     }
 
     mainOsc.start(now);
-    mainOsc.stop(now + 0.3);
+    mainOsc.stop(now + 0.26);
   }
 
   /**
@@ -343,8 +410,9 @@ class AudioManager {
 
       const startTime = now + (index * 0.1);
       gainNode.gain.setValueAtTime(0, startTime);
-      gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+      // Gentle chime—slightly reduced gain, smoother decay
+      gainNode.gain.linearRampToValueAtTime(0.18, startTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.55);
 
       oscillator.connect(gainNode);
       gainNode.connect(this.masterGain);
@@ -364,10 +432,10 @@ class AudioManager {
       harmonicOsc.frequency.setValueAtTime(harmonicFreq, now);
 
       // Lower volume for harmonics
-      const harmonicVolume = 0.05 / (i + 1);
+      const harmonicVolume = 0.045 / (i + 1);
       harmonicGain.gain.setValueAtTime(0, now);
-      harmonicGain.gain.linearRampToValueAtTime(harmonicVolume, now + 0.1);
-      harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      harmonicGain.gain.linearRampToValueAtTime(harmonicVolume, now + 0.08);
+      harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
 
       harmonicOsc.connect(harmonicGain);
       harmonicGain.connect(this.masterGain);
@@ -389,14 +457,14 @@ class AudioManager {
 
     oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-    oscillator.frequency.linearRampToValueAtTime(frequency * 1.33, this.audioContext.currentTime + 0.1);
+    oscillator.frequency.linearRampToValueAtTime(frequency * 1.28, this.audioContext.currentTime + 0.08);
 
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.25);
+    gainNode.gain.linearRampToValueAtTime(0.18, this.audioContext.currentTime + 0.018);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.22);
 
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.25);
+    oscillator.stop(this.audioContext.currentTime + 0.22);
   }
 
   /**
@@ -413,18 +481,18 @@ class AudioManager {
 
     oscillator.type = 'sawtooth';
     oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.25, this.audioContext.currentTime + 0.35);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.28, this.audioContext.currentTime + 0.3);
 
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(frequency * 2.5, this.audioContext.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(frequency * 0.5, this.audioContext.currentTime + 0.35);
+    filter.frequency.setValueAtTime(frequency * 2.3, this.audioContext.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(frequency * 0.6, this.audioContext.currentTime + 0.3);
 
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.2, this.audioContext.currentTime + 0.05);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.35);
+    gainNode.gain.linearRampToValueAtTime(0.18, this.audioContext.currentTime + 0.04);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.3);
 
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.35);
+    oscillator.stop(this.audioContext.currentTime + 0.3);
   }
 
   /**
@@ -444,14 +512,14 @@ class AudioManager {
 
     oscillator.type = this.settingsSound.type;
     oscillator.frequency.setValueAtTime(frequency, now);
-    oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.1, now + this.settingsSound.duration);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.08, now + this.settingsSound.duration);
 
     filter.type = 'highpass';
     filter.frequency.setValueAtTime(frequency * 0.8, now);
     filter.Q.setValueAtTime(1, now);
 
     gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(this.settingsSound.volume, now + 0.02);
+    gainNode.gain.linearRampToValueAtTime(this.settingsSound.volume, now + 0.018);
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + this.settingsSound.duration);
 
     oscillator.start(now);
@@ -499,14 +567,14 @@ class AudioManager {
 
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(90, this.audioContext.currentTime);
-    oscillator.frequency.linearRampToValueAtTime(150, this.audioContext.currentTime + 0.5);
+    oscillator.frequency.linearRampToValueAtTime(150, this.audioContext.currentTime + 0.45);
 
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.5);
+    gainNode.gain.linearRampToValueAtTime(0.095, this.audioContext.currentTime + 0.09);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.45);
 
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.5);
+    oscillator.stop(this.audioContext.currentTime + 0.45);
   }
 
   /**
@@ -527,8 +595,8 @@ class AudioManager {
 
       const startTime = now + (index * 0.2);
       gainNode.gain.setValueAtTime(0, startTime);
-      gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.1);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+      gainNode.gain.linearRampToValueAtTime(0.18, startTime + 0.09);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.72);
 
       oscillator.connect(gainNode);
       gainNode.connect(this.masterGain);
@@ -579,15 +647,15 @@ class AudioManager {
 
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(350, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(525, this.audioContext.currentTime + 0.05);
-    oscillator.frequency.exponentialRampToValueAtTime(350, this.audioContext.currentTime + 0.1);
+    oscillator.frequency.exponentialRampToValueAtTime(525, this.audioContext.currentTime + 0.045);
+    oscillator.frequency.exponentialRampToValueAtTime(350, this.audioContext.currentTime + 0.095);
 
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0.095, this.audioContext.currentTime + 0.018);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.095);
 
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.1);
+    oscillator.stop(this.audioContext.currentTime + 0.095);
   }
 
   /**
@@ -606,11 +674,11 @@ class AudioManager {
     oscillator.frequency.linearRampToValueAtTime(250, this.audioContext.currentTime + 0.1);
 
     gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15, this.audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0.14, this.audioContext.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.095);
 
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.1);
+    oscillator.stop(this.audioContext.currentTime + 0.095);
   }
 
   /**
@@ -657,8 +725,8 @@ class AudioManager {
     shimmerOsc.frequency.exponentialRampToValueAtTime(2500, now + 0.3);
 
     shimmerGain.gain.setValueAtTime(0, now);
-    shimmerGain.gain.linearRampToValueAtTime(0.02, now + 0.05);
-    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    shimmerGain.gain.linearRampToValueAtTime(0.018, now + 0.045);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
 
     shimmerOsc.connect(shimmerGain);
     shimmerGain.connect(this.masterGain);

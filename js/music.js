@@ -82,6 +82,7 @@ class MusicManager {
     // App ready only ensures initialization and UI enablement; no auto-play
     const attachAppReadyListener = () => {
       if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+        console.log('[MusicManager] Bus available, setting up event listeners');
         const onAppReady = () => {
           // Do nothing but keep initialized; allow UI to be enabled.
           if (typeof bus.removeEventListener === 'function') {
@@ -89,7 +90,16 @@ class MusicManager {
           }
         };
         bus.addEventListener('app:ready', onAppReady);
+        
+        // Listen for centerbar:ready event before setting up other listeners
+        console.log('[MusicManager] Adding centerbar:ready event listener');
+        bus.addEventListener('centerbar:ready', (e) => {
+          console.log('[MusicManager] Center bar is ready, setting up event listeners');
+          // Now that center bar is ready, set up the actual event listeners
+          this.setupCenterBarEventListeners();
+        });
       } else {
+        console.warn('[MusicManager] Bus not available, retrying...');
         setTimeout(attachAppReadyListener, 100);
       }
     };
@@ -207,6 +217,25 @@ class MusicManager {
     // Explicit init from UI gesture - guarantees play allowed
     this.ensureInitialized();
     // No-op here; actual play happens on UI actions
+  }
+
+  /**
+   * Setup event listeners for center bar actions
+   */
+  setupCenterBarEventListeners() {
+    console.log('[MusicManager] Setting up center bar event listeners');
+    
+    // Listen for centerbar:music event from center bar
+    if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+      console.log('[MusicManager] Adding centerbar:music event listener');
+      bus.addEventListener('centerbar:music', (e) => {
+        console.log('[MusicManager] Received centerbar:music event', e.detail);
+        // Toggle play/pause when music button is clicked
+        this.togglePlay();
+      });
+    } else {
+      console.warn('[MusicManager] Bus not available for centerbar:music event');
+    }
   }
 
   async play() {

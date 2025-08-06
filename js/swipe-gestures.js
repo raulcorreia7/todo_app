@@ -174,12 +174,12 @@ class SwipeGestures {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: var(--glass-color);
+            background: var(--color-glass);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             padding: 15px 25px;
-            color: var(--text-color);
+            color: var(--color-text);
             font-weight: 600;
             z-index: 10000;
             animation: swipeSuccess 0.5s ease;
