@@ -88,6 +88,40 @@
         </form>
       </section>
 
+      <!-- Premium Stats Display -->
+      <div class="stats-display">
+        <div class="stat-card stat-total">
+          <div class="stat-icon">
+            <i data-lucide="list" class="lucide-icon" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Total</div>
+            <div class="stat-value" id="headerTotalTasks">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-completed">
+          <div class="stat-icon">
+            <i data-lucide="check-circle" class="lucide-icon" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Done</div>
+            <div class="stat-value" id="headerCompletedTasks">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card stat-karma">
+          <div class="stat-icon">
+            <i data-lucide="star" class="lucide-icon" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">Karma</div>
+            <div class="stat-value" id="headerKarmaScore">0</div>
+          </div>
+        </div>
+        
+      </div>
+
       <!-- Filters -->
       <nav class="filter-group">
         <button class="btn btn--ghost active" data-filter="all">All</button>

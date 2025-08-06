@@ -37,6 +37,12 @@ class TodoApp {
     // Subtle ready cue (if supported)
     this.vibrate?.("subtle");
     this.loadTasks();
+    
+    // Update statistics after loading tasks
+    if (typeof statisticsManager !== "undefined" && statisticsManager.isReady()) {
+      statisticsManager.updateStatistics();
+    }
+    
     this.render();
     this.setupFooterVisibility();
 

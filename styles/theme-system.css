@@ -23,6 +23,14 @@
   --color-glass: rgba(26, 26, 46, 0.8);
   --color-border: rgba(233, 69, 96, 0.2);
 
+  /* Stat Display Variables */
+  --stat-icon-border-glow-opacity: 0.2;
+  --stat-icon-glow-color: var(--glow-color);
+  --stat-icon-hover-glow-color: var(--glow-color);
+  --stat-label-color: rgba(255, 255, 255, 0.6);
+  --stat-value-color: var(--color-text);
+  --stat-label-hover-opacity: 1;
+
   /* Theme-specific glass colors */
   --glass-primary: rgba(255, 255, 255, 0.12);
   --glass-primary-hover: rgba(255, 255, 255, 0.18);
@@ -144,6 +152,28 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+
+  /* Statistics Component Variables */
+  --stat-card-bg: rgba(255, 255, 255, 0.03);
+  --stat-card-border-color: rgba(255, 255, 255, 0.08);
+  --stat-card-hover-bg: rgba(255, 255, 255, 0.06);
+  --stat-card-hover-border-color: color-mix(in oklab, var(--accent-color) 30%, var(--color-border));
+  --stat-card-hover-shadow: 0 12px 28px var(--shadow-color), 0 0 25px color-mix(in oklab, var(--glow-color) 25%, transparent);
+  
+  --stat-icon-bg-start: color-mix(in oklab, var(--accent-color) 15%, transparent);
+  --stat-icon-bg-end: color-mix(in oklab, var(--accent-color) 8%, transparent);
+  --stat-icon-glow-color: color-mix(in oklab, var(--glow-color) 40%, transparent);
+  --stat-icon-hover-glow-color: color-mix(in oklab, var(--glow-color) 60%, transparent);
+  --stat-icon-border-glow-opacity: 0.2;
+
+  --stat-label-color: rgba(255, 255, 255, 0.6);
+  --stat-value-color: var(--color-text);
+  --stat-label-hover-opacity: 1;
+  --stat-value-hover-opacity: 1;
+
+  --stat-progress-ring-bg-color: color-mix(in oklab, var(--color-border) 60%, transparent);
+  --stat-progress-ring-fill-color: var(--accent-color);
+  --stat-progress-ring-glow-color: color-mix(in oklab, var(--glow-color) 50%, transparent);
 }
 
 /* Theme Variants - Luxury Glass Effects */
