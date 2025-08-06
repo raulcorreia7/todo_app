@@ -381,6 +381,12 @@
   }
 }
 
+/* Base style for Add Task button (inherits from .btn--primary) */
+.add-task-btn {
+  /* Inherits from .btn--primary */
+  /* Add any specific overrides or additional styles here if needed in the future */
+}
+
 /* Desktop: make the Add Task button reasonably wider for easier clicking */
 @media (min-width: 769px) {
   .add-task-form .input-container {
@@ -389,10 +395,12 @@
     gap: 0.5rem;
     align-items: stretch;
   }
-  .add-task-form .btn.btn--primary {
-    min-width: 88px;       /* wider, but not oversized */
-    padding-left: 1.1rem;
-    padding-right: 1.1rem;
+  .add-task-form .btn.btn--primary.add-task-btn {
+    min-width: 120px;      /* Wider button */
+    padding-left: 1.5rem;  /* Increased left padding */
+    padding-right: 1.5rem; /* Increased right padding */
+    font-size: var(--font-size-base); /* slightly larger font size */
+    font-weight: 600;      /* slightly bolder font weight */
   }
 }
 
@@ -4106,172 +4114,8 @@ body.scrolling-up .floating-settings {
   }
 }
 
-/* Zen Achievements - Subtle and Mindful */
-.zen-achievement-notification {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
-  background: var(--color-glass);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 1rem 1.5rem;
-  box-shadow: 0 4px 20px var(--shadow-color);
-  z-index: 1000;
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: all var(--transition-normal);
-  max-width: 300px;
-}
-
-.zen-achievement-notification.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.zen-achievement-notification.exit {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
-.zen-achievement-content {
-  text-align: center;
-}
-
-.zen-achievement-text {
-  font-size: var(--font-size-xs);
-  color: var(--color-text);
-  opacity: 0.7;
-  margin-bottom: 0.25rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.zen-achievement-name {
-  font-size: var(--font-size-sm);
-  color: var(--accent-color);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-
-/* Zen Achievements Grid */
-.achievements-section {
-  margin-bottom: 2.5rem;
-}
-
-.achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
-.achievement-card {
-  background: var(--color-glass);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.achievement-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px var(--shadow-color);
-}
-
-.achievement-card.unlocked {
-  border-color: var(--accent-color);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.achievement-card.locked {
-  opacity: 0.6;
-}
-
-.achievement-icon {
-  font-size: var(--font-size-2xl);
-  margin-bottom: 0.75rem;
-  text-align: center;
-}
-
-.achievement-info h5 {
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--color-text);
-}
-
-.achievement-info p {
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  opacity: 0.8;
-  margin-bottom: 1rem;
-  line-height: 1.5;
-}
-
-.achievement-progress {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
-  transition: width var(--transition-normal);
-  border-radius: 2px;
-}
-
-.progress-text {
-  font-size: var(--font-size-xs);
-  color: var(--color-text);
-  opacity: 0.7;
-  font-weight: 500;
-}
-
-.achievement-badge {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 24px;
-  height: 24px;
-  background: var(--accent-color);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-}
-
-/* Responsive Zen Achievements */
-@media (max-width: 768px) {
-  .zen-achievement-notification {
-    top: 1rem;
-    right: 1rem;
-    left: 1rem;
-    max-width: none;
-  }
-
-  .achievements-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .achievement-card {
-    padding: 1.25rem;
-  }
-}
+/* Zen Achievements styles are now in styles/achievements.css */
+/* This section has been moved to avoid duplication */
 
 /* Statistics Panel - Bottom Left Sticky */
 .statistics-panel {
@@ -4385,6 +4229,143 @@ body.scrolling-up .floating-settings {
   opacity: 0.8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Task Footer - Premium Glass Design */
+.task-footer {
+  background: var(--color-glass);
+  backdrop-filter: blur(var(--glass-blur));
+  border-top: 1px solid var(--color-border);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  z-index: 40;
+}
+
+.task-footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-count {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+  opacity: 0.9;
+}
+
+.task-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-divider {
+  color: var(--color-text);
+  opacity: 0.3;
+  font-size: var(--font-size-sm);
+}
+
+.task-footer-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.task-footer-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-sm);
+  min-height: 40px;
+  border-radius: var(--radius-md);
+}
+
+.task-footer-actions .btn .lucide-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.task-footer-actions .btn .btn-text {
+  font-weight: 500;
+}
+
+/* Responsive adjustments for task footer */
+@media (max-width: 768px) {
+  .task-footer {
+    padding: 0.75rem 1.5rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-footer-section {
+    align-items: center;
+    text-align: center;
+  }
+
+  .task-stats {
+    justify-content: center;
+  }
+
+  .task-footer-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  .task-count {
+    font-size: var(--font-size-sm);
+  }
+
+  .task-stats {
+    gap: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: var(--font-size-xs);
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .task-footer-actions .btn {
+    padding: 0.5rem 0.75rem;
+    min-width: 80px;
+  }
+
+  .task-footer-actions .btn .btn-text {
+    display: none; /* Hide text on very small screens */
+  }
 }
 
 /* App Footer - Premium Glass Design */

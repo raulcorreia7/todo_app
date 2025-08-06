@@ -9,56 +9,64 @@ const ACHIEVEMENTS = {
     name: 'Mindful Beginning',
     description: 'Your journey starts with a single step',
     icon: 'sprout',
-    condition: (stats) => stats.karmaPoints >= 1
+    condition: (stats) => stats.karmaPoints >= 1,
+    conditionText: 'Earn 1 karma point'
   },
   gentle_progress: {
     id: 'gentle_progress',
     name: 'Gentle Progress',
     description: 'Small steps lead to great changes',
     icon: 'trending-up',
-    condition: (stats) => stats.dailyStats.completed >= 5
+    condition: (stats) => stats.dailyStats.completed >= 5,
+    conditionText: 'Complete 5 tasks in a day'
   },
   mindful_refinement: {
     id: 'mindful_refinement',
     name: 'Mindful Refinement',
     description: 'Each adjustment brings clarity',
     icon: 'pencil',
-    condition: (stats) => stats.dailyStats.edited >= 3
+    condition: (stats) => stats.dailyStats.edited >= 3,
+    conditionText: 'Edit 3 tasks in a day'
   },
   peaceful_presence: {
     id: 'peaceful_presence',
     name: 'Peaceful Presence',
     description: 'Cultivating calm through consistency',
     icon: 'leaf',
-    condition: (stats) => stats.karmaPoints >= 25
+    condition: (stats) => stats.karmaPoints >= 25,
+    conditionText: 'Earn 25 karma points'
   },
   daily_harmony: {
     id: 'daily_harmony',
     name: 'Daily Harmony',
     description: 'Finding balance in each day',
     icon: 'check-circle',
-    condition: (stats) => stats.dailyCompleted
+    condition: (stats) => stats.dailyCompleted,
+    conditionText: 'Complete all tasks created today'
   },
   first_task_created: {
     id: 'first_task_created',
     name: 'First Creation',
     description: 'Bringing ideas to life',
     icon: 'plus-circle',
-    condition: (stats) => stats.firstTaskCreated
+    condition: (stats) => stats.firstTaskCreated,
+    conditionText: 'Create your first task'
   },
   first_task_deleted: {
     id: 'first_task_deleted',
     name: 'Mindful Release',
     description: 'Letting go with intention',
     icon: 'trash-2',
-    condition: (stats) => stats.firstTaskDeleted
+    condition: (stats) => stats.firstTaskDeleted,
+    conditionText: 'Delete your first task'
   },
   first_task_edited: {
     id: 'first_task_edited',
     name: 'First Refinement',
     description: 'Improving with care',
     icon: 'edit',
-    condition: (stats) => stats.firstTaskEdited
+    condition: (stats) => stats.firstTaskEdited,
+    conditionText: 'Edit your first task'
   }
 };
 

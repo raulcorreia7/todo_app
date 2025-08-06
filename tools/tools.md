@@ -7,6 +7,8 @@ This directory contains small standalone tool descriptions for agentic/autonomou
 - Prefer breaking down actions into small CLI steps.
 - Avoid overloading single commands with too many responsibilities.
 - Simpler commands gather more information reliably and reduce syntax errors.
+- Prefault default agentic read/edit way of manipulating files. tools take only precedence if: allow you gather more information and insight, to what files to investigate, and code blocks or pieces of code to know where to investigate, before reading full files to process. Else just default to a normal agentic flow.
+- 
 - Use `gsed` on macOS if available; fallback to `sed`.
 - Prefer GNU coreutils when available.
 - Try `ripgrep`, then `grep` if not enough.

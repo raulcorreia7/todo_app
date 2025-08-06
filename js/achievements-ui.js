@@ -10,6 +10,7 @@ class AchievementsUI {
   }
 
   init() {
+    if (this.isInitialized) return;
     this.createAchievementsSection();
     this.isInitialized = true;
   }
@@ -21,18 +22,22 @@ class AchievementsUI {
     const settingsContent = document.querySelector('.settings-content');
     if (!settingsContent) return;
 
+    // Avoid duplicate insertion if re-initialized
+    if (settingsContent.querySelector('.achievements-section')) return;
+
     // Create achievements section
     const achievementsSection = document.createElement('div');
     achievementsSection.className = 'settings-section achievements-section';
     achievementsSection.innerHTML = `
-      <h4>Achievements</h4>
-      <div class="achievements-grid" id="achievementsGrid">
+      <h4 id="achievementsHeading">Achievements</h4>
+      <div class="achievements-grid" id="achievementsGrid" role="list" aria-labelledby="achievementsHeading" aria-live="polite">
         ${this.renderAchievements()}
       </div>
+      <div id="achvHoverPopover" class="achv-hover-popover" role="tooltip" aria-hidden="true"></div>
     `;
 
-    // Insert after sound controls
-    const soundSection = settingsContent.querySelector('.settings-section:nth-child(4)');
+    // Prefer inserting after a known anchor; fall back gracefully
+    const soundSection = settingsContent.querySelector('.settings-section[data-section="sound"], .settings-section.sound, .settings-section:nth-child(4)');
     if (soundSection) {
       soundSection.insertAdjacentElement('afterend', achievementsSection);
     } else {
@@ -97,21 +102,44 @@ class AchievementsUI {
     const progressPercent = Math.min(achievement.progress, 100);
     const isUnlocked = achievement.unlocked;
     const isComplete = achievement.progress >= 100;
-    
+
+    // Add roles/ids for better semantics
+    const titleId = `achv-title-${achievement.id}`;
+    const descId = `achv-desc-${achievement.id}`;
+
+    // Last unlocked time if available from gamification
+    let lastUnlocked = '';
+    try {
+      const unlockedEntry = (gamificationManager.achievements || []).find(a => a.id === achievement.id);
+      if (unlockedEntry && unlockedEntry.unlockedAt) {
+        const d = new Date(unlockedEntry.unlockedAt);
+        lastUnlocked = d.toLocaleString();
+      }
+    } catch (_) {}
+
+    // Hover metadata for popover
+    const hoverData = {
+      id: achievement.id,
+      name: achievement.name,
+      condition: achievement.conditionText || 'Keep making mindful progress.',
+      lastUnlocked
+    };
+    const hoverAttr = `data-hover='${this.escapeHtml(JSON.stringify(hoverData))}'`;
+
     return `
-      <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'} ${isComplete ? 'complete' : ''}" data-achievement="${achievement.id}">
+      <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'} ${isComplete ? 'complete' : ''}" data-achievement="${achievement.id}" ${hoverAttr} role="listitem" aria-labelledby="${titleId}" aria-describedby="${descId}">
         <div class="achievement-icon">${this.renderAchievementIcon(achievement.icon)}</div>
         <div class="achievement-info">
-          <h5>${achievement.name}</h5>
-          <p>${achievement.description}</p>
-          <div class="achievement-progress">
+          <h5 id="${titleId}">${achievement.name}</h5>
+          <p id="${descId}">${achievement.description}</p>
+          <div class="achievement-progress" aria-label="Progress ${Math.floor(progressPercent)} percent">
             <div class="progress-bar">
               <div class="progress-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%"></div>
             </div>
             <span class="progress-text">${Math.floor(progressPercent)}%</span>
           </div>
         </div>
-        ${isUnlocked ? '<div class="achievement-badge">✓</div>' : ''}
+        ${isUnlocked ? '<div class="achievement-badge" aria-hidden="true">✓</div>' : ''}
       </div>
     `;
   }
@@ -167,9 +195,75 @@ class AchievementsUI {
    */
   updateAchievements() {
     const grid = document.getElementById('achievementsGrid');
-    if (grid) {
-      grid.innerHTML = this.renderAchievements();
+    if (!grid) return;
+
+    // Attempt a minimal diff update when possible:
+    // If counts and order of achievements are the same, only update progress widths and classes.
+    try {
+      const allAchievements = AchievementDefinitions.getAllAchievements();
+      const stats = gamificationManager.getStats();
+      const next = allAchievements.map(a => {
+        const unlocked = gamificationManager.hasAchievement(a.id);
+        const progress = this.calculateProgress(a, stats);
+        const complete = progress >= 100;
+        return { id: a.id, unlocked, progress: Math.min(progress, 100), complete };
+      });
+
+      const cards = Array.from(grid.querySelectorAll('.achievement-card'));
+      const idsMatch = cards.length === next.length && cards.every((c, i) => c.getAttribute('data-achievement') === next[i].id);
+
+      if (idsMatch) {
+        // Progress-only update path
+        cards.forEach((card, i) => {
+          const target = next[i];
+          // toggle unlocked/locked classes
+          card.classList.toggle('unlocked', !!target.unlocked);
+          card.classList.toggle('locked', !target.unlocked);
+          card.classList.toggle('complete', !!target.complete);
+
+          const fill = card.querySelector('.progress-fill');
+          const text = card.querySelector('.progress-text');
+          if (fill) {
+            // Only update if changed to avoid layout work
+            const width = `${target.progress}%`;
+            if (fill.style.width !== width) fill.style.width = width;
+            fill.classList.toggle('complete', !!target.complete);
+          }
+          if (text) {
+            const pct = `${Math.floor(target.progress)}%`;
+            if (text.textContent !== pct) text.textContent = pct;
+          }
+
+          // Ensure a gentle micro-breath on update without heavy motion
+          card.style.willChange = 'opacity, transform';
+          card.style.transition = 'opacity 160ms var(--ease-smooth, ease), transform 160ms var(--ease-smooth, ease)';
+        });
+        return; // Done with fast path
+      }
+    } catch (_) {
+      // Fallback to full replace below
     }
+
+    // Fallback: full replace
+    const html = this.renderAchievements();
+    window.requestAnimationFrame(() => {
+      grid.innerHTML = html;
+
+      // Wire hover popovers
+      this.bindHoverPopovers();
+
+      // Subtle entrance effect with micro-scale breath
+      grid.querySelectorAll('.achievement-card').forEach((card, idx) => {
+        card.style.willChange = 'opacity, transform';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(4px) scale(0.985)';
+        setTimeout(() => {
+          card.style.transition = 'opacity 180ms ease-out, transform 180ms ease-out';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0) scale(1)';
+        }, 10 + Math.min(idx, 6) * 20);
+      });
+    });
   }
 
   /**
@@ -179,8 +273,102 @@ class AchievementsUI {
     // Use zen-style notification instead of epic celebration
     if (typeof gamificationManager !== 'undefined') {
       // Let gamification manager handle zen notifications
+      // Also add a brief 'active' pulse to the matching card if present
+      const grid = document.getElementById('achievementsGrid');
+      if (grid) {
+        const selector = `.achievement-card.unlocked[data-achievement="${achievementName}"]`;
+        const card = grid.querySelector(selector) || Array.from(grid.querySelectorAll('.achievement-card.unlocked')).find(c => {
+          const title = c.querySelector('h5');
+          return title && title.textContent && title.textContent.trim() === achievementName;
+        });
+        if (card) {
+          card.classList.add('active');
+          setTimeout(() => card.classList.remove('active'), 900);
+        }
+      }
       return;
     }
+  }
+
+  /**
+   * Hover popover bindings (desktop only cues)
+   */
+  bindHoverPopovers() {
+    try {
+      const pop = document.getElementById('achvHoverPopover');
+      if (!pop) return;
+
+      const show = (card) => {
+        const dataAttr = card.getAttribute('data-hover');
+        if (!dataAttr) return;
+        let data = null;
+        try { data = JSON.parse(dataAttr); } catch { return; }
+
+        // Build content
+        const lines = [];
+        if (data.name) lines.push(`<div class="achv-popover-title">${this.escapeHtml(data.name)}</div>`);
+        if (data.condition) lines.push(`<div class="achv-popover-cond">${this.escapeHtml(data.condition)}</div>`);
+        if (data.lastUnlocked) lines.push(`<div class="achv-popover-meta">Unlocked: ${this.escapeHtml(data.lastUnlocked)}</div>`);
+        pop.innerHTML = lines.join('');
+        pop.setAttribute('aria-hidden', 'false');
+
+        // Position near card (top-right corner)
+        const rect = card.getBoundingClientRect();
+        const x = rect.right + 8 + window.scrollX;
+        const y = rect.top + 8 + window.scrollY;
+        pop.style.position = 'absolute';
+        pop.style.left = `${x}px`;
+        pop.style.top = `${y}px`;
+        pop.style.opacity = '1';
+        pop.style.transform = 'translateY(0)';
+      };
+
+      const hide = () => {
+        pop.setAttribute('aria-hidden', 'true');
+        pop.style.opacity = '0';
+        pop.style.transform = 'translateY(-2px)';
+      };
+
+      // Delegate on container
+      const grid = document.getElementById('achievementsGrid');
+      if (!grid) return;
+
+      // Clean previous
+      grid.removeEventListener('mouseover', this._achvHoverOver);
+      grid.removeEventListener('mouseout', this._achvHoverOut);
+
+      this._achvHoverOver = (e) => {
+        const card = e.target.closest('.achievement-card');
+        if (!card) return;
+        show(card);
+      };
+      this._achvHoverOut = (e) => {
+        const rel = e.relatedTarget;
+        if (rel && (rel === pop || pop.contains(rel))) return;
+        hide();
+      };
+
+      grid.addEventListener('mouseover', this._achvHoverOver, { passive: true });
+      grid.addEventListener('mouseout', this._achvHoverOut, { passive: true });
+
+      // Hide on scroll/resize
+      window.addEventListener('scroll', hide, { passive: true });
+      window.addEventListener('resize', hide);
+
+      // Initial hidden state styles
+      pop.style.opacity = '0';
+      pop.style.transform = 'translateY(-2px)';
+      pop.style.transition = 'opacity 160ms ease, transform 160ms ease';
+      pop.style.pointerEvents = 'none';
+      pop.style.background = 'var(--color-glass)';
+      pop.style.border = '1px solid var(--color-border)';
+      pop.style.backdropFilter = 'blur(12px)';
+      pop.style.padding = '10px 12px';
+      pop.style.borderRadius = '10px';
+      pop.style.boxShadow = '0 8px 24px var(--shadow-color)';
+      pop.style.zIndex = '10060';
+      pop.style.minWidth = '180px';
+    } catch (_) { /* no-op */ }
   }
 }
 

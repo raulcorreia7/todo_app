@@ -286,3 +286,22 @@
     box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
   }
 }
+
+/* Ensure center action bar and all its children are non-interactive when hidden */
+.center-action-bar.is-hidden {
+  pointer-events: none !important;
+}
+
+.center-action-bar.is-hidden * {
+  pointer-events: none !important;
+}
+
+/* Remove any visual hover/focus feedback when hidden */
+.center-action-bar.is-hidden .btn--floating-action:focus {
+  outline: none;
+}
+
+.center-action-bar.is-hidden .btn--floating-action:hover {
+  transform: none;
+  box-shadow: none;
+}

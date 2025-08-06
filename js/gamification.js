@@ -155,6 +155,63 @@ class GamificationManager {
     // Add to queue instead of showing immediately
     this.achievementQueue.push(achievement);
     
+    // Trigger subtle UI cues if the Achievements UI is present
+    if (typeof achievementsUI !== 'undefined' && achievementsUI && typeof achievementsUI.updateAchievements === 'function') {
+      // Update the grid to reflect unlocked state before effects
+      achievementsUI.updateAchievements();
+      // Defer to next frame to ensure DOM updated, then add pulse, badge glint, and optional confetti-lite
+      requestAnimationFrame(() => {
+        const grid = document.getElementById('achievementsGrid');
+        if (!grid) return;
+        const byId = grid.querySelector(`.achievement-card.unlocked[data-achievement="${achievement.id}"]`);
+        const card = byId || Array.from(grid.querySelectorAll('.achievement-card.unlocked')).find(c => {
+          const title = c.querySelector('h5');
+          return title && title.textContent && title.textContent.trim() === achievement.name;
+        });
+        if (card) {
+          // Unlock pulse
+          card.classList.add('active');
+          setTimeout(() => card.classList.remove('active'), 900);
+
+          // Badge glint (short class toggle)
+          const badge = card.querySelector('.achievement-badge');
+          if (badge) {
+            badge.classList.add('badge-glint');
+            setTimeout(() => badge.classList.remove('badge-glint'), 260);
+          }
+
+          // Confetti-lite easter egg (subtle, reduced-motion aware, milestone-gated)
+          try {
+            const preferReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const milestone = this.achievements.length; // simple milestone proxy
+            const isMilestone = milestone === 5 || milestone === 10 || milestone % 10 === 0;
+            const chance = 0.15; // 15% random chance
+            if (!preferReduced && (isMilestone || Math.random() < chance)) {
+              this.spawnConfettiLite(card);
+            }
+          } catch (_) {}
+        }
+      });
+
+      // Optional ultra-soft chime (gated by settings toggle, debounced, respects global mute)
+      try {
+        const now = Date.now();
+        // Read settings toggle, default to false (silent by default unless user turns on)
+        const chimeEnabled = (typeof settingsManager !== 'undefined' && typeof settingsManager.getSettings === 'function')
+          ? !!settingsManager.getSettings().achievementsChime
+          : false;
+
+        if (chimeEnabled && (!this._lastChimeAt || now - this._lastChimeAt > 2500)) {
+          const soundAllowed = typeof settingsManager === 'undefined' ? true : !!settingsManager.soundEnabled;
+          const notMuted = typeof audioManager === 'undefined' ? true : !(audioManager.getGlobalMute && audioManager.getGlobalMute());
+          if (soundAllowed && notMuted && typeof audioManager !== 'undefined' && typeof audioManager.play === 'function') {
+            audioManager.play('achievement'); // gracefully no-op if missing sample
+            this._lastChimeAt = now;
+          }
+        }
+      } catch (_) {}
+    }
+    
     // Start queue processing if not already running
     if (!this.isProcessingQueue) {
       this.processAchievementQueue();
@@ -226,12 +283,16 @@ class GamificationManager {
     
     const notification = document.createElement('div');
     notification.className = 'zen-achievement-notification';
+
+    // Rotate micro-copy for subtle novelty
+    const copies = ['Mindful moment', 'Gentle progress', 'Quiet victory'];
+    const heading = copies[Math.floor(Math.random() * copies.length)];
     
     const iconHtml = this.renderAchievementIcon(achievement.icon);
     
     notification.innerHTML = `
-      <div class="zen-achievement-content">
-        <div class="zen-achievement-text">Mindful moment</div>
+      <div class="zen-achievement-content" role="status" aria-live="polite" aria-atomic="true">
+        <div class="zen-achievement-text">${heading}</div>
         <div class="zen-achievement-name">
           <span class="zen-achievement-icon">${iconHtml}</span>
           ${achievement.name}
@@ -245,13 +306,22 @@ class GamificationManager {
     setTimeout(() => {
       notification.classList.add('show');
     }, 100);
+
+    // Subtle confetti-lite accompanying the notification (non-blocking, reduced-motion aware)
+    try {
+      const preferReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!preferReduced) {
+        this.spawnConfettiLite(notification, { insideNotification: true });
+      }
+    } catch (_) {}
     
-    // Gentle fade out
+    // Gentle fade out + tiny idle delay between queue items for cadence
     setTimeout(() => {
       notification.classList.add('exit');
       setTimeout(() => {
         notification.remove();
-        this.processAchievementQueue();
+        // Idle delay (150–250ms) before next item to avoid stacked feel
+        setTimeout(() => this.processAchievementQueue(), 180);
       }, 600);
     }, 2500);
   }
@@ -267,6 +337,81 @@ class GamificationManager {
     
     // Show the achievement
     await this.showZenAchievementNotification(achievement);
+  }
+
+  /**
+   * Confetti-lite generator (subtle, transform/opacity-only)
+   * container: element where the particles will be appended (card or notification)
+   * options.insideNotification: positions particles near the icon area when true
+   */
+  spawnConfettiLite(container, options = {}) {
+    try {
+      const preferReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (preferReduced) return;
+
+      const particleCount = 3 + Math.floor(Math.random() * 4); // 3–6
+      const contRect = container.getBoundingClientRect();
+      const origin = this._findIconCenter(container) || { x: contRect.width / 2, y: contRect.height / 2 };
+
+      // Create a temporary particle container
+      const pc = document.createElement('div');
+      pc.className = 'zen-particle-container';
+      // Position relative to container box
+      pc.style.position = 'absolute';
+      pc.style.left = '0';
+      pc.style.top = '0';
+      pc.style.width = '100%';
+      pc.style.height = '100%';
+      pc.style.pointerEvents = 'none';
+
+      // Ensure the container can host absolutely positioned children
+      const prevPos = getComputedStyle(container).position;
+      if (prevPos === 'static' || !prevPos) {
+        container.style.position = 'relative';
+      }
+      container.appendChild(pc);
+
+      for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('div');
+        p.className = 'zen-particle';
+        const size = 4 + Math.floor(Math.random() * 3); // 4–6px
+        p.style.width = `${size}px`;
+        p.style.height = `${size}px`;
+        p.style.left = `${origin.x}px`;
+        p.style.top = `${origin.y}px`;
+        p.style.opacity = '0';
+        p.style.background = 'var(--accent-color)';
+        p.style.borderRadius = Math.random() < 0.5 ? '50%' : '22%'; // circle/diamond-lite
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 28 + Math.random() * 20; // small spread
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance * 0.9; // slightly elliptical
+        p.style.setProperty('--tx', `${tx}px`);
+        p.style.setProperty('--ty', `${ty}px`);
+        p.style.animation = `zenParticleBloom ${400 + Math.floor(Math.random()*300)}ms ease-out forwards`;
+        p.style.animationDelay = `${Math.floor(Math.random()*80)}ms`;
+        pc.appendChild(p);
+      }
+
+      // Cleanup after the longest particle animation finishes
+      setTimeout(() => {
+        pc.remove();
+      }, 900);
+    } catch (_) {
+      // no-op
+    }
+  }
+
+  _findIconCenter(container) {
+    try {
+      const icon = container.querySelector('.achievement-icon, .zen-achievement-icon');
+      if (!icon) return null;
+      const rect = icon.getBoundingClientRect();
+      const contRect = container.getBoundingClientRect();
+      return { x: rect.left - contRect.left + rect.width / 2, y: rect.top - contRect.top + rect.height / 2 };
+    } catch {
+      return null;
+    }
   }
 
   celebrateVictory() {

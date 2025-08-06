@@ -66,11 +66,11 @@
               maxlength="500"
               autocomplete="off"
             />
-            <button
-              type="submit"
-              class="btn btn--primary"
-              aria-label="Add task"
-            >
+          <button
+            type="submit"
+            class="btn btn--primary add-task-btn"
+            aria-label="Add task"
+          >
               <i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
             </button>
           </div>
@@ -110,11 +110,37 @@
         </div>
       </main>
 
-      <!-- Task Count -->
+      <!-- Task Count & Actions Footer -->
       <footer class="task-footer">
-        <span id="taskCount">0 tasks remaining</span>
-        <div class="footer-actions">
-          <!-- legacy footer actions removed; replaced by floating action bar -->
+        <div class="task-footer-section">
+          <span id="taskCount" class="task-count">0 tasks remaining</span>
+          <div class="task-stats">
+            <span class="stat-item">
+              <span class="stat-value" id="footerTotalTasks">0</span>
+              <span class="stat-label">Total</span>
+            </span>
+            <span class="stat-divider">•</span>
+            <span class="stat-item">
+              <span class="stat-value" id="footerCompletedTasks">0</span>
+              <span class="stat-label">Done</span>
+            </span>
+            <span class="stat-divider">•</span>
+            <span class="stat-item">
+              <span class="stat-value" id="footerKarmaScore">0</span>
+              <span class="stat-label">Karma</span>
+            </span>
+          </div>
+        </div>
+        
+        <div class="task-footer-actions">
+          <button id="footerStatsBtn" class="btn btn--ghost btn--small" aria-label="View statistics">
+            <i data-lucide="bar-chart-3" class="lucide-icon" aria-hidden="true"></i>
+            <span class="btn-text">Stats</span>
+          </button>
+          <button id="footerSettingsBtn" class="btn btn--ghost btn--small" aria-label="Open settings">
+            <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
+            <span class="btn-text">Settings</span>
+          </button>
         </div>
       </footer>
     </div>

@@ -641,23 +641,44 @@ class TodoApp {
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
+      // If user is typing inside an input/textarea/contenteditable, allow native shortcuts (like Cmd/Ctrl+A) to work
+      const target = e.target;
+      const isEditable =
+        (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) ||
+        (target && target.isContentEditable);
+
+      if (isEditable) {
+        // Make sure we never block select-all inside editable fields
+        if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) {
+          // Let the browser perform the native select all behavior
+          return;
+        }
+      }
+
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
           case "n":
+          case "N":
             e.preventDefault();
             document.getElementById("newTaskInput")?.focus();
             break;
           case "a":
-            e.preventDefault();
-            this.setFilter("all");
+          case "A":
+            // Only override select-all when NOT focused on an editable element
+            if (!isEditable) {
+              e.preventDefault();
+              this.setFilter("all");
+            }
             break;
           case "Enter":
             if (this.editingTaskId) {
+              e.preventDefault();
               this.saveEdit(this.editingTaskId);
             }
             break;
           case "Escape":
             if (this.editingTaskId) {
+              e.preventDefault();
               this.cancelEdit();
             }
             break;

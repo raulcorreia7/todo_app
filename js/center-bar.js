@@ -451,10 +451,16 @@ class CenterBar {
                 bar.style.transform = 'translate(-50%, 24px)';
                 bar.style.opacity = '0';
                 bar.style.pointerEvents = 'none';
+                bar.classList.add('is-hidden');
+                bar.setAttribute('aria-hidden', 'true');
+                try { bar.setAttribute('inert', ''); } catch (_) {}
             } else {
                 bar.style.transform = 'translate(-50%, 0)';
                 bar.style.opacity = '1';
                 bar.style.pointerEvents = 'auto';
+                bar.classList.remove('is-hidden');
+                bar.removeAttribute('aria-hidden');
+                try { bar.removeAttribute('inert'); } catch (_) {}
             }
             lastY = y;
             ticking = false;

@@ -216,51 +216,82 @@ class SettingsManager {
       volumeSlider._bound = true;
     }
 
-    // Utilities: inject Reset to Defaults button if not present
+    // Utilities: inject controls
     const utilitiesContainer = document.getElementById('utilitiesContainer');
-    if (utilitiesContainer && !utilitiesContainer.querySelector('#resetDefaultsBtn')) {
-      const resetBtn = document.createElement('button');
-      // Danger visual treatment per user request
-      resetBtn.className = 'btn btn--danger-hybrid';
-      resetBtn.id = 'resetDefaultsBtn';
-      resetBtn.setAttribute('aria-label', 'Reset to default settings');
-      resetBtn.textContent = 'Reset to Defaults';
-      utilitiesContainer.appendChild(resetBtn);
+    if (utilitiesContainer) {
+      // Reset to Defaults button
+      if (!utilitiesContainer.querySelector('#resetDefaultsBtn')) {
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'btn btn--danger-hybrid';
+        resetBtn.id = 'resetDefaultsBtn';
+        resetBtn.setAttribute('aria-label', 'Reset to default settings');
+        resetBtn.textContent = 'Reset to Defaults';
+        utilitiesContainer.appendChild(resetBtn);
 
-      // Ensure click handler always references the latest modalManager at click time
-      resetBtn.addEventListener('click', async () => {
-        const doReset = () => this.resetToDefaults();
+        resetBtn.addEventListener('click', async () => {
+          const doReset = () => this.resetToDefaults();
 
-        // Prefer ModalManager.show if available (custom luxury modal)
-        try {
-          if (typeof modalManager !== 'undefined' && typeof modalManager.show === 'function') {
-            const confirmed = await modalManager
-              .show({
-                title: 'Reset to Defaults',
-                message:
-                  'Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences.',
-                cancelText: 'Cancel',
-                confirmText: 'Reset',
-                confirmStyle: 'danger'
-              })
-              .catch(() => false);
+          try {
+            if (typeof modalManager !== 'undefined' && typeof modalManager.show === 'function') {
+              const confirmed = await modalManager
+                .show({
+                  title: 'Reset to Defaults',
+                  message:
+                    'Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences.',
+                  cancelText: 'Cancel',
+                  confirmText: 'Reset',
+                  confirmStyle: 'danger'
+                })
+                .catch(() => false);
 
-            if (confirmed === true) doReset();
-            return;
+              if (confirmed === true) doReset();
+              return;
+            }
+          } catch (err) {
+            console.warn('modalManager.show threw an error, falling back to window.confirm', err);
           }
-        } catch (err) {
-          console.warn('modalManager.show threw an error, falling back to window.confirm', err);
-        }
 
-        // Fallback to native confirm
-        if (
-          window.confirm(
-            'Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences.'
-          )
-        ) {
-          doReset();
-        }
-      });
+          if (window.confirm('Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences.')) {
+            doReset();
+          }
+        });
+      }
+
+      // Achievements chime toggle (optional subtle audio)
+      if (!utilitiesContainer.querySelector('#achvChimeToggle')) {
+        const row = document.createElement('div');
+        row.className = 'settings-row';
+        row.innerHTML = `
+          <label class="settings-checkbox" style="display:flex;align-items:center;gap:10px;">
+            <input type="checkbox" id="achvChimeToggle" />
+            <span class="checkmark" aria-hidden="true"></span>
+            <span>Achievements chime</span>
+          </label>
+        `;
+        utilitiesContainer.appendChild(row);
+
+        const toggle = row.querySelector('#achvChimeToggle');
+        // Initialize from persisted settings (fallback true for premium feedback)
+        const persisted = storageManager.getSettings ? storageManager.getSettings() : {};
+        this.achievementsChime = typeof persisted.achievementsChime === 'boolean' ? persisted.achievementsChime : false;
+        toggle.checked = !!this.achievementsChime;
+
+        toggle.addEventListener('change', () => {
+          this.achievementsChime = toggle.checked;
+          this.saveSettings();
+          // Notify others
+          if (typeof bus !== 'undefined') {
+            bus.dispatchEvent(new CustomEvent('settingsChanged', { detail: { achievementsChime: this.achievementsChime } }));
+          }
+          // Soft feedback if chime enabled and sound allowed
+          try {
+            const notMuted = typeof audioManager === 'undefined' ? true : !(audioManager.getGlobalMute && audioManager.getGlobalMute());
+            if (this.achievementsChime && notMuted && typeof audioManager !== 'undefined') {
+              audioManager.play('toggle');
+            }
+          } catch (_) {}
+        });
+      }
     }
   }
 
@@ -382,7 +413,8 @@ class SettingsManager {
       theme: this.currentTheme,
       font: this.currentFont,
       soundEnabled: this.soundEnabled,
-      volume: this.volume
+      volume: this.volume,
+      achievementsChime: !!this.achievementsChime
     });
     console.log('[Settings] Settings saved successfully');
   }
@@ -973,7 +1005,8 @@ class SettingsManager {
       font: this.currentFont,
       soundEnabled: this.soundEnabled,
       volume: this.volume,
-      animations: true // Default to true for animations
+      animations: true, // Default to true for animations
+      achievementsChime: !!this.achievementsChime
     };
   }
 }
