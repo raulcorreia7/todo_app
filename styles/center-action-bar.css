@@ -9,7 +9,17 @@
 .center-action-bar .action-subgroup {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px; /* mobile-first tighter spacing */
+}
+
+/* Vertical separator tweaks */
+.center-action-bar .vertical-separator {
+  height: 20px;         /* mobile: shorter separator */
+  width: 1px;
+  background: var(--color-border, rgba(255,255,255,0.22));
+  opacity: 0.9;
+  margin: 0 6px;        /* reduce horizontal breathing space on mobile */
+  align-self: center;
 }
 
 /* Buttons: adopt glass look consistent with the design system */
@@ -23,9 +33,9 @@
   z-index: 1;
   
   /* Ensure consistent round shape */
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  border-radius: 9999px; /* ensure perfectly round even if slight size variance */
+  width: 40px;  /* mobile-first more compact */
+  height: 40px; /* mobile-first more compact */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,8 +46,8 @@
 /* Icons: explicit stroke so visibility does not rely on inherited currentColor */
 .center-action-bar .btn--floating-action svg {
   display: inline-block;
-  width: 24px;
-  height: 24px;
+  width: 20px;  /* scale down with button */
+  height: 20px; /* scale down with button */
   /* Force the stroke color to use the theme text color */
   stroke: var(--color-text, #e8f8f5) !important;
   fill: none;
@@ -65,6 +75,34 @@
   outline-offset: 2px;
 }
 
+/* Mobile-first container padding to keep edges within bounds */
+.center-action-bar {
+  padding: 0 2.5vw;
+}
+
+/* Tablet/desktop scaling */
+@media (min-width: 640px) {
+  .center-action-bar .btn--floating-action {
+    width: 48px;
+    height: 48px;
+    border-radius: 9999px; /* keep perfectly round on larger sizes too */
+  }
+  .center-action-bar .btn--floating-action svg {
+    width: 24px;
+    height: 24px;
+  }
+  .center-action-bar .action-subgroup {
+    gap: 8px;
+  }
+  .center-action-bar {
+    padding: 0 1.25vw;
+  }
+  .center-action-bar .vertical-separator {
+    height: 28px;     /* scale up on larger screens */
+    margin: 0 10px;   /* restore more generous spacing */
+  }
+}
+
 /* Sound button animations */
 .center-action-bar .btn--floating-action[data-action="sound"] {
   transition: all 0.3s ease;
@@ -90,9 +128,148 @@
   }
 }
 
+/* Music button states: playing/buffering/paused */
+/* Strictly scope music button animations to prevent bleed from other CAB buttons */
+/* IMPORTANT: make rotation timeline independent from class churn.
+   Use animation-play-state to pause/resume instead of adding/removing animation names. */
+.center-action-bar #cabMusic {
+  /* define the animations on the base element so they never get re-attached */
+  animation:
+    cabMusicSpin 6s linear infinite,
+    cabMusicBreath 2.4s ease-in-out infinite,
+    cabMusicAura 3.2s ease-in-out infinite;
+  animation-play-state: paused; /* paused by default */
+  transform-origin: center;
+  position: relative;
+  isolation: isolate;
+  will-change: transform, box-shadow;
+}
+.center-action-bar #cabMusic .lucide-icon {
+  /* icon rotation timeline always present; paused by default */
+  animation: cabIconSpin 6s linear infinite;
+  animation-play-state: paused;
+  transform-origin: center;
+  will-change: transform;
+}
+
+/* When playing, only resume the timelines instead of re-attaching them */
+.center-action-bar #cabMusic.is-playing {
+  animation-play-state: running !important;
+}
+.center-action-bar #cabMusic.is-playing .lucide-icon {
+  animation-play-state: running !important;
+}
+
+.center-action-bar #cabMusic.is-playing::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 0 rgba(99,102,241,0.20);
+  pointer-events: none;
+  animation: cabMusicAura 3.2s ease-in-out infinite;
+  animation-play-state: running !important;
+  z-index: -1;
+}
+.center-action-bar #cabMusic.is-playing::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 0 rgba(99,102,241,0.20);
+  pointer-events: none;
+  animation: cabMusicAura 3.2s ease-in-out infinite !important;
+  z-index: -1; /* keep aura behind the button content */
+}
+.center-action-bar #cabMusic.buffering {
+  position: relative;
+  isolation: isolate;
+}
+.center-action-bar #cabMusic.buffering::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid rgba(99, 102, 241, 0.45);
+  animation: ripple-wave 0.9s ease-out infinite;
+  pointer-events: none;
+}
+/* When paused, only pause the timelines (do not remove animations) */
+.center-action-bar #cabMusic.is-paused {
+  animation-play-state: paused !important;
+}
+.center-action-bar #cabMusic.is-paused .lucide-icon {
+  animation-play-state: paused !important;
+}
+
+@keyframes cabMusicBreath {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(99,102,241,0.0); }
+  50%      { transform: scale(1.03); box-shadow: 0 6px 16px -8px rgba(99,102,241,0.35); }
+}
+/* Legacy-inspired canMusic spin: rotate the button softly while playing */
+@keyframes cabMusicSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* Rotate icon CLOCKWISE to satisfy requirement */
+@keyframes cabIconSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Subtle premium aura pulsing around the button while playing */
+@keyframes cabMusicAura {
+  0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.18); }
+  50%  { box-shadow: 0 0 18px 4px rgba(99,102,241,0.30); }
+  100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.18); }
+}
+
+/* Settings open pulse hook (applied momentarily via JS when opening settings) */
+.center-action-bar #cabSettings.open-pulse {
+  animation: cabOpenPulse 0.5s ease-out;
+}
+@keyframes cabOpenPulse {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
+  70%  { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(99,102,241,0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+}
+
+/* Test button sparkle hook: brief highlight ring */
+.center-action-bar #cabTest.sparkle-hit {
+  animation: cabTestSpark 0.5s ease-out;
+}
+@keyframes cabTestSpark {
+  0%   { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6); transform: scale(1); }
+  70%  { box-shadow: 0 0 0 12px rgba(72, 187, 120, 0); transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); transform: scale(1); }
+}
+
+/* Clear micro-sweep effect */
+.center-action-bar #cabClear.micro-sweep {
+  animation: cabBroomSweep 0.45s ease-out;
+}
+@keyframes cabBroomSweep {
+  0%   { transform: rotate(0deg); }
+  40%  { transform: rotate(-12deg); }
+  80%  { transform: rotate(6deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Delete danger shake */
+.center-action-bar #cabDelete.danger-shake {
+  animation: shake-x 0.35s linear;
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+}
+
 /* Sound disabled animation */
 .center-action-bar .btn--floating-action[data-action="sound"].sound-disabled {
   animation: soundDisabledPulse 0.6s ease-out;
+}
+
+/* Hint state used by music manager when autoplay blocked */
+.center-action-bar #cabMusic.hint {
+  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3);
+  animation: aiRefactorPulse 1.6s ease-in-out infinite;
 }
 
 @keyframes soundDisabledPulse {

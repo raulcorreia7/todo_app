@@ -1,399 +1,446 @@
 /**
- * MusicPlayer - unified transport UI + visualizer + bus integration
- * Replaces ad-hoc transport wiring in app.js and supersedes music-visualizer.js
+ * MusicPlayer - Transport UI controller (class-based, bus-first)
+ * Follows app architecture similar to CenterBar/Settings/Storage:
+ * - Class instance assigned to const musicPlayer
+ * - Immediate init() with DOM ready checks
+ * - Uses EventBus (bus) for communication; DOM fallbacks only as last resort
  *
  * Responsibilities:
  * - Create and manage a popover with transport controls (prev/play/pause/next)
- * - Manage a minimal visualizer state (non-audio-producing; hooks exist to integrate analyser)
- * - Integrate with existing musicManager (js/music.js) via the global bus
- * - Expose a simple API: toggleUI(), open(), close(), isOpen()
- * - Provide robust, idempotent initialization and comprehensive debug logs
- *
- * Events listened (via bus):
- * - music:playing({ buffering? }): reflect playing UI state
- * - music:paused: reflect paused UI
- * - music:buffering({ buffering }): reflect buffering state
- * - music:hintStart: hint user to press play (resume gesture)
- * - music:silenceStart / music:silenceEnd: dim visualizer if desired
- *
- * Events emitted (via bus):
- * - music:prev, music:next, music:toggle
- *
- * Usage:
- *   window.musicPlayer.init();          // usually on DOMContentLoaded
- *   window.musicPlayer.toggleUI(anchorButtonEl); // called from CenterBar action
+ * - Minimal visualizer container (CSS-based)
+ * - Reflect state from MusicManager bus events
+ * - Emit transport events via bus (music:prev, music:toggle, music:next, music:setVolume)
  */
-(function (global) {
-  const LOG_PREFIX = "[MusicPlayer]";
-  function log(...args) {
-    console.debug(LOG_PREFIX, ...args);
+
+class MusicPlayer {
+  constructor() {
+    this.isInitialized = false;
+
+    // DOM refs
+    this.pop = null;
+    this.header = null;
+    this.transport = null;
+    this.volume = null;
+    this.vizContainer = null;
+
+    // state
+    this.isOpenState = false;
+    this.pinned = false;
+    this.buffering = false;
+    this.playing = false;
+
+    // controls
+    this.btnPrev = null;
+    this.btnPlayPause = null;
+    this.btnNext = null;
+
+    // volume controls
+    this.slider = null;
+    this.fill = null;
+    this.handle = null;
+
+    // internal handlers
+    this._onDocPointerDown = null;
+    this._onKeyDown = null;
+    this.lastAnchorEl = null;
+
+    this.init();
   }
-  function warn(...args) {
-    console.warn(LOG_PREFIX, ...args);
+
+  log(...args) { try { console.debug('[MusicPlayer]', ...args); } catch (_) {} }
+  warn(...args) { try { console.warn('[MusicPlayer]', ...args); } catch (_) {} }
+  err(...args) { try { console.error('[MusicPlayer]', ...args); } catch (_) {} }
+
+  isReady() {
+    return this.isInitialized;
   }
-  function err(...args) {
-    console.error(LOG_PREFIX, ...args);
-  }
 
-  class MusicPlayer {
-    constructor() {
-      this.initialized = false;
-      this.pop = null; // popover root
-      this.header = null; // header row (optional)
-      this.transport = null; // transport row container
-      this.volume = null; // volume row container
-      this.vizContainer = null; // visualizer container (minimal)
-      this.isOpenState = false;
-      this.pinned = false;
-
-      // controls
-      this.btnPrev = null;
-      this.btnPlayPause = null;
-      this.btnNext = null;
-
-      // volume controls (optional UI)
-      this.slider = null;
-      this.fill = null;
-      this.handle = null;
-
-      // state
-      this.buffering = false;
-      this.playing = false;
+  // Safe bus dispatch helper
+  busDispatch(name, detail) {
+    try {
+      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
+        bus.dispatchEvent(new CustomEvent(name, { detail }));
+        return true;
+      }
+    } catch (e) {
+      this.warn('busDispatch failed', name, e);
     }
+    return false;
+  }
 
-    busDispatch(name, detail) {
+  init() {
+    const onReady = () => {
       try {
-        if (
-          typeof global.bus !== "undefined" &&
-          typeof bus.dispatchEvent === "function"
-        ) {
-          bus.dispatchEvent(new CustomEvent(name, { detail }));
-          return true;
-        }
+        this.ensurePopover();
+        this.wireControls();
+        this.subscribeBus();
+        this.isInitialized = true;
+        this.log('initialized');
+
+        // Mark ready on bus (optional)
+        try {
+          if (typeof bus !== 'undefined' && typeof bus.markReady === 'function') {
+            bus.markReady('musicplayer');
+          }
+        } catch (_) {}
       } catch (e) {
-        warn("busDispatch failed", name, e);
+        this.err('init failed', e);
       }
-      return false;
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', onReady);
+    } else {
+      onReady();
     }
+  }
 
-    init() {
-      if (this.initialized) return;
-      this.ensurePopover();
-      this.wireControls();
-      this.subscribeBus();
-      this.initialized = true;
-      log("initialized");
+  ensurePopover() {
+    // Create if missing
+    let pop = document.getElementById('musicPopover');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'musicPopover';
+      pop.className = 'music-popover';
+      document.body.appendChild(pop);
     }
+    this.pop = pop;
 
-    ensurePopover() {
-      // Create if missing
-      let pop = document.getElementById("musicPopover");
-      if (!pop) {
-        pop = document.createElement("div");
-        pop.id = "musicPopover";
-        pop.className = "music-popover";
-        document.body.appendChild(pop);
-      }
-      this.pop = pop;
+    // structure
+    this.pop.innerHTML = '';
+    this.pop.style.opacity = '0';
+    this.pop.style.transform = 'scale(0.98)';
+    this.pop.classList.remove('open');
 
-      // structure
-      this.pop.innerHTML = "";
-      this.pop.style.opacity = "0";
-      this.pop.style.transform = "scale(0.98)";
-      this.pop.classList.remove("open");
+    // Header (optional, includes a pin)
+    const header = document.createElement('div');
+    header.className = 'music-popover-header';
+    header.innerHTML = `
+      <button class="btn music-pin small" aria-label="Pin">📌</button>
+      <div class="music-label">Music</div>
+      <button class="btn btn--icon music-close" aria-label="Close">✕</button>
+    `;
+    this.header = header;
 
-      // Header (optional, includes a pin)
-      const header = document.createElement("div");
-      header.className = "music-popover-header";
-      header.innerHTML = `
-        <button class="btn music-pin small" aria-label="Pin">📌</button>
-        <div class="music-label">Music</div>
-        <button class="btn btn--icon music-close" aria-label="Close">✕</button>
-      `;
-      this.header = header;
+    // Transport row
+    const transport = document.createElement('div');
+    transport.className = 'music-transport';
+    transport.innerHTML = `
+      <button class="btn btn--action" id="musicPrev" aria-label="Previous">⏮</button>
+      <button class="btn btn--action" id="musicPlayPause" aria-label="Play/Pause">
+        <span id="musicPlayIcon">▶</span>
+        <span id="musicPauseIcon" style="display:none;">⏸</span>
+      </button>
+      <button class="btn btn--action" id="musicNext" aria-label="Next">⏭</button>
+    `;
+    this.transport = transport;
 
-      // Transport row
-      const transport = document.createElement("div");
-      transport.className = "music-transport";
-      transport.innerHTML = `
-        <button class="btn btn--action" id="musicPrev" aria-label="Previous">⏮</button>
-        <button class="btn btn--action" id="musicPlayPause" aria-label="Play/Pause">
-          <span id="musicPlayIcon">▶</span>
-          <span id="musicPauseIcon" style="display:none;">⏸</span>
-        </button>
-        <button class="btn btn--action" id="musicNext" aria-label="Next">⏭</button>
-      `;
-      this.transport = transport;
-
-      // Volume row (optional, non-invasive)
-      const volume = document.createElement("div");
-      volume.className = "music-volume";
-      volume.innerHTML = `
-        <span class="music-label">Vol</span>
-        <div class="music-slider-container">
-          <div id="musicSlider" class="music-slider">
-            <div id="musicFill" class="music-fill" style="width:50%"></div>
-            <div id="musicHandle" class="music-handle" style="left:50%"></div>
-          </div>
+    // Volume row (optional, non-invasive)
+    const volume = document.createElement('div');
+    volume.className = 'music-volume';
+    volume.innerHTML = `
+      <span class="music-label">Vol</span>
+      <div class="music-slider-container">
+        <div id="musicSlider" class="music-slider">
+          <div id="musicFill" class="music-fill" style="width:50%"></div>
+          <div id="musicHandle" class="music-handle" style="left:50%"></div>
         </div>
-      `;
-      this.volume = volume;
+      </div>
+    `;
+    this.volume = volume;
 
-      // Minimal visualizer container (no audio context; CSS-animated baseline)
-      const viz = document.createElement("div");
-      viz.id = "musicFrequencyBars";
-      viz.className = "music-visualizer";
-      // Add 8 placeholder bars for CSS micro-animation
-      for (let i = 0; i < 8; i++) {
-        const bar = document.createElement("div");
-        bar.className = "bar";
-        viz.appendChild(bar);
-      }
-      this.vizContainer = viz;
-
-      // Assemble
-      this.pop.appendChild(header);
-      this.pop.appendChild(transport);
-      this.pop.appendChild(volume);
-      this.pop.appendChild(viz);
+    // Minimal visualizer container (no audio context; CSS-animated baseline)
+    const viz = document.createElement('div');
+    viz.id = 'musicFrequencyBars';
+    viz.className = 'music-visualizer';
+    for (let i = 0; i < 8; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      viz.appendChild(bar);
     }
+    this.vizContainer = viz;
 
-    wireControls() {
-      this.btnPrev = this.pop.querySelector("#musicPrev");
-      this.btnPlayPause = this.pop.querySelector("#musicPlayPause");
-      this.btnNext = this.pop.querySelector("#musicNext");
+    // Assemble
+    this.pop.appendChild(header);
+    this.pop.appendChild(transport);
+    this.pop.appendChild(volume);
+    this.pop.appendChild(viz);
+  }
 
-      const btnClose = this.pop.querySelector(".music-close");
-      const btnPin = this.pop.querySelector(".music-pin.small");
+  wireControls() {
+    this.btnPrev = this.pop.querySelector('#musicPrev');
+    this.btnPlayPause = this.pop.querySelector('#musicPlayPause');
+    this.btnNext = this.pop.querySelector('#musicNext');
 
-      // volume bits
-      this.slider = this.pop.querySelector("#musicSlider");
-      this.fill = this.pop.querySelector("#musicFill");
-      this.handle = this.pop.querySelector("#musicHandle");
+    const btnClose = this.pop.querySelector('.music-close');
+    const btnPin = this.pop.querySelector('.music-pin.small');
 
-      // events
-      this.btnPrev?.addEventListener("click", (e) => {
+    // Track last anchor to exempt it from outside-click close
+    this.lastAnchorEl = null;
+
+    // volume bits
+    this.slider = this.pop.querySelector('#musicSlider');
+    this.fill = this.pop.querySelector('#musicFill');
+    this.handle = this.pop.querySelector('#musicHandle');
+
+    // Transport events (bus-first, with safe fallbacks)
+    this.btnPrev?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.log('prev clicked');
+      this.busDispatch('music:prev');
+      // optional direct fallback
+      try { if (typeof window.musicManager?.prev === 'function') window.musicManager.prev(); } catch (_) {}
+    });
+
+    this.btnPlayPause?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.log('toggle clicked');
+      this.busDispatch('music:toggle');
+      // optional direct fallback
+      try { if (typeof window.musicManager?.togglePlay === 'function') window.musicManager.togglePlay(); } catch (_) {}
+    });
+
+    this.btnNext?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.log('next clicked');
+      this.busDispatch('music:next');
+      // optional direct fallback
+      try { if (typeof window.musicManager?.next === 'function') window.musicManager.next(); } catch (_) {}
+    });
+
+    btnClose?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.close();
+    });
+
+    btnPin?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.pinned = !this.pinned;
+      btnPin.classList.toggle('pinned', this.pinned);
+      if (this.pinned) this.pop.classList.add('sticky');
+      else this.pop.classList.remove('sticky');
+    });
+
+    // volume drag (simple)
+    if (this.slider && this.fill && this.handle) {
+      const onAt = (clientX) => {
+        const rect = this.slider.getBoundingClientRect();
+        const t = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        const pct = Math.round(t * 100);
+        this.fill.style.width = pct + '%';
+        this.handle.style.left = pct + '%';
+        // inform music system
+        this.busDispatch('music:setVolume', { volume: t });
+        this.log('volume', t.toFixed(2));
+      };
+
+      const start = (e) => {
         e.preventDefault();
-        log("prev clicked");
-        this.busDispatch("music:prev");
-      });
-
-      this.btnPlayPause?.addEventListener("click", (e) => {
-        e.preventDefault();
-        log("toggle clicked");
-        this.busDispatch("music:toggle");
-      });
-
-      this.btnNext?.addEventListener("click", (e) => {
-        e.preventDefault();
-        log("next clicked");
-        this.busDispatch("music:next");
-      });
-
-      btnClose?.addEventListener("click", (e) => {
-        e.preventDefault();
-        this.close();
-      });
-
-      btnPin?.addEventListener("click", (e) => {
-        e.preventDefault();
-        this.pinned = !this.pinned;
-        btnPin.classList.toggle("pinned", this.pinned);
-        if (this.pinned) {
-          this.pop.classList.add("sticky");
-        } else {
-          this.pop.classList.remove("sticky");
-        }
-      });
-
-      // volume drag (simple)
-      if (this.slider && this.fill && this.handle) {
-        const onAt = (clientX) => {
-          const rect = this.slider.getBoundingClientRect();
-          const t = Math.max(
-            0,
-            Math.min(1, (clientX - rect.left) / rect.width)
-          );
-          const pct = Math.round(t * 100);
-          this.fill.style.width = pct + "%";
-          this.handle.style.left = pct + "%";
-          // inform music system
-          this.busDispatch("music:setVolume", { volume: t });
-          log("volume", t.toFixed(2));
+        const move = (ev) => {
+          const x = ev.touches?.[0]?.clientX ?? ev.clientX;
+          onAt(x);
         };
-
-        const start = (e) => {
-          e.preventDefault();
-          const move = (ev) => {
-            const x = ev.touches?.[0]?.clientX ?? ev.clientX;
-            onAt(x);
-          };
-          const up = () => {
-            window.removeEventListener("mousemove", move);
-            window.removeEventListener("mouseup", up);
-            window.removeEventListener("touchmove", move);
-            window.removeEventListener("touchend", up);
-          };
-          window.addEventListener("mousemove", move);
-          window.addEventListener("mouseup", up);
-          window.addEventListener("touchmove", move, { passive: true });
-          window.addEventListener("touchend", up);
+        const up = () => {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+          window.removeEventListener('touchmove', move);
+          window.removeEventListener('touchend', up);
         };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+        window.addEventListener('touchmove', move, { passive: true });
+        window.addEventListener('touchend', up);
+      };
 
-        this.slider.addEventListener("mousedown", start);
-        this.slider.addEventListener("touchstart", start, { passive: true });
-      }
+      this.slider.addEventListener('mousedown', start);
+      this.slider.addEventListener('touchstart', start, { passive: true });
+    }
+  }
+
+  subscribeBus() {
+    if (typeof bus === 'undefined' || typeof bus.addEventListener !== 'function') {
+      this.warn('bus not available; UI will still open/close');
+      return;
     }
 
-    subscribeBus() {
-      if (
-        typeof global.bus === "undefined" ||
-        typeof bus.addEventListener !== "function"
-      ) {
-        warn("bus not available; UI will still open/close");
-        return;
-      }
+    bus.addEventListener('music:playing', (e) => {
+      const isBuf = !!(e.detail && e.detail.buffering);
+      this.buffering = isBuf;
+      this.setPlaying(true);
+      this.pop.classList.toggle('is-buffering', isBuf);
+      this.log('music:playing', { buffering: isBuf });
+    });
 
-      bus.addEventListener("music:playing", (e) => {
-        const isBuf = !!(e.detail && e.detail.buffering);
-        this.buffering = isBuf;
-        this.setPlaying(true);
-        if (isBuf) this.pop.classList.add("is-buffering");
-        else this.pop.classList.remove("is-buffering");
-        log("music:playing", { buffering: isBuf });
-      });
+    bus.addEventListener('music:paused', () => {
+      this.setPlaying(false);
+      this.log('music:paused');
+    });
 
-      bus.addEventListener("music:paused", () => {
-        this.setPlaying(false);
-        log("music:paused");
-      });
+    bus.addEventListener('music:buffering', (e) => {
+      const isBuf = !!(e.detail && e.detail.buffering);
+      this.buffering = isBuf;
+      this.pop.classList.toggle('is-buffering', isBuf);
+      this.log('music:buffering', { buffering: isBuf });
+    });
 
-      bus.addEventListener("music:buffering", (e) => {
-        const isBuf = !!(e.detail && e.detail.buffering);
-        this.buffering = isBuf;
-        this.pop.classList.toggle("is-buffering", isBuf);
-        log("music:buffering", { buffering: isBuf });
-      });
+    bus.addEventListener('music:silenceStart', () => {
+      this.pop.classList.add('is-silent');
+      this.log('music:silenceStart');
+    });
 
-      bus.addEventListener("music:silenceStart", () => {
-        this.pop.classList.add("is-silent");
-        log("music:silenceStart");
-      });
+    bus.addEventListener('music:silenceEnd', () => {
+      this.pop.classList.remove('is-silent');
+      this.log('music:silenceEnd');
+    });
 
-      bus.addEventListener("music:silenceEnd", () => {
-        this.pop.classList.remove("is-silent");
-        log("music:silenceEnd");
-      });
+    bus.addEventListener('music:hintStart', () => {
+      this.log('music:hintStart');
+    });
 
-      // Optional hint to resume audio context on user gesture
-      bus.addEventListener("music:hintStart", () => {
-        log("music:hintStart");
-      });
+    // Open/close from center bar action
+    bus.addEventListener('centerbar:music', (e) => {
+      this.log('Received centerbar:music event');
+      const anchor = e.detail?.anchor || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
+      this.lastAnchorEl = anchor;
+      this.toggleUI(anchor);
+    });
 
-      // Listen for centerbar:music event from center bar
-      bus.addEventListener("centerbar:music", (e) => {
-        log("Received centerbar:music event");
-        const anchor = e.detail?.anchor || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
-        this.toggleUI(anchor);
-      });
-      
-      // Also listen for music:started and music:paused events to update UI
-      bus.addEventListener("music:started", (e) => {
-        log("Received music:started event");
-        this.setPlaying(true);
-      });
-      
-      bus.addEventListener("music:paused", (e) => {
-        log("Received music:paused event");
-        this.setPlaying(false);
-      });
+    // Reflect explicit started
+    bus.addEventListener('music:started', () => {
+      this.setPlaying(true);
+    });
+  }
+
+  setPlaying(playing) {
+    this.playing = !!playing;
+    const playIcon = this.pop.querySelector('#musicPlayIcon');
+    const pauseIcon = this.pop.querySelector('#musicPauseIcon');
+    if (playIcon && pauseIcon) {
+      playIcon.style.display = this.playing ? 'none' : '';
+      pauseIcon.style.display = this.playing ? '' : 'none';
     }
-
-    setPlaying(playing) {
-      this.playing = !!playing;
-      const playIcon = this.pop.querySelector("#musicPlayIcon");
-      const pauseIcon = this.pop.querySelector("#musicPauseIcon");
-      if (playIcon && pauseIcon) {
-        playIcon.style.display = this.playing ? "none" : "";
-        pauseIcon.style.display = this.playing ? "" : "none";
-      }
-      // reflect on button (for micro-eq CSS)
-      const btn = document.getElementById("musicBtn");
-      if (btn) {
-        btn.classList.toggle("is-playing", this.playing);
-        btn.classList.toggle("is-paused", !this.playing);
-        btn.classList.toggle("buffering", !!this.buffering);
-      }
-      // reflect on viz container
-      if (this.vizContainer) {
-        this.vizContainer.classList.toggle("is-playing", this.playing);
-      }
+    // reflect on CAB button
+    const btn = document.getElementById('cabMusic') || document.getElementById('musicBtn');
+    if (btn) {
+      btn.classList.toggle('is-playing', this.playing);
+      btn.classList.toggle('is-paused', !this.playing);
+      btn.classList.toggle('buffering', !!this.buffering);
     }
-
-    isOpen() {
-      return this.isOpenState;
+    // reflect on viz container
+    if (this.vizContainer) {
+      this.vizContainer.classList.toggle('is-playing', this.playing);
     }
+  }
 
-    open(anchorEl) {
-      this.init();
-      // position near anchor if available; default center top-of-footer
-      try {
+  isOpen() {
+    return this.isOpenState;
+  }
+
+  open(anchorEl) {
+    // Remember anchor for outside-click closing logic
+    this.lastAnchorEl = anchorEl || this.lastAnchorEl || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
+
+    // position near anchor with desktop/mobile specific rules
+    try {
+      const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      const popRect = this.pop.getBoundingClientRect();
+
+      if (!isMobile) {
         if (anchorEl) {
           const btnRect = anchorEl.getBoundingClientRect();
-          const popRect = this.pop.getBoundingClientRect();
           const centerX = btnRect.left + btnRect.width / 2;
-          const left = Math.max(
-            8,
-            Math.min(
-              window.innerWidth - popRect.width - 8,
-              centerX - popRect.width / 2
-            )
-          );
+          const left = Math.max(8, Math.min(window.innerWidth - popRect.width - 8, centerX - popRect.width / 2));
           const bottom = Math.max(8, window.innerHeight - btnRect.top + 10);
-          this.pop.style.left = left + popRect.width / 2 + "px"; // translateX(-50%) center correction if used
-          this.pop.style.bottom = bottom + "px";
+          this.pop.style.left = left + popRect.width / 2 + 'px'; // translateX(-50%) correction
+          this.pop.style.bottom = bottom + 'px';
         }
-      } catch (_) {
-        /* ignore positioning errors */
+      } else {
+        const cab = document.getElementById('centerActionBar');
+        const cabRect = cab ? cab.getBoundingClientRect() : null;
+        const anchorCenterX = cabRect ? (cabRect.left + cabRect.width / 2) : (window.innerWidth / 2);
+        const left = Math.max(8, Math.min(window.innerWidth - popRect.width - 8, Math.round(anchorCenterX - popRect.width / 2)));
+        const belowCabTop = cabRect ? Math.ceil(cabRect.bottom + 8) : Math.round(window.innerHeight * 0.3);
+        const safeTop = Math.max(8, belowCabTop);
+
+        this.pop.style.bottom = 'auto';
+        this.pop.style.top = `${safeTop}px`;
+        this.pop.style.left = `${left}px`;
       }
+    } catch (_) {}
 
-      this.pop.classList.add("open");
-      this.pop.style.opacity = "1";
-      this.pop.style.transform = "scale(1)";
-      this.isOpenState = true;
-      log("open");
-    }
+    this.pop.classList.add('open');
+    this.pop.style.opacity = '1';
+    this.pop.style.transform = 'scale(1)';
+    // Accessibility + hit-testing: make interactive when open
+    try {
+      this.pop.removeAttribute('inert');
+      this.pop.setAttribute('aria-hidden', 'false');
+      this.pop.style.pointerEvents = 'auto';
+      this.pop.style.visibility = 'visible';
+    } catch (_) {}
+    this.isOpenState = true;
 
-    close() {
-      if (!this.pop) return;
-      if (this.pinned) {
-        // do not close when pinned
-        log("close requested but pinned");
-        return;
-      }
-      this.pop.classList.remove("open");
-      this.pop.style.opacity = "0";
-      this.pop.style.transform = "scale(0.98)";
-      this.isOpenState = false;
-      log("close");
-    }
+    // Setup outside-click and ESC-to-close when opened
+    try {
+      this._onDocPointerDown = (ev) => {
+        if (this.pinned) return;
+        const target = ev.target;
+        const isInsidePopover = this.pop && (this.pop === target || this.pop.contains(target));
+        const isOnAnchor = this.lastAnchorEl && (this.lastAnchorEl === target || this.lastAnchorEl.contains?.(target));
+        if (!isInsidePopover && !isOnAnchor) this.close();
+      };
+      this._onKeyDown = (ev) => {
+        if (ev.key === 'Escape') this.close();
+      };
+      document.addEventListener('pointerdown', this._onDocPointerDown, true);
+      document.addEventListener('keydown', this._onKeyDown, true);
+    } catch (_) {}
 
-    toggleUI(anchorEl) {
-      if (!this.isOpen()) this.open(anchorEl);
-      else this.close();
-    }
+    this.log('open');
   }
 
-  // Singleton
-  const musicPlayer = new MusicPlayer();
-  global.musicPlayer = musicPlayer;
-
-  // Auto-init on DOM ready to ensure container exists
-  document.addEventListener("DOMContentLoaded", () => {
-    try {
-      musicPlayer.init();
-    } catch (e) {
-      err("auto init failed", e);
+  close() {
+    if (!this.pop) return;
+    if (this.pinned) {
+      this.log('close requested but pinned');
+      return;
     }
-  });
-})(window);
+    this.pop.classList.remove('open');
+    this.pop.style.opacity = '0';
+    this.pop.style.transform = 'scale(0.98)';
+    // Accessibility + hit-testing: ensure completely non-interactive when closed
+    try {
+      this.pop.setAttribute('inert', '');
+      this.pop.setAttribute('aria-hidden', 'true');
+      this.pop.style.pointerEvents = 'none';
+      this.pop.style.visibility = 'hidden';
+    } catch (_) {}
+    this.isOpenState = false;
+
+    try {
+      if (this._onDocPointerDown) {
+        document.removeEventListener('pointerdown', this._onDocPointerDown, true);
+        this._onDocPointerDown = null;
+      }
+      if (this._onKeyDown) {
+        document.removeEventListener('keydown', this._onKeyDown, true);
+        this._onKeyDown = null;
+      }
+    } catch (_) {}
+
+    this.log('close');
+  }
+
+  toggleUI(anchorEl) {
+    if (!this.isOpen()) this.open(anchorEl);
+    else this.close();
+  }
+}
+
+// Create global music player instance (class-based like other components)
+const musicPlayer = new MusicPlayer();
+
+// Export for debugging
+if (window.DEV) {
+  window.musicPlayer = musicPlayer;
+}

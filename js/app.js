@@ -303,6 +303,18 @@ class TodoApp {
     if (addTaskForm) {
       addTaskForm.addEventListener("submit", (e) => {
         e.preventDefault();
+
+        // Microinteraction: add confirmation pop on the submit button
+        try {
+          const submitBtn = addTaskForm.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.classList.remove('btn--add-confirm'); // allow re-trigger
+            void submitBtn.offsetWidth; // reflow
+            submitBtn.classList.add('btn--add-confirm');
+            setTimeout(() => submitBtn && submitBtn.classList.remove('btn--add-confirm'), 500);
+          }
+        } catch (_) {}
+
         this.addTask();
       });
     }
@@ -345,385 +357,9 @@ class TodoApp {
       });
     }
 
-    // Music popover toggle button + transport wiring (ensure presence; create if missing)
-    let musicBtn = document.getElementById("musicBtn");
-    let musicPopover = document.getElementById("musicPopover");
-
-    // Optional cleanup: auto-create a minimal popover container if markup is missing
-    if (!musicPopover) {
-      const pop = document.createElement("div");
-      pop.id = "musicPopover";
-      pop.className = "music-popover";
-      pop.style.display = "none";
-      pop.innerHTML = `
-        <div class="music-transport">
-          <button id="musicPrev" aria-label="Previous">&#9664;</button>
-          <button id="musicPlayPause" aria-label="Play/Pause">
-            <span id="musicPlayIcon">▶</span><span id="musicPauseIcon" style="display:none;">⏸</span>
-          </button>
-          <button id="musicNext" aria-label="Next">&#9654;</button>
-        </div>
-        <div class="music-track-indicator">
-          <span id="currentTrack">1</span>/<span id="totalTracks">0</span>
-        </div>
-        <div id="silenceIndicator" class="silence-indicator" style="display:none;">
-          <div class="silence-progress"><div id="silenceProgressFill"></div></div>
-        </div>
-        <div class="music-volume">
-          <div id="musicSlider" class="music-slider">
-            <div id="musicFill" class="music-fill"></div>
-            <div id="musicHandle" class="music-handle"></div>
-          </div>
-          <div id="volumeFeedback" class="volume-feedback"></div>
-        </div>
-      `;
-      document.body.appendChild(pop);
-      musicPopover = pop;
-    }
-    // Do NOT create a duplicate music button; CenterBar is the single source of truth for music button
-
-    if (musicBtn && musicPopover) {
-      // Centralized toggle for popover
-      const toggleMusicUI = () => {
-        const pop = document.getElementById("musicPopover");
-        if (!pop) return;
-        const isOpen =
-          pop.classList.contains("open") || pop.style.display === "block";
-        if (isOpen) {
-          pop.classList.remove("open");
-          pop.style.display = "none";
-        } else {
-          // Position above the music button centered
-          try {
-            const btn = document.getElementById("musicBtn");
-            const rect = btn?.getBoundingClientRect();
-            const prect = pop.getBoundingClientRect();
-            if (rect) {
-              const centerX = rect.left + rect.width / 2;
-              const left = Math.max(
-                8,
-                Math.min(
-                  window.innerWidth - prect.width - 8,
-                  centerX - prect.width / 2
-                )
-              );
-              const bottom = Math.max(8, window.innerHeight - rect.top + 10);
-              pop.style.left = `${left + prect.width / 2}px`; // translateX(-50%) friendly
-              pop.style.bottom = `${bottom}px`;
-            }
-          } catch {}
-          pop.style.display = "block";
-          requestAnimationFrame(() => pop.classList.add("open"));
-        }
-      };
-
-      // Keep local click for direct UI toggle
-      musicBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        toggleMusicUI();
-      });
-
-      // Transport controls: decoupled from SFX sound button
-      const prevBtn = document.getElementById("musicPrev");
-      const playPauseBtn = document.getElementById("musicPlayPause");
-      const nextBtn = document.getElementById("musicNext");
-
-      // Micro UI elements for feedback
-      const transportEl = musicPopover.querySelector(".music-transport");
-      const trackIndicator = musicPopover.querySelector(
-        ".music-track-indicator"
-      );
-      const currentTrackEl = document.getElementById("currentTrack");
-      const totalTracksEl = document.getElementById("totalTracks");
-      const silenceIndicator = document.getElementById("silenceIndicator");
-      const silenceCountdownEl = document.getElementById("silenceCountdown");
-      const silenceProgressFill = document.getElementById(
-        "silenceProgressFill"
-      );
-
-      // Helper to ensure index is valid on first play (outside bounds -> set to 0)
-      const ensureIndexBeforePlay = () => {
-        try {
-          if (typeof musicManager !== "undefined") {
-            const idx = musicManager.getCurrentTrackIndex?.();
-            const tracks = musicManager.getTrackList?.() || [];
-            if (!(idx >= 0 && idx < tracks.length)) {
-              // Outside bounds: set to first track by toggling internal index
-              // MusicManager exposes next/prev; but we can coerce by saving and restoring
-              // Simpler: directly set to first by localStorage and re-init playing
-              // Fallback approach: call next until index becomes 0 or tracks.length === 0
-              if (tracks.length > 0) {
-                // Prefer a direct assignment if available
-                if (typeof musicManager.currentIndex === "number") {
-                  musicManager.currentIndex = 0;
-                  try {
-                    localStorage.setItem("music.lastTrackIndex", "0");
-                  } catch {}
-                }
-              }
-            }
-          }
-        } catch {}
-      };
-
-      if (prevBtn) {
-        prevBtn.addEventListener("click", async (e) => {
-          e.preventDefault();
-          try {
-            if (
-              typeof musicManager !== "undefined" &&
-              typeof musicManager.prev === "function"
-            ) {
-              // brief press animation
-              transportEl?.classList.add("press-prev");
-              setTimeout(
-                () => transportEl?.classList.remove("press-prev"),
-                120
-              );
-              await musicManager.prev();
-            }
-          } catch (err) {
-            console.warn("Player prev failed:", err);
-          }
-        });
-      }
-
-      if (playPauseBtn) {
-        playPauseBtn.addEventListener("click", async (e) => {
-          e.preventDefault();
-          try {
-            if (
-              typeof musicManager !== "undefined" &&
-              typeof musicManager.togglePlay === "function"
-            ) {
-              // On first user play after reload and when index is out of bounds, set to first track
-              ensureIndexBeforePlay();
-
-              // no textual first-play messages per design preference
-
-              await musicManager.togglePlay();
-            }
-          } catch (err) {
-            console.warn("Player togglePlay failed:", err);
-          }
-        });
-      }
-
-      if (nextBtn) {
-        nextBtn.addEventListener("click", async (e) => {
-          e.preventDefault();
-          try {
-            if (
-              typeof musicManager !== "undefined" &&
-              typeof musicManager.next === "function"
-            ) {
-              // brief press animation
-              transportEl?.classList.add("press-next");
-              setTimeout(
-                () => transportEl?.classList.remove("press-next"),
-                120
-              );
-              await musicManager.next();
-            }
-          } catch (err) {
-            console.warn("Player next failed:", err);
-          }
-        });
-      }
-
-      // Volume slider wiring (generic, independent from SFX mute)
-      const slider = document.getElementById("musicSlider");
-      const handle = document.getElementById("musicHandle");
-      const fill = document.getElementById("musicFill");
-
-      const setSlider = (pct) => {
-        const clamped = Math.max(0, Math.min(100, pct));
-        if (fill) fill.style.width = `${clamped}%`;
-        if (handle) handle.style.left = `${clamped}%`;
-      };
-
-      const valueFromEvent = (evt) => {
-        const rect = slider.getBoundingClientRect();
-        const x = evt.touches ? evt.touches[0].clientX : evt.clientX;
-        const pct = ((x - rect.left) / rect.width) * 100;
-        return Math.max(0, Math.min(100, pct));
-      };
-
-      const applyVolumePct = (pct) => {
-        setSlider(pct);
-        if (
-          typeof musicManager !== "undefined" &&
-          typeof musicManager.setVolume === "function"
-        ) {
-          musicManager.setVolume(pct / 100, { smooth: true });
-        }
-        // transient percent chip
-        const chip = document.getElementById("volumeFeedback");
-        if (chip) {
-          chip.textContent = `${Math.round(pct)}%`;
-          chip.style.left = `${Math.max(0, Math.min(100, pct))}%`;
-          chip.classList.add("show");
-          clearTimeout(chip._hideT);
-          chip._hideT = setTimeout(() => chip.classList.remove("show"), 900);
-        }
-      };
-
-      if (slider) {
-        let dragging = false;
-
-        const onStart = (e) => {
-          e.preventDefault();
-          dragging = true;
-          applyVolumePct(valueFromEvent(e));
-        };
-        const onMove = (e) => {
-          if (!dragging) return;
-          e.preventDefault();
-          applyVolumePct(valueFromEvent(e));
-        };
-        const onEnd = () => {
-          dragging = false;
-        };
-
-        slider.addEventListener("mousedown", onStart);
-        document.addEventListener("mousemove", onMove);
-        document.addEventListener("mouseup", onEnd);
-
-        slider.addEventListener("touchstart", onStart, { passive: false });
-        document.addEventListener("touchmove", onMove, { passive: false });
-        document.addEventListener("touchend", onEnd);
-
-        // Initialize slider from stored volume if available
-        try {
-          const vol = parseFloat(localStorage.getItem("music.volume"));
-          const pct = isFinite(vol) ? Math.max(0, Math.min(1, vol)) * 100 : 45;
-          setSlider(pct);
-        } catch {
-          setSlider(45);
-        }
-      }
-
-      // Reflect playing state on the floating music button (not the SFX volume button)
-      const reflectMusicBtn = (playing) => {
-        if (!musicBtn) return;
-        musicBtn.classList.toggle("is-playing", !!playing);
-        musicBtn.classList.toggle("is-paused", !playing);
-      };
-
-      // Update track counts initially
-      if (
-        currentTrackEl &&
-        totalTracksEl &&
-        typeof musicManager !== "undefined"
-      ) {
-        const tracks = musicManager.getTrackList?.() || [];
-        totalTracksEl.textContent = String(tracks.length || 0);
-        const idx = musicManager.getCurrentTrackIndex?.();
-        currentTrackEl.textContent = String(
-          (typeof idx === "number" ? idx : 0) + 1
-        );
-      }
-
-      const bumpTrackIndicator = () => {
-        if (!trackIndicator) return;
-        trackIndicator.classList.add("highlight");
-        setTimeout(() => trackIndicator.classList.remove("highlight"), 240);
-      };
-
-      // Subtle highlight on play/pause button while music is playing
-      const setPlayButtonPlayingState = (isPlaying) => {
-        const playIcon = document.getElementById("musicPlayIcon");
-        const pauseIcon = document.getElementById("musicPauseIcon");
-        if (playPauseBtn) {
-          playPauseBtn.classList.toggle("is-playing", !!isPlaying);
-        }
-        // Ensure correct icon visibility is preserved
-        if (playIcon && pauseIcon) {
-          if (isPlaying) {
-            playIcon.style.display = "none";
-            pauseIcon.style.display = "";
-          } else {
-            playIcon.style.display = "";
-            pauseIcon.style.display = "none";
-          }
-        }
-      };
-
-      let silenceTimer = null;
-      let silenceEndTs = 0;
-
-      if (typeof bus !== "undefined") {
-        bus.addEventListener("music:started", () => {
-          reflectMusicBtn(true);
-          setPlayButtonPlayingState(true);
-        });
-        bus.addEventListener("music:playing", () => {
-          reflectMusicBtn(true);
-          setPlayButtonPlayingState(true);
-        });
-        bus.addEventListener("music:paused", () => {
-          reflectMusicBtn(false);
-          setPlayButtonPlayingState(false);
-        });
-
-        // Silence gap feedback without textual messages: keep progress bar only
-        bus.addEventListener("music:silenceStart", () => {
-          reflectMusicBtn(false);
-          if (silenceIndicator) silenceIndicator.style.display = "grid";
-          const min =
-            typeof musicManager !== "undefined"
-              ? musicManager.gapMinSeconds
-              : 15;
-          const max =
-            typeof musicManager !== "undefined"
-              ? musicManager.gapMaxSeconds
-              : 90;
-          const dur =
-            Math.max(min, Math.min(max, Math.round((min + max) / 2))) * 1000;
-          silenceEndTs = Date.now() + dur;
-          const tick = () => {
-            const remain = Math.max(0, silenceEndTs - Date.now());
-            if (silenceProgressFill) {
-              const pct = 100 - (remain / dur) * 100;
-              silenceProgressFill.style.width = `${Math.max(
-                0,
-                Math.min(100, pct)
-              )}%`;
-            }
-            if (remain > 0) {
-              silenceTimer = setTimeout(tick, 250);
-            }
-          };
-          clearTimeout(silenceTimer);
-          tick();
-        });
-        bus.addEventListener("music:silenceEnd", () => {
-          reflectMusicBtn(true);
-          clearTimeout(silenceTimer);
-          silenceTimer = null;
-          if (silenceIndicator) silenceIndicator.style.display = "none";
-          if (silenceProgressFill) silenceProgressFill.style.width = "0%";
-        });
-
-        bus.addEventListener("music:buffering", (e) => {
-          const isBuf = !!(e.detail && e.detail.buffering);
-          musicBtn.classList.toggle("buffering", isBuf);
-          transportEl?.classList.toggle("buffering", isBuf);
-        });
-        // Remove tips/hints entirely per design request
-        // bus.addEventListener('music:hintStart', () => {});
-
-        // Track change feedback: bump indicator, no text messages
-        const syncTrack = () => {
-          if (!currentTrackEl || typeof musicManager === "undefined") return;
-          const idx = musicManager.getCurrentTrackIndex?.() ?? 0;
-          currentTrackEl.textContent = String(idx + 1);
-          bumpTrackIndicator();
-        };
-        bus.addEventListener("music:playing", syncTrack);
-        bus.addEventListener("music:started", syncTrack);
-      }
-    }
+    // Music popover UI and transport are now owned by MusicPlayer (js/music-player.js).
+    // The legacy creation and wiring in app.js has been removed to prevent duplication and conflicts.
+    // MusicPlayer listens to 'centerbar:music' to toggle the popover near #cabMusic and keeps state synced.
 
     // Sound button: global mute/unmute for sound effects ONLY (does not affect music play/pause)
     // Ensure there is a visible SFX toggle button in DOM (fallback if theme omitted it)
@@ -734,31 +370,24 @@ class TodoApp {
       volumeBtn.addEventListener("click", async (e) => {
         e.preventDefault();
         try {
-          // Toggle global sound-enabled setting
+          // Route all toggles through settingsManager (which maps to global mute)
           if (
             typeof settingsManager !== "undefined" &&
             typeof settingsManager.toggleSoundEnabled === "function"
           ) {
             settingsManager.toggleSoundEnabled();
-          } else if (typeof audioManager !== "undefined") {
-            // Fallback: flip AudioManager enabled state and persist via settings if available
-            const next = !audioManager.enabled;
-            audioManager.setEnabled(next);
-            if (typeof settingsManager !== "undefined") {
-              settingsManager.soundEnabled = next;
-              if (typeof settingsManager.saveSettings === "function") {
-                settingsManager.saveSettings();
-              }
-            }
+          } else if (typeof audioManager !== "undefined" && typeof audioManager.setGlobalMute === "function") {
+            const nextMuted = !audioManager.getGlobalMute?.() && audioManager.enabled ? true : !audioManager.enabled;
+            audioManager.setGlobalMute(nextMuted);
+            audioManager.setEnabled(!nextMuted);
           }
 
-          // Do not toggle or influence music playback here.
-          // Only provide a subtle UI feedback if sounds are enabled now
-          if (typeof audioManager !== "undefined" && audioManager.enabled) {
+          // Subtle UI feedback only when output becomes enabled
+          if (typeof audioManager !== "undefined" && audioManager.enabled && !audioManager.getGlobalMute?.()) {
             audioManager.play("toggle");
           }
 
-          // Update icon animation state (handled by updateVolumeButtonState via settingsChanged)
+          // Icon micro-interaction
           const volumeIcon = document.getElementById("volumeIcon");
           if (volumeIcon) {
             volumeIcon.classList.add("toggling");
@@ -767,53 +396,7 @@ class TodoApp {
         } catch (e) {
           console.warn("Sound mute toggle failed:", e);
         }
-
-        // Emit a settingsChanged event so UI state syncs (provide detail to avoid null in listeners)
-        if (typeof bus !== "undefined") {
-          let detail = null;
-          try {
-            if (
-              typeof settingsManager !== "undefined" &&
-              typeof settingsManager.getSettings === "function"
-            ) {
-              // Preferred: full settings snapshot
-              detail = { ...settingsManager.getSettings() };
-            } else if (typeof settingsManager !== "undefined") {
-              // Best-effort snapshot of known props if getSettings not available
-              detail = {
-                soundEnabled: !!settingsManager.soundEnabled,
-                theme:
-                  typeof settingsManager.theme !== "undefined"
-                    ? settingsManager.theme
-                    : undefined,
-                animations:
-                  typeof settingsManager.animations !== "undefined"
-                    ? settingsManager.animations
-                    : undefined,
-              };
-            } else {
-              // Fallback to avoid null detail consumers
-              detail = {
-                soundEnabled:
-                  typeof audioManager !== "undefined"
-                    ? !!audioManager.enabled
-                    : true,
-              };
-            }
-          } catch (err) {
-            console.warn(
-              "Failed to build settingsChanged detail payload:",
-              err
-            );
-            detail = {
-              soundEnabled:
-                typeof audioManager !== "undefined"
-                  ? !!audioManager.enabled
-                  : true,
-            };
-          }
-          bus.dispatchEvent(new CustomEvent("settingsChanged", { detail }));
-        }
+        // Do not emit settingsChanged here; the settings/audio managers emit standardized events.
       });
     }
 
@@ -974,48 +557,24 @@ class TodoApp {
         // Toggle global sound effects (does not affect music transport)
         bus.addEventListener("centerbar:sound", () => {
           try {
-            let toggled = false;
             if (
               typeof settingsManager !== "undefined" &&
               typeof settingsManager.toggleSoundEnabled === "function"
             ) {
               settingsManager.toggleSoundEnabled();
-              toggled = true;
             } else if (
               typeof audioManager !== "undefined" &&
-              typeof audioManager.setEnabled === "function"
+              typeof audioManager.setGlobalMute === "function"
             ) {
-              const next = !audioManager.enabled;
-              audioManager.setEnabled(next);
-              toggled = true;
+              const nextMuted = !audioManager.getGlobalMute?.() && audioManager.enabled ? true : !audioManager.enabled;
+              audioManager.setGlobalMute(nextMuted);
+              audioManager.setEnabled(!nextMuted);
             }
-            // After toggling, emit settingsChanged so UI syncs and icon updates
-            if (toggled) {
-              let detail = null;
-              try {
-                if (
-                  typeof settingsManager !== "undefined" &&
-                  typeof settingsManager.getSettings === "function"
-                ) {
-                  detail = { ...settingsManager.getSettings() };
-                } else if (typeof settingsManager !== "undefined") {
-                  detail = { soundEnabled: !!settingsManager.soundEnabled };
-                } else if (typeof audioManager !== "undefined") {
-                  detail = { soundEnabled: !!audioManager.enabled };
-                }
-              } catch {}
-              if (typeof bus !== "undefined") {
-                bus.dispatchEvent(
-                  new CustomEvent("settingsChanged", { detail })
-                );
-              }
-              // Optional subtle feedback when enabling
-              if (typeof audioManager !== "undefined" && audioManager.enabled) {
-                try {
-                  audioManager.play("toggle");
-                } catch {}
-              }
+            // Subtle feedback when output is enabled
+            if (typeof audioManager !== "undefined" && audioManager.enabled && !audioManager.getGlobalMute?.()) {
+              try { audioManager.play("toggle"); } catch {}
             }
+            // Do not emit settingsChanged here; let settings/audio managers emit standardized events.
           } catch (err) {
             console.warn("[bus] centerbar:sound failed", err);
           }
@@ -1045,7 +604,16 @@ class TodoApp {
       }
 
       bus.addEventListener("tasksUpdated", () => this.render());
-      bus.addEventListener("settingsChanged", () => this.render());
+      bus.addEventListener("settingsChanged", (e) => {
+        const detail = e && e.detail ? e.detail : {};
+        // prefer globalMute if present
+        const isEnabled = typeof detail.globalMute === "boolean"
+          ? !detail.globalMute
+          : (typeof detail.soundEnabled === "boolean" ? detail.soundEnabled : !!(settingsManager && settingsManager.soundEnabled));
+        // keep the volume button visuals in sync
+        this.updateVolumeButtonState(isEnabled);
+        this.render();
+      });
 
       // Keep music button state in sync with actual playback
       const syncMusicBtn = (playing) => {
@@ -2116,9 +1684,13 @@ class TodoApp {
    */
   initializeVolumeButtonState() {
     if (typeof settingsManager !== "undefined") {
-      this.updateVolumeButtonState(settingsManager.soundEnabled);
-      // Store initial state for comparison
-      this.lastSoundEnabledState = settingsManager.soundEnabled;
+      // Derive from global mute when available
+      const initialEnabled =
+        typeof audioManager !== "undefined" && typeof audioManager.getGlobalMute === "function"
+          ? !audioManager.getGlobalMute()
+          : settingsManager.soundEnabled;
+      this.updateVolumeButtonState(initialEnabled);
+      this.lastSoundEnabledState = initialEnabled;
     }
   }
 
@@ -2133,10 +1705,13 @@ class TodoApp {
 
     // Listen for settings changes via the event bus
     if (typeof bus !== "undefined") {
-      bus.addEventListener("settingsChanged", () => {
-        // Update volume button state whenever settings change
-        this.updateVolumeButtonState(settingsManager.soundEnabled);
-        this.lastSoundEnabledState = settingsManager.soundEnabled;
+      bus.addEventListener("settingsChanged", (e) => {
+        const detail = e && e.detail ? e.detail : {};
+        const isEnabled = typeof detail.globalMute === "boolean"
+          ? !detail.globalMute
+          : (typeof detail.soundEnabled === "boolean" ? detail.soundEnabled : !!(settingsManager && settingsManager.soundEnabled));
+        this.updateVolumeButtonState(isEnabled);
+        this.lastSoundEnabledState = isEnabled;
       });
     }
 
@@ -2145,9 +1720,12 @@ class TodoApp {
       if (e.key === "luxury-todo-settings") {
         try {
           const settings = JSON.parse(e.newValue);
+          const isEnabled = typeof settings.globalMute === "boolean"
+            ? !settings.globalMute
+            : !!settings.soundEnabled;
           // Update volume button state whenever settings change
-          this.updateVolumeButtonState(settings.soundEnabled);
-          this.lastSoundEnabledState = settings.soundEnabled;
+          this.updateVolumeButtonState(isEnabled);
+          this.lastSoundEnabledState = isEnabled;
         } catch (error) {
           console.warn("Failed to parse settings from storage:", error);
         }

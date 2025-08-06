@@ -199,19 +199,32 @@ class SettingsLoader {
   async applySoundSettings(settings) {
     try {
       if (typeof audioManager !== 'undefined') {
+        // Prefer explicit globalMute if present in persisted settings; fall back to soundEnabled
+        const persistedGlobalMute = typeof settings.globalMute === 'boolean' ? settings.globalMute : undefined;
         const soundEnabled = settings.soundEnabled !== false;
-        audioManager.setEnabled(soundEnabled);
-        audioManager.enabled = soundEnabled; // Ensure consistency
+        const globalMute = persistedGlobalMute !== undefined ? persistedGlobalMute : !soundEnabled;
+
+        // Apply centralized global mute and keep legacy enabled mirrored for compatibility
+        if (typeof audioManager.setGlobalMute === 'function') {
+          audioManager.setGlobalMute(globalMute);
+        }
+        audioManager.setEnabled?.(!globalMute);
+        audioManager.enabled = !globalMute; // Ensure consistency for older readers
         audioManager.setVolume(settings.volume || 50);
-        
-        // Dispatch settingsChanged event to notify other components
-        if (typeof bus !== 'undefined') {
-          bus.dispatchEvent(new CustomEvent('settingsChanged', { 
-            detail: { 
-              soundEnabled: soundEnabled,
-              volume: settings.volume || 50
-            } 
-          }));
+
+        // Save back normalized settings to ensure consistency across app
+        try {
+          if (typeof bus !== 'undefined') {
+            bus.dispatchEvent(new CustomEvent('settingsChanged', {
+              detail: {
+                globalMute: globalMute,
+                soundEnabled: !globalMute,
+                volume: settings.volume || 50
+              }
+            }));
+          }
+        } catch (e) {
+          console.warn('Failed to dispatch settingsChanged after applying sound settings:', e);
         }
       }
     } catch (error) {

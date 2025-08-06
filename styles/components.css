@@ -49,7 +49,8 @@
   background: transparent;
   color: var(--color-text);
   backdrop-filter: blur(8px);
-  min-height: 48px;
+  min-height: 48px;              /* align with input explicit height */
+  height: 48px;                  /* match the .task-input height for vertical parity */
   letter-spacing: 0.025em;
   position: relative;
   overflow: hidden;
@@ -101,7 +102,45 @@
   overflow: hidden;
   transition: all var(--transition-normal);
   animation: float 3s ease-in-out infinite;
+  padding-left: calc(var(--space-lg) * 1.2);  /* make a bit wider horizontally */
+  padding-right: calc(var(--space-lg) * 1.2); /* symmetrical width increase */
+  min-width: 56px;                            /* ensure a slightly wider hit area */
 }
+
+/* Premium/Lux "Zen" attention for Add Task */
+@keyframes zenFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2.5px); }
+}
+@keyframes zenAura {
+  0%   { box-shadow: 0 6px 18px var(--shadow-color), 0 0 0 0 color-mix(in oklab, var(--glow-color) 18%, transparent); }
+  50%  { box-shadow: 0 10px 28px var(--shadow-color), 0 0 22px 3px color-mix(in oklab, var(--glow-color) 28%, transparent); }
+  100% { box-shadow: 0 6px 18px var(--shadow-color), 0 0 0 0 color-mix(in oklab, var(--glow-color) 18%, transparent); }
+}
+@keyframes zenPulseRing {
+  0%   { opacity: 0.0; transform: translate(-50%,-50%) scale(0.86); }
+  10%  { opacity: 0.45; }
+  50%  { opacity: 0.25; transform: translate(-50%,-50%) scale(1.06); }
+  100% { opacity: 0;    transform: translate(-50%,-50%) scale(1.18); }
+}
+
+
+/* Respect reduced motion */
+
+/* Micro "added" confirmation pop after form submit — premium feel */
+@keyframes addConfirmPop {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.0); }
+  30%  { transform: scale(1.04); box-shadow: 0 0 0 8px rgba(16,185,129,0.0); }
+  60%  { transform: scale(1.02); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.0); }
+}
+.btn--add-confirm {
+  animation: addConfirmPop 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn--add-confirm { animation: none !important; }
+}
+
 
 .btn--primary:hover {
   background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
@@ -310,19 +349,59 @@
   filter: drop-shadow(0 0 3px var(--glow-color));
 }
 
+.task-actions .lucide-icon {
+  width: clamp(18px, 3.8vw, 22px);
+  height: clamp(18px, 3.8vw, 22px);
+  stroke-width: 1.9;
+}
+.task-edit-btn .lucide-icon,
+.task-delete-btn .lucide-icon,
+.task-ai-refactor-btn .lucide-icon {
+  width: clamp(18px, 3.6vw, 21px);
+  height: clamp(18px, 3.6vw, 21px);
+}
+@media (max-width: 768px) {
+  /* Ensure input grows and takes more horizontal space */
+  .add-task-form .input-container {
+    display: grid;
+    grid-template-columns: 1fr auto; /* input grows, button hugs */
+    gap: 0.5rem;
+    align-items: stretch; /* keep equal heights on mobile too */
+  }
+  .add-task-form .task-input {
+    min-width: 0;          /* allow shrinking without overflow */
+    flex: 1 1 auto;        /* grow to fill available space */
+    padding-left: 0.875rem; /* keep comfortable text padding */
+    padding-right: 0.875rem;
+    height: 48px;          /* explicit to avoid line-height variance */
+  }
+  .add-task-form .btn.btn--primary {
+    height: 48px;          /* lock vertical size equal to input */
+    min-width: 60px;       /* a touch wider on mobile for better tap target */
+  }
+}
+
+/* Desktop: make the Add Task button reasonably wider for easier clicking */
+@media (min-width: 769px) {
+  .add-task-form .input-container {
+    display: grid;
+    grid-template-columns: 1fr auto; /* text input expands, button keeps width */
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .add-task-form .btn.btn--primary {
+    min-width: 88px;       /* wider, but not oversized */
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+}
+
 /* Refined Button Sizes */
 .btn--small {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-xs);
   min-height: 40px;
   border-radius: var(--radius-md);
-}
-
-.btn--large {
-  padding: var(--space-md) var(--space-2xl);
-  font-size: var(--font-size-base);
-  min-height: 56px;
-  border-radius: var(--radius-xl);
 }
 
 /* Floating button base (kept for backward compatibility) */
@@ -448,13 +527,16 @@
 
 /* Enhanced Task Items */
 .task-item {
-  /* Grid redesign: checkbox | text | actions */
+  /* Grid redesign: checkbox | title/desc | actions */
   display: grid;
-  grid-template-areas: "checkbox title actions";
   grid-template-columns: 50px 1fr 120px;
+  grid-template-areas:
+    "checkbox title actions"
+    "checkbox desc  actions";
   align-items: center;
-  gap: var(--space-lg);
-  padding: var(--space-lg);
+  column-gap: clamp(8px, 2.6vw, 12px);
+  row-gap: clamp(6px, 2vw, 8px);
+  padding: clamp(12px, 3.6vw, 16px);
   margin: calc(var(--space-sm) * 1.5) 0;
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
@@ -464,7 +546,6 @@
   transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
-  max-height: 120px;
 }
 
 .task-item:hover {
@@ -648,9 +729,11 @@
   grid-area: title;
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+  display: grid;
+  grid-template-areas:
+    "title"
+    "desc";
+  row-gap: clamp(6px, 2vw, 8px);
   align-self: center;
   padding: var(--space-sm) 0;
 }
@@ -660,17 +743,23 @@
   width: 100%;
 }
 
-/* Title typography per Phase 3.1 (reduced for better density) */
+/* Title typography & overflow guards */
 .task-title {
-  font-size: 0.85rem; /* was 0.9rem */
+  grid-area: title;
+  font-size: clamp(15px, 2.6vw, 17px);
   font-weight: 600;
   color: var(--color-text);
-  line-height: 1.35; /* slightly tighter */
+  line-height: 1.25;
   text-align: left;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.2px;
   margin: 0;
   padding: 0;
   position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;   /* single line for stability on mobile */
+  min-width: 0;          /* allow ellipsis in grid/flex */
+  max-width: 100%;       /* prevent overflow beyond column */
 }
 
 .task-title::after {
@@ -685,35 +774,135 @@
 }
 
 .task-description {
-  font-size: 0.8rem; /* reduce description size for hierarchy; was var(--font-size-sm) ~0.875rem */
+  grid-area: desc;
+  font-size: clamp(13px, 2.2vw, 14px);
   color: var(--color-text);
-  opacity: 0.75;
+  opacity: 0.8;
   line-height: 1.5;
   word-wrap: break-word;
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.01em;
-  font-style: italic;
   text-align: left;
   margin: 0;
   padding: 0;
   border-left: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* premium calm clamp */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
+/* Actions rail: desktop/tablet default (right-aligned inline) */
 .task-actions {
   grid-area: actions;
-  display: flex;
-  gap: 12px; /* Phase 3: clearer separation between action buttons */
+  display: inline-flex;
+  gap: clamp(6px, 2vw, 10px);
   margin-left: var(--space-md);
   flex-shrink: 0;
   align-items: center;
   justify-content: flex-end;
-  align-self: center; /* Ensure action buttons stay centered */
+  align-self: center;
+  flex-wrap: nowrap;
 }
+
+/* Mobile: transform actions into a seamless organic "pill" under the description (bottom rail)
+   - Keeps Edit + AI primary visible, tucks Delete into an overflow (•••) for smallest widths
+   - Improves thumb reach and avoids crowding the title line
+*/
+@media (max-width: 600px) {
+  /* Mobile: two-column stack; actions flow under description (no absolute positioning) */
+  .task-item {
+    grid-template-columns: 36px 1fr;
+    grid-template-areas:
+      "checkbox title"
+      ".        desc"
+      ".        actions";
+    row-gap: clamp(6px, 2vw, 10px);
+    align-items: start;
+    position: relative;
+  }
+
+  .task-actions {
+    grid-area: actions;
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin: 6px 0 0 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  /* Remove padding hack since actions no longer overlap text */
+  .task-description { padding-bottom: 0; }
+
+  /* Compact, calm action buttons */
+  .task-edit-btn,
+  .task-ai-refactor-btn,
+  .task-delete-btn,
+  .task-overflow-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: color-mix(in oklab, var(--color-glass) 86%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-border) 85%, transparent);
+    box-shadow: 0 4px 12px -8px var(--shadow-color, rgba(0,0,0,0.25));
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    animation: none; /* reduce motion on mobile */
+  }
+
+  .task-actions .lucide-icon {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.8;
+  }
+
+  .task-edit-btn:hover,
+  .task-ai-refactor-btn:hover,
+  .task-delete-btn:hover,
+  .task-overflow-btn:hover {
+    transform: translateY(-1px);
+    background: color-mix(in oklab, var(--color-glass) 92%, transparent);
+  }
+  .task-edit-btn:active,
+  .task-ai-refactor-btn:active,
+  .task-delete-btn:active,
+  .task-overflow-btn:active {
+    transform: translateY(0);
+  }
+}
+
+/* Very small phones: prefer Edit + AI; move Delete into overflow for a calmer rail */
+@media (max-width: 380px) {
+  /* For tiny phones: prefer overflow over destructive action */
+  .task-actions .task-delete-btn { display: none !important; }
+  .task-actions .task-overflow-btn { display: inline-flex !important; }
+
+  .task-edit-btn,
+  .task-ai-refactor-btn,
+  .task-delete-btn,
+  .task-overflow-btn {
+    width: 28px;  /* maintain 28x28 even on very small phones */
+    height: 28px;
+  }
+  .task-actions .lucide-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Default: overflow button hidden unless on small widths or explicitly added */
+.task-overflow-btn { display: none; }
 
 /* Task Edit Button */
 .task-edit-btn {
-  width: 44px;   /* Phase 3: increase to 44px */
-  height: 44px;  /* Phase 3: increase to 44px */
+  width: 40px;   /* proportional target for mobile */
+  height: 40px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-md);
@@ -739,8 +928,8 @@
 
 /* Task Delete Button */
 .task-delete-btn {
-  width: 44px;   /* Phase 3: increase to 44px */
-  height: 44px;  /* Phase 3: increase to 44px */
+  width: 40px;
+  height: 40px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-md);
@@ -766,8 +955,8 @@
 
 /* AI Refactor Button - Matching edit/delete styling */
 .task-ai-refactor-btn {
-  width: 44px;   /* Phase 3: increase to 44px */
-  height: 44px;  /* Phase 3: increase to 44px */
+  width: 40px;
+  height: 40px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-md);
@@ -1962,33 +2151,31 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 420px;
+  width: min(92vw, 540px); /* expand a bit for better content fit */
+  max-width: 92vw;
   background: var(--color-glass);
   backdrop-filter: blur(25px);
-  /* Increased blur for premium feel */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   box-shadow: 0 8px 30px var(--shadow-color), 0 0 20px var(--glow-color);
-  /* Added glow */
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
   transition: all var(--transition-normal);
-  max-height: 85vh;
+  max-height: clamp(70vh, 82vh, 90vh);
   overflow-y: auto;
 }
 
 /* Mobile Settings Panel Adjustments */
 @media (max-width: 768px) {
   .settings-panel {
-    width: 80%;
+    inset: auto 4vw auto 4vw;
+    width: auto;
     max-width: none;
-    max-height: 90vh;
+    max-height: 92vh;
     border-radius: var(--radius-xl);
     padding: 0;
-    top: 2%;
-    /* Further adjust position to use even more vertical space */
+    top: 4%;
   }
 
   .settings-header {
@@ -2112,6 +2299,22 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--glow-color), transparent);
   opacity: 0.3;
+}
+
+/* Header progress capsule (tracks scroll subtly) */
+.settings-header::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  height: 3px;
+  width: var(--settings-progress, 12%);
+  max-width: calc(100% - 24px);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
+  opacity: 0.25;
+  transition: width 200ms ease, opacity 200ms ease;
+  pointer-events: none;
 }
 
 .progress-header h3,
@@ -2463,6 +2666,46 @@
   padding: 2rem;
   padding-top: 3rem;
   /* Added padding to prevent overlap with sticky header */
+  --section-gap: 1.75rem;
+  --subtle-divider: linear-gradient(90deg, transparent, color-mix(in oklab, var(--glow-color) 40%, transparent), transparent);
+}
+
+/* Section separators with subtle animated gradient line */
+.settings-section + .settings-section {
+  margin-top: var(--section-gap);
+  padding-top: calc(var(--section-gap) * 0.75);
+  position: relative;
+}
+.settings-section + .settings-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 6px;
+  right: 6px;
+  height: 1px;
+  background: var(--subtle-divider);
+  opacity: 0.35;
+  filter: blur(0.2px);
+}
+
+/* Scroll mask hints at top/bottom of content */
+.settings-content::before,
+.settings-content::after {
+  content: '';
+  position: sticky;
+  display: block;
+  pointer-events: none;
+  height: 16px;
+  left: 0; right: 0;
+  z-index: 1;
+}
+.settings-content::before {
+  top: 0;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--color-glass) 90%, transparent), transparent);
+}
+.settings-content::after {
+  bottom: 0;
+  background: linear-gradient(to top, color-mix(in oklab, var(--color-glass) 90%, transparent), transparent);
 }
 
 /* Utilities section: make Reset button span full width and match app action style */
@@ -2528,10 +2771,83 @@
   margin-top: 1rem;
 }
 
+/* Font preview sample block (used for hover/active previews) */
+.font-preview-sample {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in oklab, var(--color-glass) 86%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  opacity: 0.92;
+  transition: opacity 160ms ease, transform 160ms ease, background 160ms ease;
+}
+.font-preview-sample.is-hidden {
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .font-preview-sample,
+  .font-preview-sample.is-hidden {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Light/Dark hint badge on theme cards */
+.theme-card::after {
+  /* tone badge appears on hover/active for subtlety */
+  content: attr(data-tone);
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.theme-card:hover::after,
+.theme-card.active::after {
+  opacity: 0.9;
+  transform: translateY(0);
+}
+
+[data-theme="ivory"] .theme-card::after,
+[data-theme="champagne"] .theme-card::after,
+[data-theme="sakura"] .theme-card::after,
+[data-theme="pearl"] .theme-card::after,
+[data-theme="mint"] .theme-card::after,
+[data-theme="coral"] .theme-card::after],
+[data-theme="frost"] .theme-card::after {
+  background: rgba(0,0,0,0.25);
+}
+
+@media (max-width: 768px) {
+  .theme-card::after {
+    top: 4px;
+    right: 4px;
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+}
+
 .theme-cards-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); /* 25% smaller min width */
-  gap: 0.5625rem; /* 25% smaller gap from 0.75rem */
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* ensure readable labels */
+  gap: 0.625rem;
   padding: 0.5rem 0;
 }
 
@@ -2553,13 +2869,14 @@
   box-shadow: 0 4px 15px var(--shadow-color);
   display: flex;
   flex-direction: column;
-  height: 97.5px; /* 25% smaller from 130px */
+  height: 108px; /* slightly taller to fix cramped layout */
+  position: relative; /* allow overlay badges */
 }
 
 /* Mobile theme card adjustments */
 @media (max-width: 768px) {
   .theme-card {
-    height: 84px;
+    height: 96px; /* allow label + badge breathing room */
   }
 }
 
@@ -2574,8 +2891,22 @@
   box-shadow: 0 8px 25px var(--shadow-color), 0 0 20px var(--glow-color);
 }
 
+/* Editorial active edge for selected theme */
+.theme-card.active::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--accent-color), var(--glow-color));
+  box-shadow: 0 0 8px var(--glow-color);
+  opacity: 0.9;
+}
+
 .theme-preview {
-  height: 60px; /* 25% smaller from 80px */
+  height: 64px;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -2584,17 +2915,17 @@
 /* Mobile theme preview adjustments */
 @media (max-width: 768px) {
   .theme-preview {
-    height: 49px;
+    height: 56px;
   }
 }
 
 .theme-name {
-  padding: 0.375rem; /* 25% smaller from 0.5rem */
+  padding: 0.375rem;
   text-align: center;
-  font-size: calc(var(--font-size-xs) * 0.9); /* Slightly smaller label to match proportional reduction */
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--color-text);
-  background: rgba(0, 0, 0, 0.1);
+  background: color-mix(in oklab, var(--color-glass) 65%, transparent);
   backdrop-filter: blur(5px);
   flex-grow: 1;
   display: flex;
@@ -2604,9 +2935,9 @@
 
 /* Mobile theme name adjustments */
 @media (max-width: 768px) {
-  .theme-name {
-    padding: 0.25rem;
-    font-size: var(--font-size-xs);
+  .theme-cards-container {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* stable 3-up on phones */
+    gap: 0.5rem;
   }
 }
 
@@ -2838,56 +3169,99 @@
 }
 
 .font-selector {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-start;
-  flex-wrap: wrap;
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); /* auto-fit to evenly distribute and center */
+  gap: 0.625rem; /* rhythm */
+  justify-items: center;  /* center each button in its track */
+  align-items: stretch;
 }
 
+/* Premium/Lux font buttons — compact, elegant, high-contrast */
 .font-option {
-  flex: 1;
-  min-width: 100px;
-  padding: 1rem 1.25rem;
-  background: var(--color-glass);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  width: 100%;                     /* fill grid column to center evenly */
+  max-width: 220px;                /* prevent overly wide button on large screens */
+  min-width: 88px;                 /* tappable minimum matches grid min */
+  padding: 0.7rem 1rem;
+  background: color-mix(in oklab, var(--color-glass) 82%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-border) 92%, transparent);
+  border-radius: calc(var(--radius-lg) - 2px);
   color: var(--color-text);
   cursor: pointer;
   transition: all var(--transition-normal);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
   text-align: center;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(calc(var(--glass-blur) * 0.8));
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 14px color-mix(in oklab, var(--color-shadow, rgba(0,0,0,0.4)) 22%, transparent);
+  outline: none;
+  justify-self: center;            /* ensure centering within grid track */
 }
 
+/* premium shimmer */
 .font-option::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 100%;
+  left: -120%;
+  width: 120%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.14) 50%, transparent 80%);
   transition: none;
 }
 
 .font-option:hover::before {
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer 1.4s ease-in-out infinite;
 }
 
-.font-option:hover,
+/* hover = subtle lift and glow; active = premium gradient */
+.font-option:hover {
+  background: color-mix(in oklab, var(--color-glass) 88%, transparent);
+  border-color: color-mix(in oklab, var(--accent-color) 40%, var(--color-border) 60%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px color-mix(in oklab, var(--glow-color) 26%, transparent);
+}
+
 .font-option.active {
   background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
   color: white;
   border-color: var(--accent-color);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--shadow-color), 0 0 15px var(--glow-color);
+  box-shadow: 0 10px 26px color-mix(in oklab, var(--glow-color) 35%, transparent), 0 0 16px var(--glow-color);
 }
 
 .font-option.active {
-  font-weight: 600;
+  font-weight: 700;
+}
+
+/* subtle embossed top highlight */
+.font-option::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 48%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+
+/* micro status dot to the left for selection state */
+.font-option.active::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  animation: glowPulse 2s ease-in-out infinite;
 }
 
 /* Ensure order: statistics, music, volume, settings on wide viewports (moved from index.html inline) */
@@ -2902,6 +3276,8 @@
   #musicBtn { order: 2; }
   #volumeBtn { order: 3; }
   #settingsBtn { order: 4; }
+  /* Keep tiny footprint on desktop */
+  .music-popover { max-width: 320px; }
 }
 
 /* Shared styles for audio floating buttons (music + volume) */
@@ -2928,69 +3304,43 @@
 #volumeBtn.btn--floating-audio.disabled,
 #musicBtn.btn--floating-audio.music-disabled { opacity: 0.85; }
 
-/* Music popover header & visualizer (moved from index.html inline) */
-.music-popover-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.35rem;
-  gap: 0.5rem;
-}
+/* Music popover header removed for minimal design (no sticky/pin, no title) */
+.music-popover-header { display: none !important; }
 .music-pin.btn { padding: 2px; opacity: 0.6; }
 .music-pin.btn svg { width: 12px; height: 12px; }
 .music-pin.btn.pinned { opacity: 1; filter: drop-shadow(0 0 6px var(--glow-color)); }
 
 /* Small sticky button positioned at top-right of the visualizer */
-.music-visualizer {
-  position: relative; /* enable absolute positioning for pin button */
-}
-.music-pin.small {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-sm, 6px);
-  background: rgba(18,18,18,0.35);
-  border: 1px solid rgba(255,255,255,0.22);
-  backdrop-filter: blur(6px);
-  transition: background 120ms ease, opacity 120ms ease, transform 120ms ease;
-  opacity: 0.95;
-  z-index: 2; /* ensure it sits above bars */
-}
-.music-pin.small:hover { opacity: 1; background: rgba(18,18,18,0.5); transform: scale(1.04); }
-.music-pin.small.pinned {
-  box-shadow: 0 0 10px var(--glow-color);
-  border-color: var(--accent-color);
-}
-.music-pin.small svg { width: 12px; height: 12px; }
+/* Remove sticky pin for minimal design */
+.music-visualizer { position: relative; }
+.music-pin.small { display: none !important; }
 
+/* Visualizer container present but disabled (kept for future enablement) */
 .music-visualizer {
-  display: grid;
+  display: none !important; /* hide the visualizer entirely for now */
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   align-items: end;
   gap: 6px;
-  height: clamp(60px, 25vh, 160px);
+  height: clamp(56px, 24vh, 140px);
   width: 100%;
   opacity: 0.0;
   transition: opacity 200ms ease;
 }
-.music-visualizer.is-playing { opacity: 0.9; }
+/* Keep state classes defined but ineffective while hidden */
+.music-visualizer.is-playing { opacity: 0.0; }
 .music-visualizer.is-muted,
 .music-popover.is-muted .music-visualizer,
 .music-popover.is-buffering .music-visualizer,
 .music-popover.is-paused .music-visualizer,
-.music-popover.is-silent .music-visualizer { opacity: 0.35; }
+.music-popover.is-silent .music-visualizer { opacity: 0.0; }
 /* keep pin visible even when visualizer is dimmed */
 .music-popover.is-muted .music-pin.small,
 .music-popover.is-buffering .music-pin.small,
 .music-popover.is-paused .music-pin.small,
 .music-popover.is-silent .music-pin.small { opacity: 0.95; }
 
+/* Keep bar styles defined but inactive while container is hidden */
 .music-visualizer .bar {
   width: 100%;
   border-radius: 3px;
@@ -2998,10 +3348,10 @@
   box-shadow: 0 0 8px var(--glow-color);
   height: 18%;
   transform-origin: bottom center;
-  animation: vizBreath 1.2s ease-in-out infinite; /* faster baseline for more reactive feel */
+  animation: none; /* disable animation while hidden */
   animation-play-state: paused;
 }
-.music-visualizer.is-playing .bar { animation-play-state: running; }
+.music-visualizer.is-playing .bar { animation-play-state: paused; } /* no animation while disabled */
 
 /* stagger with nth-child to add organic feel (reduced delays for snappier response) */
 .music-visualizer .bar:nth-child(1) { animation-delay: 0ms; }
@@ -3040,43 +3390,110 @@
 /* Music popover styling - reuse design tokens */
 .music-popover {
   position: fixed;
-  background: var(--color-glass);
-  border: 1px solid var(--color-border);
+  pointer-events: none; /* default non-interactive until opened */
+  /* Ultra-compact premium glass card */
+  background: var(--color-glass, rgba(18, 18, 18, 0.35));
+  border: 1px solid var(--color-border, rgba(255,255,255,0.12));
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(var(--glass-blur));
-  box-shadow: 0 6px 20px var(--shadow-color);
-  padding: 0.75rem;
-  z-index: 1000;
-  min-width: 260px;
-  transition: transform 120ms ease, opacity 120ms ease, height 120ms ease;
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(140%);
+  box-shadow: 0 10px 26px var(--shadow-color, rgba(0,0,0,0.32)), 0 0 18px rgba(99,102,241,0.10);
+  padding: 0.5rem 0.6rem;
+  z-index: var(--z-index-modal, 1000);
+  /* Minimal footprint */
+  min-width: 210px;
+  max-width: 320px;
+  width: auto;
+  transition: transform 160ms var(--easing-smooth, cubic-bezier(0.22, 1, 0.36, 1)),
+              opacity 160ms ease, height 140ms ease, width 140ms ease;
   transform-origin: bottom center;
   display: grid;
-  grid-template-rows: auto auto auto 1fr; /* header, transport, slider row, visualizer grows */
-  gap: 0.5rem;
+  grid-template-rows: auto auto; /* transport + volume only */
+  gap: 0.4rem;
+  color: var(--color-text, #e8f8f5);
 }
 .music-popover.sticky { pointer-events: auto; }
 .music-popover.above { transform-origin: bottom center; }
 .music-popover.below { transform-origin: top center; }
-.music-popover.open { opacity: 1; transform: scale(1); }
-.music-popover:not(.open) { opacity: 0; transform: scale(0.98); }
+/* Default open animation */
+.music-popover.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; visibility: visible; }
+.music-popover:not(.open) { opacity: 0; transform: translateY(4px) scale(0.98); pointer-events: none; visibility: hidden; }
+
+/* Ensure closed/hidden states are never clickable (additional safety) */
+.music-popover.is-hidden,
+.music-popover.is-closed {
+  pointer-events: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Mobile: force music popover to open BELOW the settings (top-origin, slight downward slide) */
+@media (max-width: 768px) {
+  .music-popover {
+    transform-origin: top center;
+  }
+  .music-popover.open {
+    opacity: 1;
+    transform: translateY(6px) scale(1); /* gentle drop to indicate “below” */
+  }
+  .music-popover:not(.open) {
+    opacity: 0;
+    transform: translateY(2px) scale(0.98);
+  }
+}
 
 .music-transport {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-auto-flow: column;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0; /* tighter */
+}
+.music-transport .btn,
+.music-transport .btn.btn--action {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--color-text, #e8f8f5);
+  border-radius: 9px;
+  padding: 4px 8px;
+  min-width: 34px;
+  min-height: 34px;
+  line-height: 1;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.music-transport .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.16); }
+.music-transport .btn:active { transform: translateY(0); }
+.music-transport .btn,
+.music-transport .btn.btn--action {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--color-text, #e8f8f5);
+  border-radius: var(--radius-md, 10px);
+  padding: 6px 10px;
+  line-height: 1;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.music-transport .btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.16);
+}
+.music-transport .btn:active {
+  transform: translateY(0);
 }
 
 .music-volume {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .music-label {
-  font-size: 0.8rem;
-  opacity: 0.8;
-  color: var(--color-text);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+  color: var(--color-text, #e8f8f5);
   white-space: nowrap;
 }
 
@@ -3088,31 +3505,32 @@
 .music-slider {
   width: 100%;
   height: 6px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
   border-radius: 4px;
   position: relative;
   cursor: pointer;
   border: 1px solid rgba(255,255,255,0.12);
+  overflow: hidden;
 }
 
 .music-fill {
   height: 100%;
   width: 45%;
-  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
-  border-radius: 4px;
-  box-shadow: 0 0 8px var(--glow-color);
+  background: linear-gradient(90deg, var(--accent-color, #63e), var(--glow-color, rgba(99,102,241,0.6)));
+  border-radius: 5px;
+  box-shadow: 0 0 10px var(--glow-color, rgba(99,102,241,0.35));
 }
 
 .music-handle {
   position: absolute;
   top: 50%;
   transform: translate(-50%,-50%);
-  width: 16px;
-  height: 16px;
-  background: var(--color-glass);
-  border: 2px solid var(--accent-color);
+  width: 14px;
+  height: 14px;
+  background: var(--color-glass, rgba(18,18,18,0.35));
+  border: 2px solid var(--accent-color, #63e);
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--glow-color);
+  box-shadow: 0 0 10px var(--glow-color, rgba(99,102,241,0.45));
 }
 
 /* Progress slider inside visualizer */
@@ -3218,18 +3636,20 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  #music-visualizer.visualizer-container {
-    right: max(0.75rem, env(safe-area-inset-right));
-    bottom: max(5rem, env(safe-area-inset-bottom));
-    padding: 0.4rem 0.6rem;
-    min-width: 150px;
+  .font-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); /* evenly distribute across width */
+    gap: 0.5rem;
+    justify-items: center;
   }
-  #music-visualizer .visualizer-bars {
-    height: 36px;
-    gap: 3px;
-  }
-  #music-visualizer .viz-bar {
-    width: 4px;
+
+  .font-option {
+    width: 100%;
+    min-width: 78px;
+    max-width: 180px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+    border-radius: calc(var(--radius-lg) - 3px);
   }
 }
 
@@ -3588,94 +4008,65 @@ body.scrolling-up .floating-settings {
   height: 28px;
 }
 
-/* Responsive Luxury */
+/* Responsive Luxury (simplified mobile card model) */
 @media (max-width: 768px) {
   .task-item {
-    /* adjust grid for mobile; slightly narrower actions col */
-    grid-template-columns: 44px 1fr 96px; /* slightly narrower actions col */
-    padding: 1.1rem; /* slightly tighter vertical spacing */
+    grid-template-columns: 40px 1fr;
+    grid-template-areas:
+      "checkbox title"
+      ".        desc"
+      ".        actions";
+    padding: clamp(12px, 3.6vw, 16px);
     margin: 0.5rem 0;
   }
 
-  /* Extra guard for mobile vertical centering of checkbox */
-  .task-checkbox {
-    align-self: center !important;
-    justify-self: center !important;
-  }
+  .task-checkbox { align-self: center !important; justify-self: center !important; }
 
-  /* Ensure checkbox column centers perfectly on mobile as well */
-  .task-checkbox {
-    justify-self: center;
-    align-self: center;
-  }
-
-  /* Compact but accessible action buttons on mobile */
   .task-edit-btn,
   .task-delete-btn,
-  .task-ai-refactor-btn {
-    width: 40px;
-    height: 40px;
-  }
+  .task-ai-refactor-btn { width: 36px; height: 36px; }
 
-  .task-actions {
-    gap: 10px;
-  }
+  .task-actions { gap: 10px; }
 
-  .task-title {
-    font-size: 0.82rem; /* smaller on mobile */
-    line-height: 1.35;
-  }
+  .task-title { font-size: 0.92rem; line-height: 1.35; }
 
   .task-description {
-    font-size: 0.75rem; /* smaller on mobile */
+    grid-area: desc;
+    font-size: clamp(12.5px, 2.2vw, 14px);
+    opacity: 0.85;
     line-height: 1.45;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    max-width: 100%;
   }
 
-  .btn {
-    padding: 0.625rem 1.25rem;
-    min-height: 44px;
-  }
-
-  .btn--large {
-    padding: 0.875rem 1.75rem;
-  }
-
-  .floating-controls {
-    bottom: 1.5rem;
-    right: 1.5rem;
-  }
-
-  .floating-btn {
-    width: 56px;
-    height: 56px;
-  }
+  .floating-btn { width: 56px; height: 56px; }
 
   .modal-header .close-btn,
-  .settings-header .close-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.875rem;
-  }
+  .settings-header .close-btn { width: 40px; height: 40px; font-size: 1.875rem; }
 
-  .statistics-panel {
-    width: 70%;
-    /* 30% smaller */
-    max-width: 280px;
-    /* Adjusted max-width */
-  }
+  .statistics-panel { width: 70%; max-width: 280px; }
 }
 
 @media (max-width: 480px) {
   .task-item {
-    /* stack layout on very small screens */
+    grid-template-columns: 36px 1fr;
     grid-template-areas:
-      "checkbox checkbox checkbox"
-      "title title title"
-      "actions actions actions";
-    grid-template-columns: 1fr;
-    padding: 0.9rem; /* slightly tighter */
-    align-items: stretch;
+      "checkbox title"
+      ".        desc"
+      ".        actions";
+    padding: 10px;
+    align-items: start;
   }
+  .task-title { font-size: clamp(14px, 3.6vw, 16px); }
+  .task-description { font-size: clamp(12px, 3.2vw, 13.5px); -webkit-line-clamp: 2; }
+  .task-edit-btn, .task-delete-btn, .task-ai-refactor-btn { width: 34px; height: 34px; }
+  .task-actions .lucide-icon { width: clamp(16px, 4.4vw, 19px); height: clamp(16px, 4.4vw, 19px); stroke-width: 2; }
+}
 
   /* Keep checkbox centered in stacked layout */
   .task-checkbox { justify-self: center; align-self: center; }
@@ -3688,8 +4079,8 @@ body.scrolling-up .floating-settings {
 
   .task-actions {
     margin-left: 0;
-    margin-top: 1rem;
-    justify-content: center;
+    margin-top: 0.5rem;
+    justify-content: flex-end; /* keep actions at right rail even on small phones */
   }
 
   .task-footer {
@@ -4082,7 +4473,61 @@ body.scrolling-up .floating-settings {
   }
 }
 
-/* Volume Control Styling */
+/* Generic Slider Component (reusable) */
+.slider {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.slider__fill {
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
+  border-radius: 4px;
+  transition: width 0.2s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 12px 2px var(--glow-color);
+}
+.slider__handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: var(--color-glass);
+  border: 2px solid var(--accent-color);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--glow-color);
+  transition: all 0.2s ease;
+  z-index: 2;
+  cursor: grab;
+}
+.slider__handle:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 0 0 20px var(--glow-color);
+}
+.slider__handle:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Compact variant for tight spaces (music popover usage) */
+.slider--compact {
+  height: 6px;
+}
+.slider--compact .slider__handle {
+  width: 14px;
+  height: 14px;
+}
+
+/* Settings-panel integration (horizontal row layout) */
 .volume-control {
   display: flex;
   flex-direction: row;        /* horizontal layout */
@@ -4183,7 +4628,9 @@ body.scrolling-up .floating-settings {
   min-width: 0;       /* prevent overflow in flex */
 }
 
-.volume-slider {
+/* Deprecated: bridged to generic slider */
+.volume-slider { 
+  composes: slider; /* for editors without CSS Modules, keep duplicate rules below */
   width: 100%;
   height: 8px;
   background: rgba(255, 255, 255, 0.1);
@@ -4192,22 +4639,23 @@ body.scrolling-up .floating-settings {
   cursor: pointer;
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: visible; /* let glow extend if needed */
-  box-shadow: 0 0 0 0 var(--glow-color); /* reset */
+  overflow: visible;
+  box-shadow: 0 0 0 0 var(--glow-color);
 }
 
+/* Bridge to generic slider fill */
 .volume-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
   border-radius: 4px;
   width: 50%;
-  /* Default to 50% */
   transition: width 0.2s ease;
   position: relative;
   z-index: 1;
-  box-shadow: 0 0 12px 2px var(--glow-color); /* make the glow follow the fill width */
+  box-shadow: 0 0 12px 2px var(--glow-color);
 }
 
+/* Bridge to generic slider handle */
 .volume-handle {
   position: absolute;
   top: 50%;
@@ -4220,7 +4668,7 @@ body.scrolling-up .floating-settings {
   cursor: grab;
   box-shadow: 0 0 10px var(--glow-color);
   transition: all 0.2s ease;
-  z-index: 2; /* above the fill */
+  z-index: 2;
 }
 
 .volume-handle:hover {
@@ -4233,11 +4681,13 @@ body.scrolling-up .floating-settings {
   transform: translate(-50%, -50%) scale(1.1);
 }
 
-/* Prevent touch interactions on volume slider when scrolling on mobile */
+/* Prevent touch interactions on sliders when scrolling on mobile */
 @media (max-width: 768px) {
 
   .settings-panel .volume-slider,
-  .settings-panel .volume-handle {
+  .settings-panel .volume-handle,
+  .settings-panel .slider,
+  .settings-panel .slider__handle {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -4540,15 +4990,27 @@ body.scrolling-up .floating-settings {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .header-actions {
-    gap: 0.5rem;
+  .task-item {
+    /* mobile layout: checkbox | title/desc | actions */
+    grid-template-columns: 40px 1fr auto;    /* actions width adapts to content */
+    grid-template-areas:
+      "checkbox title actions"
+      "checkbox desc  actions";
+    padding: clamp(10px, 3.2vw, 14px);
+    margin: 0.5rem 0;
   }
-
-  .btn--icon {
-    min-height: 36px;
-    min-width: 36px;
-    padding: 0.4rem;
+  /* tighten icon proportion further on smaller screens */
+  .task-actions .lucide-icon {
+    width: clamp(18px, 4.2vw, 21px);
+    height: clamp(18px, 4.2vw, 21px);
   }
+  .task-edit-btn,
+  .task-delete-btn,
+  .task-ai-refactor-btn {
+    width: 38px;
+    height: 38px;
+  }
+}
 
   #statisticsBtn {
     display: none;
@@ -4583,7 +5045,7 @@ body.scrolling-up .floating-settings {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-  z-index: 11000;
+  z-index: 1000;
 }
 
   .settings-header {
@@ -4801,10 +5263,10 @@ body.scrolling-up .floating-settings {
 
 /* Responsive adjustments for edit mode */
 @media (max-width: 768px) {
-  .task-item.edit-mode {
-    padding: 1.5rem;
-    margin: 0.75rem 0;
+  .theme-preview {
+    height: 56px;
   }
+}
   
   .edit-actions {
     margin-top: 1rem;

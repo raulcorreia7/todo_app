@@ -368,7 +368,7 @@ body.loading-theme {
 .input-container {
   display: flex;
   gap: 0.75rem;
-  align-items: center;
+  align-items: stretch; /* make children equal height */
 }
 
 .task-input {
@@ -382,6 +382,7 @@ body.loading-theme {
   backdrop-filter: blur(var(--glass-blur));
   transition: all var(--transition-normal);
   letter-spacing: 0.01em;
+  height: 48px;               /* explicit height for vertical match */
 }
 
 .task-input:focus {

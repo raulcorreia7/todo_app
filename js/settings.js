@@ -435,7 +435,10 @@ class SettingsManager {
     this.settingsPanel.style.width = '90%';
     this.settingsPanel.style.maxHeight = '80vh';
     this.settingsPanel.style.overflowY = 'auto';
-    this.settingsPanel.style.zIndex = '11000'; // Ensure highest priority
+    // Keep settings panel below modal/backdrop using design-system scale
+    const rootStyles = getComputedStyle(document.documentElement);
+    const zFixed = rootStyles.getPropertyValue('--z-fixed')?.trim() || '1030';
+    this.settingsPanel.style.zIndex = zFixed;
 
     // Proactively warn once if modalManager is not ready to help debugging
     if (!(typeof modalManager !== 'undefined' && typeof modalManager.confirm === 'function')) {
@@ -515,27 +518,34 @@ class SettingsManager {
 
   setSoundEnabled(enabled) {
     console.log('[Settings] setSoundEnabled called with:', enabled);
+    // Keep legacy field for UI/back-compat
     this.soundEnabled = enabled;
     this.saveSettings();
 
+    // Drive centralized global mute and mirror legacy enabled for compatibility
     if (typeof audioManager !== 'undefined') {
-      audioManager.setEnabled(enabled);
-      // Also update audioManager.enabled to ensure consistency
+      const nextGlobalMute = !enabled;
+      if (typeof audioManager.setGlobalMute === 'function') {
+        audioManager.setGlobalMute(nextGlobalMute);
+      }
+      // Keep legacy enabled in sync (power saving path remains separate)
+      audioManager.setEnabled?.(enabled);
       audioManager.enabled = enabled;
-      console.log('[Settings] audioManager.setEnabled called with:', enabled);
+      console.log('[Settings] audioManager.setGlobalMute:', nextGlobalMute, ' audioManager.setEnabled:', enabled);
     } else {
       console.warn('[Settings] audioManager not available for setSoundEnabled');
     }
     
-    // Dispatch settingsChanged event to notify other components (always send payload)
+    // Dispatch settingsChanged with both fields so all listeners stay in sync
     if (typeof bus !== 'undefined') {
       bus.dispatchEvent(new CustomEvent('settingsChanged', { 
         detail: { 
           soundEnabled: enabled,
+          globalMute: !enabled,
           volume: this.volume
         } 
       }));
-      console.log('[Settings] settingsChanged event dispatched with:', { soundEnabled: enabled, volume: this.volume });
+      console.log('[Settings] settingsChanged event dispatched with:', { soundEnabled: enabled, globalMute: !enabled, volume: this.volume });
     } else {
       console.warn('[Settings] bus not available for settingsChanged event');
     }
@@ -649,6 +659,26 @@ class SettingsManager {
           card.className = 'theme-card';
           card.dataset.theme = themeName;
           
+          // Determine light/dark tone for badge hint
+          const tone = (() => {
+            // prefer explicit theme flag if provided by ThemeManager
+            if (typeof theme.isDark === 'boolean') return theme.isDark ? 'dark' : 'light';
+            // fallback: estimate using primary color luminance
+            const hex = (theme.primary || '#000').toString().trim();
+            const toRGB = (h) => {
+              const clean = h.replace('#', '');
+              const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+              const r = parseInt(full.slice(0, 2), 16) / 255;
+              const g = parseInt(full.slice(2, 4), 16) / 255;
+              const b = parseInt(full.slice(4, 6), 16) / 255;
+              // relative luminance
+              const srgb = [r, g, b].map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+              const L = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+              return L;
+            };
+            return toRGB(hex) < 0.5 ? 'dark' : 'light';
+          })();
+
           // Create preview with gradient
           const preview = document.createElement('div');
           preview.className = 'theme-preview';
@@ -658,6 +688,9 @@ class SettingsManager {
           const name = document.createElement('div');
           name.className = 'theme-name';
           name.textContent = theme.name;
+
+          // Add light/dark tone badge via data attribute (used by CSS ::after)
+          card.setAttribute('data-tone', tone);
           
           // Assemble card
           card.appendChild(preview);
@@ -692,6 +725,21 @@ class SettingsManager {
         const card = document.createElement('div');
         card.className = 'theme-card';
         card.dataset.theme = theme.id;
+
+        // Estimate tone from primary color
+        const hex = (theme.primary || '#000').toString().trim();
+        const toRGB = (h) => {
+          const clean = h.replace('#', '');
+          const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+          const r = parseInt(full.slice(0, 2), 16) / 255;
+          const g = parseInt(full.slice(2, 4), 16) / 255;
+          const b = parseInt(full.slice(4, 6), 16) / 255;
+          const srgb = [r, g, b].map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+          const L = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+          return L;
+        };
+        const tone = toRGB(hex) < 0.5 ? 'dark' : 'light';
+        card.setAttribute('data-tone', tone);
         
         // Create preview with gradient
         const preview = document.createElement('div');
@@ -736,8 +784,18 @@ class SettingsManager {
     if (activeCard) {
       activeCard.classList.add('active');
     }
-    // Ensure clickable/accessible
+
+    // Accessibility: label list and each option
     container.setAttribute('role', 'listbox');
+    container.querySelectorAll('.theme-card').forEach(card => {
+      card.setAttribute('role', 'option');
+      const isActive = card.classList.contains('active');
+      card.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      const tone = card.getAttribute('data-tone') || '';
+      const nameEl = card.querySelector('.theme-name');
+      const label = nameEl ? nameEl.textContent : card.dataset.theme;
+      card.setAttribute('aria-label', `${label} theme (${tone})`);
+    });
   }
 
   // Static panel is the source; no longer creating it dynamically

@@ -70,6 +70,19 @@ class CenterBar {
     handleSettings() {
         console.log('[CenterBar] Handling settings action');
         
+        // microinteraction: pulse when opening
+        try {
+            const settingsBtn = document.getElementById('cabSettings');
+            if (settingsBtn) {
+                settingsBtn.classList.remove('open-pulse');
+                // force reflow to restart animation
+                void settingsBtn.offsetWidth;
+                settingsBtn.classList.add('open-pulse');
+                // cleanup after animation
+                setTimeout(() => settingsBtn && settingsBtn.classList.remove('open-pulse'), 600);
+            }
+        } catch (_) {}
+
         // 1) Bus-first (preferred)
         if (this.dispatch('centerbar:settings', { 
             anchor: document.getElementById('cabSettings') || document.getElementById('settingsBtn') || null
@@ -99,35 +112,39 @@ class CenterBar {
         console.log('[CenterBar] Handling sound action');
         this.ensureAudioUnlockedOnce();
 
-        // 1) Bus-first
-        if (this.dispatch('centerbar:sound', { 
+        // Primary path: dispatch centerbar:sound so managers handle canonical toggle + emit standardized events
+        if (this.dispatch('centerbar:sound', {
             anchor: document.getElementById('cabSound') || document.getElementById('volumeBtn') || null
         })) {
+            // 3) Update button state and animation after dispatch
+            this.updateSoundButtonState();
             return;
         }
 
-        console.warn('[CenterBar] Sound event not dispatched, falling back to direct call');
-        
-        // 2) Direct setting toggle to ensure behavior even if no listener
+        // Fallbacks: call settingsManager or audioManager with GLOBAL mute semantics (no local emissions here)
         if (typeof settingsManager?.toggleSoundEnabled === 'function') {
-            try { 
-                settingsManager.toggleSoundEnabled(); 
-                return;
-            } catch (e) { 
-                console.warn('sound toggle failed', e); 
-            }
-        } else if (typeof audioManager !== 'undefined' && typeof audioManager.setEnabled === 'function') {
             try {
-                const next = !audioManager.enabled;
-                audioManager.setEnabled(next);
+                settingsManager.toggleSoundEnabled();
+                // Update UI state after fallback
+                this.updateSoundButtonState();
                 return;
-            } catch (e) { 
-                console.warn('audio manager toggle failed', e); 
+            } catch (e) {
+                console.warn('[CenterBar] settingsManager.toggleSoundEnabled failed', e);
+            }
+        } else if (typeof audioManager !== 'undefined' && typeof audioManager.setGlobalMute === 'function') {
+            try {
+                const nextMuted = typeof audioManager.getGlobalMute === 'function'
+                    ? !audioManager.getGlobalMute()
+                    : !audioManager.enabled;
+                audioManager.setGlobalMute(nextMuted);
+                audioManager.setEnabled?.(!nextMuted);
+                // Update UI state after fallback
+                this.updateSoundButtonState();
+                return;
+            } catch (e) {
+                console.warn('[CenterBar] audioManager.setGlobalMute fallback failed', e);
             }
         }
-
-        // 3) Update button state and animation
-        this.updateSoundButtonState();
 
         // 4) Minimal DOM fallback
         const volumeBtn = document.getElementById('volumeBtn');
@@ -140,19 +157,24 @@ class CenterBar {
         const soundBtn = document.getElementById('cabSound');
         if (soundBtn) {
             soundBtn.click();
+            return;
         }
+
+        console.error('[CenterBar] Failed to toggle sound - no method available');
     }
 
     updateSoundButtonState() {
         const soundButton = document.getElementById('cabSound');
         if (!soundButton) return;
 
-        // Get current sound state
+        // Get current sound state (prefer globalMute when available)
         let isSoundEnabled = true;
-        if (typeof settingsManager?.getSettings === 'function') {
-            isSoundEnabled = settingsManager.getSettings().soundEnabled;
+        if (typeof audioManager !== 'undefined' && typeof audioManager.getGlobalMute === 'function') {
+            isSoundEnabled = !audioManager.getGlobalMute();
+        } else if (typeof settingsManager?.getSettings === 'function') {
+            isSoundEnabled = !!settingsManager.getSettings().soundEnabled;
         } else if (typeof audioManager !== 'undefined') {
-            isSoundEnabled = audioManager.enabled;
+            isSoundEnabled = !!audioManager.enabled;
         }
 
         // Update icon
@@ -190,41 +212,133 @@ class CenterBar {
         console.log('[CenterBar] Handling music action');
         this.ensureAudioUnlockedOnce();
 
-        // 1) Bus-first to toggle UI/popover
-        if (this.dispatch('centerbar:music', { 
-            anchor: document.getElementById('cabMusic') || document.getElementById('musicBtn') || null
-        })) {
-            return;
-        }
+        // Always open/close the music UI via bus; do NOT trigger playback here.
+        const anchor = document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
 
-        console.warn('[CenterBar] Music event not dispatched, falling back to direct call');
-        
-        // 2) Minimal DOM fallback: click music UI toggle button if exists
-        const btn = document.getElementById('musicBtn');
-        if (btn) { 
-            btn.click(); 
-            return; 
-        }
-
-        // 3) Try to click the music button directly
-        const musicBtn = document.getElementById('cabMusic');
-        if (musicBtn) {
-            musicBtn.click();
-            return;
-        }
-
-        // 4) As a last resort: if intent is to toggle playback, try musicManager
+        // Microinteraction: premium "zen burst" on toggle of UI for dopamine hit
         try {
-            if (typeof musicManager?.togglePlay === 'function') {
-                musicManager.togglePlay();
+            const btn = anchor;
+            if (btn) {
+                this.createZenBurst(btn, { tint: 'var(--glow-color, rgba(99,102,241,0.65))' });
             }
-        } catch (e) { 
-            console.warn('music toggle fallback failed', e); 
+        } catch (_) {}
+
+        if (this.dispatch('centerbar:music', { anchor })) {
+            return;
         }
+
+        console.warn('[CenterBar] centerbar:music not handled; applying DOM fallback to dispatch event');
+        // Fallback: if no listener handled it, try to dispatch via DOM CustomEvent
+        try {
+            const ev = new CustomEvent('centerbar:music', { detail: { anchor } });
+            document.dispatchEvent?.(ev);
+        } catch (_) {}
+
+        // As a last resort, avoid toggling playback automatically; UI ownership lives in MusicPlayer.
+    }
+
+    /**
+     * Premium microinteraction: Zen Burst around a button
+     * Creates a subtle ring ripple and a few soft particles that fade upward.
+     * Respects reduced motion by doing nothing if the user prefers reduced motion.
+     * @param {HTMLElement} btn 
+     * @param {{tint?: string}} options 
+     */
+    createZenBurst(btn, options = {}) {
+        try {
+            // respect reduced motion
+            const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (prefersReduced) return;
+
+            const rect = btn.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2 + window.scrollX;
+            const cy = rect.top + rect.height / 2 + window.scrollY;
+
+            // Create a container for easy cleanup
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '0';
+            container.style.top = '0';
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.pointerEvents = 'none';
+            container.style.zIndex = '1000';
+
+            // Insert into body
+            document.body.appendChild(container);
+
+            // Ripple ring
+            const ring = document.createElement('div');
+            ring.style.position = 'absolute';
+            ring.style.left = `${cx}px`;
+            ring.style.top = `${cy}px`;
+            ring.style.width = '0';
+            ring.style.height = '0';
+            ring.style.transform = 'translate(-50%, -50%)';
+            ring.style.borderRadius = '9999px';
+            ring.style.boxShadow = `0 0 0 0 ${options.tint || 'rgba(99,102,241,0.65)'}`;
+            ring.style.opacity = '0.75';
+            ring.style.animation = 'cabZenRipple 650ms ease-out forwards';
+            container.appendChild(ring);
+
+            // Soft particles (5–7)
+            const count = 6;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'absolute';
+                p.style.left = `${cx}px`;
+                p.style.top = `${cy}px`;
+                p.style.width = `${3 + Math.random() * 3}px`;
+                p.style.height = p.style.width;
+                p.style.borderRadius = '9999px';
+                // muted premium palette
+                const palette = [
+                    'rgba(99,102,241,0.85)',  // indigo
+                    'rgba(139,92,246,0.85)',  // violet
+                    'rgba(16,185,129,0.85)',  // emerald
+                    'rgba(56,189,248,0.85)',  // sky
+                    'rgba(236,72,153,0.85)'   // pink
+                ];
+                p.style.background = palette[Math.floor(Math.random() * palette.length)];
+                p.style.boxShadow = '0 0 12px rgba(255,255,255,0.20)';
+                p.style.transform = 'translate(-50%, -50%)';
+                const dx = (Math.random() - 0.5) * 36;
+                const dy = - (14 + Math.random() * 26);
+                const dur = 550 + Math.random() * 250;
+                p.style.transition = `transform ${dur}ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity ${dur}ms ease-out, filter ${dur}ms ease-out`;
+                p.style.opacity = '0.95';
+                container.appendChild(p);
+                // async position update
+                requestAnimationFrame(() => {
+                    p.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${0.85 + Math.random() * 0.25})`;
+                    p.style.opacity = '0';
+                    p.style.filter = 'blur(0.2px)';
+                });
+            }
+
+            // Cleanup after animation
+            setTimeout(() => {
+                if (container && container.parentNode) {
+                    container.parentNode.removeChild(container);
+                }
+            }, 800);
+        } catch (_) {}
     }
 
     handleTest() {
         console.log('[CenterBar] Handling test action');
+
+        // microinteraction: brief sparkle ring
+        try {
+            const btn = document.getElementById('cabTest');
+            if (btn) {
+                btn.classList.remove('sparkle-hit');
+                void btn.offsetWidth;
+                btn.classList.add('sparkle-hit');
+                setTimeout(() => btn && btn.classList.remove('sparkle-hit'), 600);
+            }
+        } catch (_) {}
+
         if (this.dispatch('centerbar:test')) {
             return;
         }
@@ -240,6 +354,18 @@ class CenterBar {
 
     handleClear() {
         console.log('[CenterBar] Handling clear action');
+
+        // microinteraction: broom micro-sweep
+        try {
+            const btn = document.getElementById('cabClear');
+            if (btn) {
+                btn.classList.remove('micro-sweep');
+                void btn.offsetWidth;
+                btn.classList.add('micro-sweep');
+                setTimeout(() => btn && btn.classList.remove('micro-sweep'), 600);
+            }
+        } catch (_) {}
+
         if (this.dispatch('centerbar:clear')) {
             return;
         }
@@ -255,6 +381,18 @@ class CenterBar {
 
     handleDelete() {
         console.log('[CenterBar] Handling delete action');
+
+        // microinteraction: danger shake
+        try {
+            const btn = document.getElementById('cabDelete');
+            if (btn) {
+                btn.classList.remove('danger-shake');
+                void btn.offsetWidth;
+                btn.classList.add('danger-shake');
+                setTimeout(() => btn && btn.classList.remove('danger-shake'), 500);
+            }
+        } catch (_) {}
+
         if (this.dispatch('centerbar:delete')) {
             return;
         }
@@ -275,8 +413,14 @@ class CenterBar {
             this.log('No element with data-action found');
             return;
         }
+
+        // Prevent accidental restart of music button animation by avoiding any class churn
+        // on #cabMusic when other actions are clicked.
+        // We only ever toggle .is-playing/.is-paused for #cabMusic from music bus events,
+        // NOT on arbitrary clicks here.
         const action = el.getAttribute('data-action');
         this.log(`Found action: ${action}`);
+
         if (action && this.actions[action]) {
             this.log('Executing action:', action);
             this.actions[action]();
@@ -365,14 +509,113 @@ class CenterBar {
         });
 
         // Hydrate Lucide icons within the Center Action Bar container
+        // IMPORTANT: avoid rehydrating inside #cabMusic while playing to prevent animation reset.
         try {
             if (window.lucide && typeof lucide.createIcons === 'function') {
-                lucide.createIcons();
+                const cab = document.getElementById('centerActionBar');
+                const cabMusicBtn = document.getElementById('cabMusic') || document.getElementById('musicBtn');
+                if (cab) {
+                    // Temporarily detach the music icon from hydration if playing
+                    let skipped = null;
+                    if (cabMusicBtn && cabMusicBtn.classList.contains('is-playing')) {
+                        // store and remove icon subtree to avoid replacement
+                        skipped = cabMusicBtn.querySelector('.lucide-icon')?.parentNode ? cabMusicBtn.querySelector('.lucide-icon') : null;
+                        if (skipped && skipped.parentNode) {
+                            skipped.__cabDetached = true;
+                            skipped.__cabNext = skipped.nextSibling;
+                            skipped.parentNode.removeChild(skipped);
+                        }
+                    }
+                    // run hydration on the bar
+                    lucide.createIcons({ attrs: {} });
+                    // restore the skipped node exactly where it was
+                    if (skipped) {
+                        const target = cabMusicBtn;
+                        if (skipped.__cabNext) target.insertBefore(skipped, skipped.__cabNext);
+                        else target.appendChild(skipped);
+                        delete skipped.__cabDetached;
+                        delete skipped.__cabNext;
+                    }
+                } else {
+                    lucide.createIcons({ attrs: {} });
+                }
             }
         } catch (_) {}
 
-        // Initialize sound button state
+                // Initialize sound button state
         this.updateSoundButtonState();
+
+        // Disable animation churn on #cabMusic by locking class toggling exclusively to music bus events.
+        // Also protect against re-adding the same classes (which would restart CSS animations).
+        const safeToggle = (el, cls, on) => {
+            if (!el) return;
+            // Only add/remove when state actually changes
+            const has = el.classList.contains(cls);
+            if (on && !has) el.classList.add(cls);
+            if (!on && has) el.classList.remove(cls);
+        };
+
+        // Reflect music state on CAB from bus to drive CSS hooks (is-playing/buffering/is-paused/hint)
+        try {
+            if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+                const cabMusicBtn = document.getElementById('cabMusic') || document.getElementById('musicBtn');
+
+                // Guard Lucide hydration globally to avoid replacing the music icon DOM while playing
+                try {
+                    if (window.lucide && typeof lucide.createIcons === 'function' && !lucide.__cabPatched) {
+                        const originalCreate = lucide.createIcons.bind(lucide);
+                        lucide.createIcons = function(...args) {
+                            try {
+                                const btn = document.getElementById('cabMusic') || document.getElementById('musicBtn');
+                                if (btn && btn.classList.contains('is-playing')) {
+                                    // If a root selector is passed, clone and strip #cabMusic
+                                    // Many calls use no args; in that case, we run normal and then restore.
+                                    const icon = btn.querySelector('.lucide-icon');
+                                    if (icon && icon.parentNode) {
+                                        icon.__cabPatched = true;
+                                        icon.__cabNext = icon.nextSibling;
+                                        icon.parentNode.removeChild(icon);
+                                        const res = originalCreate(...args);
+                                        // restore without losing animation timeline
+                                        if (icon.__cabNext) btn.insertBefore(icon, icon.__cabNext);
+                                        else btn.appendChild(icon);
+                                        delete icon.__cabNext;
+                                        delete icon.__cabPatched;
+                                        return res;
+                                    }
+                                }
+                            } catch (_) {}
+                            return originalCreate(...args);
+                        };
+                        lucide.__cabPatched = true;
+                    }
+                } catch (_) {}
+
+                const syncMusicClasses = (playing) => {
+                    if (!cabMusicBtn) return;
+                    // Use safeToggle to avoid re-adding classes and restarting animations
+                    safeToggle(cabMusicBtn, 'is-playing', !!playing);
+                    safeToggle(cabMusicBtn, 'is-paused', !playing);
+                };
+
+                bus.addEventListener('music:started', () => syncMusicClasses(true));
+                bus.addEventListener('music:playing', () => syncMusicClasses(true));
+                bus.addEventListener('music:paused', () => syncMusicClasses(false));
+                bus.addEventListener('music:silenceStart', () => syncMusicClasses(false));
+                bus.addEventListener('music:buffering', (e) => {
+                    if (!cabMusicBtn) return;
+                    safeToggle(cabMusicBtn, 'buffering', !!(e.detail && e.detail.buffering));
+                });
+                bus.addEventListener('music:hintStart', () => {
+                    if (!cabMusicBtn) return;
+                    // Only apply hint if not already present to avoid reflow/animation restart
+                    if (!cabMusicBtn.classList.contains('hint')) {
+                        cabMusicBtn.classList.add('hint');
+                        setTimeout(() => cabMusicBtn && cabMusicBtn.classList.remove('hint'), 3000);
+                    }
+                });
+            }
+        } catch (_) {}
 
         this.wireScrollHideCenterBar();
         this.log('wired');

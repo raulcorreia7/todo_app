@@ -16,20 +16,21 @@
   }
 
   /* Make the Add button less tall and the plus icon bigger on mobile */
+  /* Make submit button compact; input remains dominant */
   .add-task-form button[type="submit"].btn {
-    /* Make button more compact vertically while keeping tap target */
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     min-height: 44px;
-    height: 44px;                  /* force compact height */
-    padding: 0 0.5rem;             /* remove vertical padding */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;           /* less pill, more compact */
-    line-height: 1;                /* avoid extra vertical expansion */
+    padding: 0;                    /* pure icon button */
+    display: inline-grid;
+    place-items: center;
+    border-radius: 12px;
+    line-height: 1;
   }
   .add-task-form button[type="submit"].btn svg {
-    width: 42px;                   /* large plus icon */
-    height: 42px;
+    width: 22px;                   /* readable but not oversized */
+    height: 22px;
   }
 
   .app-title {
@@ -58,10 +59,6 @@
     font-size: 0.875rem;
   }
 
-  .btn--large {
-    padding: 0.875rem 1.5rem;
-    min-height: 48px;
-  }
 
   .btn--floating {
     width: 56px;
@@ -138,10 +135,6 @@
     font-size: 0.875rem;
   }
 
-  .btn--large {
-    padding: 0.75rem 1.25rem;
-    min-height: 44px;
-  }
 
   .btn--floating {
     width: 52px;
@@ -234,6 +227,30 @@
   .app-title {
     font-size: 4rem;
   }
+
+  /* Keep input dominant and make submit button visually lighter on desktop */
+  .add-task-form .input-container {
+    display: grid;
+    grid-template-columns: 1fr auto; /* input expands, button hugs */
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .add-task-form button[type="submit"].btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 10px;
+    line-height: 1;
+  }
+  .add-task-form button[type="submit"].btn .lucide-icon,
+  .add-task-form button[type="submit"].btn svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* Ultra-wide Screens */
@@ -255,9 +272,6 @@
     min-height: 44px;
   }
 
-  .btn--large {
-    min-height: 48px;
-  }
 
   .btn--floating,
   .floating-btn {

@@ -9,6 +9,8 @@ class AudioManager {
     this.masterGain = null;
     this.volume = 42; // lowered ~15% for subtler baseline
     this.enabled = true;
+    this.globalMuted = false; // global output mute (does not pause music)
+    this._preMuteGain = null; // remember gain before global mute
     this.isInitialized = false;
     this.sounds = new Map();
     this.audioInitialized = false; // Flag to track if audio context is ready
@@ -92,15 +94,20 @@ class AudioManager {
       if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
         bus.addEventListener('centerbar:sound', (event) => {
           console.log('[AudioManager] Received centerbar:sound event', event.detail);
-          this.toggleSoundEnabled();
-          
+          // Treat centerbar sound as GLOBAL mute toggle (preserve backwards compatibility)
+          const nextMuted = !this.globalMuted;
+          this.setGlobalMute(nextMuted);
+          // Also mirror to legacy soundEnabled for UI compatibility
+          this.setEnabled(!nextMuted);
+
           // Dispatch settingsChanged event to notify other components
           if (typeof bus !== 'undefined') {
-            bus.dispatchEvent(new CustomEvent('settingsChanged', { 
-              detail: { 
-                soundEnabled: this.enabled,
+            bus.dispatchEvent(new CustomEvent('settingsChanged', {
+              detail: {
+                soundEnabled: !nextMuted,
+                globalMute: nextMuted,
                 volume: this.volume
-              } 
+              }
             }));
           }
         });
@@ -110,8 +117,14 @@ class AudioManager {
       if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
         bus.addEventListener('settingsChanged', (event) => {
           console.log('[AudioManager] Received settingsChanged event', event.detail);
-          if (event.detail && event.detail.soundEnabled !== undefined) {
+          if (event.detail && event.detail.globalMute !== undefined) {
+            this.setGlobalMute(!!event.detail.globalMute);
+            // keep legacy enabled in sync
+            this.setEnabled(!event.detail.globalMute);
+          } else if (event.detail && event.detail.soundEnabled !== undefined) {
+            // fallback for older emitters
             this.setEnabled(event.detail.soundEnabled);
+            this.setGlobalMute(!event.detail.soundEnabled);
           }
           if (event.detail && event.detail.volume !== undefined) {
             this.setVolume(event.detail.volume);
@@ -162,7 +175,14 @@ class AudioManager {
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(100, volume));
     if (this.masterGain) {
-      this.masterGain.gain.value = (this.volume / 100) * 0.85;
+      // If globally muted, keep audible output at 0 but remember pre-mute level
+      const target = (this.volume / 100) * 0.85;
+      if (!this.globalMuted) {
+        this.masterGain.gain.value = target;
+      } else {
+        // remember target so we can restore on unmute
+        this._preMuteGain = target;
+      }
     }
   }
 
@@ -172,10 +192,39 @@ class AudioManager {
    */
   setEnabled(enabled) {
     this.enabled = enabled;
-    if (!enabled && this.audioContext) {
-      this.audioContext.suspend();
-    } else if (enabled && this.audioContext) {
-      this.audioContext.resume();
+    if (!this.audioContext) return;
+
+    try {
+      const now = this.audioContext.currentTime || 0;
+      // Use short ramps to avoid pops when toggling context state
+      const target = (this.volume / 100) * 0.85;
+      if (!enabled) {
+        // Ramp down then suspend
+        this.masterGain?.gain.cancelScheduledValues?.(now);
+        this.masterGain?.gain.setValueAtTime?.(this.masterGain.gain.value, now);
+        this.masterGain?.gain.linearRampToValueAtTime?.(0, now + 0.04);
+        setTimeout(() => {
+          // Suspend after ramp completes
+          this.audioContext.suspend().catch(() => {});
+        }, 50);
+      } else {
+        // Ensure value at 0, resume, then ramp up to effective level unless globally muted
+        this.masterGain?.gain.cancelScheduledValues?.(now);
+        this.masterGain?.gain.setValueAtTime?.(0, now);
+        this.audioContext.resume().then(() => {
+          const restore = this.globalMuted ? 0 : target;
+          const t = this.audioContext.currentTime || 0;
+          this.masterGain?.gain.setValueAtTime?.(0, t);
+          this.masterGain?.gain.linearRampToValueAtTime?.(restore, t + 0.05);
+        }).catch(() => {});
+      }
+    } catch {
+      // Fallback to previous behavior on any API error
+      if (!enabled) {
+        this.audioContext.suspend();
+      } else {
+        this.audioContext.resume();
+      }
     }
   }
 
@@ -183,34 +232,78 @@ class AudioManager {
    * Toggle sound enabled state
    */
   toggleSoundEnabled() {
-    const newState = !this.enabled;
-    this.setEnabled(newState);
-    
+    // Maintain backward-compat call path by mapping to global mute
+    const nextMuted = this.enabled ? true : false;
+    this.setGlobalMute(nextMuted);
+    this.setEnabled(!nextMuted);
+
     // Dispatch settingsChanged event to notify other components
     if (typeof bus !== 'undefined') {
-      bus.dispatchEvent(new CustomEvent('settingsChanged', { 
-        detail: { 
-          soundEnabled: newState,
+      bus.dispatchEvent(new CustomEvent('settingsChanged', {
+        detail: {
+          soundEnabled: !nextMuted,
+          globalMute: nextMuted,
           volume: this.volume
-        } 
+        }
       }));
     }
-    
+
     // Update UI if settings manager is available
     if (typeof settingsManager !== 'undefined') {
-      settingsManager.soundEnabled = newState;
-      settingsManager.updateUI();
+      settingsManager.soundEnabled = !nextMuted;
+      settingsManager.updateUI?.();
     }
-    
-    // Play toggle sound if enabled
-    if (newState) {
+
+    // Play toggle sound if enabled after toggle (i.e., unmuted)
+    if (!nextMuted) {
       this.play('toggle');
     }
-    
+
     // Update center bar sound button state
     if (typeof centerBar !== 'undefined' && typeof centerBar.updateSoundButtonState === 'function') {
       centerBar.updateSoundButtonState();
     }
+  }
+
+  /**
+   * Globally mute/unmute output without pausing playback
+   * Sets master gain to 0 when muted; restores to previous or computed volume on unmute.
+   * Emits no events itself (callers should emit settingsChanged if needed).
+   * @param {boolean} muted
+   */
+  setGlobalMute(muted) {
+    this.globalMuted = !!muted;
+    if (!this.masterGain) return;
+    if (this.globalMuted) {
+      // Remember current gain to restore later
+      const current = this.masterGain.gain.value;
+      const target = (this.volume / 100) * 0.85;
+      this._preMuteGain = Number.isFinite(current) ? current : target;
+      try {
+        const now = this.audioContext?.currentTime || 0;
+        this.masterGain.gain.cancelScheduledValues?.(now);
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+        this.masterGain.gain.linearRampToValueAtTime(0, now + 0.03);
+      } catch {
+        this.masterGain.gain.value = 0;
+      }
+    } else {
+      const restore = Number.isFinite(this._preMuteGain)
+        ? this._preMuteGain
+        : (this.volume / 100) * 0.85;
+      try {
+        const now = this.audioContext?.currentTime || 0;
+        this.masterGain.gain.cancelScheduledValues?.(now);
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+        this.masterGain.gain.linearRampToValueAtTime(restore, now + 0.03);
+      } catch {
+        this.masterGain.gain.value = restore;
+      }
+    }
+  }
+
+  getGlobalMute() {
+    return !!this.globalMuted;
   }
 
   /**
@@ -274,6 +367,11 @@ class AudioManager {
   async play(soundName) {
     // Don't play sounds for "test" button
     if (soundName === 'test') return;
+
+    // If globally muted, skip generating WebAudio nodes to save CPU
+    if (this.globalMuted === true) {
+      return;
+    }
 
     // Initialize audio on first user interaction
     if (!this.audioInitialized) {

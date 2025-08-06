@@ -15,6 +15,8 @@
  */
 class MusicManager {
   constructor() {
+    // Global mute gate (from settings/audio manager)
+    this.globalMute = false;
     // Config
     this.TRACKS = [
       'sounds/song_chill_0.mp3',
@@ -97,6 +99,21 @@ class MusicManager {
           console.log('[MusicManager] Center bar is ready, setting up event listeners');
           // Now that center bar is ready, set up the actual event listeners
           this.setupCenterBarEventListeners();
+        });
+
+        // Listen to global settings changes to apply global mute gate without pausing playback
+        bus.addEventListener('settingsChanged', (evt) => {
+          try {
+            const detail = evt && evt.detail ? evt.detail : {};
+            if (detail.globalMute !== undefined) {
+              this.applyGlobalMute(!!detail.globalMute);
+            } else if (detail.soundEnabled !== undefined) {
+              // Backward compatibility: soundEnabled false == global mute on
+              this.applyGlobalMute(!detail.soundEnabled);
+            }
+          } catch (err) {
+            console.warn('[MusicManager] settingsChanged listener failed', err);
+          }
         });
       } else {
         console.warn('[MusicManager] Bus not available, retrying...');
@@ -225,17 +242,47 @@ class MusicManager {
   setupCenterBarEventListeners() {
     console.log('[MusicManager] Setting up center bar event listeners');
     
-    // Listen for centerbar:music event from center bar
-    if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
-      console.log('[MusicManager] Adding centerbar:music event listener');
-      bus.addEventListener('centerbar:music', (e) => {
-        console.log('[MusicManager] Received centerbar:music event', e.detail);
-        // Toggle play/pause when music button is clicked
-        this.togglePlay();
-      });
-    } else {
-      console.warn('[MusicManager] Bus not available for centerbar:music event');
+    if (typeof bus === 'undefined' || typeof bus.addEventListener !== 'function') {
+      console.warn('[MusicManager] Bus not available for event wiring');
+      return;
     }
+
+    // Open/close the music UI popover (no playback here)
+    bus.addEventListener('centerbar:music', (e) => {
+      console.log('[MusicManager] Received centerbar:music event', e.detail);
+      try {
+        if (typeof window.musicPlayer !== 'undefined' && typeof window.musicPlayer.toggleUI === 'function') {
+          const anchor = e.detail?.anchor || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
+          window.musicPlayer.toggleUI(anchor);
+          return;
+        }
+      } catch (err) {
+        console.warn('[MusicManager] Failed to delegate to MusicPlayer.toggleUI', err);
+      }
+      // No UI controller available: ignore to avoid unintended playback
+    });
+
+    // Wire transport controls dispatched by MusicPlayer UI
+    bus.addEventListener('music:prev', () => {
+      console.log('[MusicManager] bus music:prev -> prev()');
+      this.prev();
+    });
+    bus.addEventListener('music:next', () => {
+      console.log('[MusicManager] bus music:next -> next()');
+      this.next();
+    });
+    bus.addEventListener('music:toggle', () => {
+      console.log('[MusicManager] bus music:toggle -> togglePlay()');
+      this.togglePlay();
+    });
+
+    // Optional volume control from MusicPlayer slider
+    bus.addEventListener('music:setVolume', (e) => {
+      const vol = e?.detail?.volume;
+      if (typeof vol === 'number' && isFinite(vol)) {
+        this.setVolume(Math.max(0, Math.min(1, vol)), { smooth: true });
+      }
+    });
   }
 
   async play() {
@@ -248,14 +295,14 @@ class MusicManager {
     }
 
     try {
-      // start play
+      // Always start playback request (policy friendly), but keep volume at 0 if muted globally
       const p = el.play();
       if (p && typeof p.then === 'function') await p;
 
       // If first start hasn't completed yet, use a 3s fade once
       if (!this.firstStartDone) {
         if (el.readyState >= 3) {
-          if (this.isMuted) {
+          if (this.isMuted || this.globalMute) {
             // Stay at 0 but mark playing
             el.volume = 0;
             this.currentVolume = 0;
@@ -266,7 +313,7 @@ class MusicManager {
             this.dispatch('music:playing', { index: this.currentIndex });
           } else {
             // First manual start path: 3s first-start fade
-            await this._fadeTo(el, this.targetVolume, 3000);
+            await this._fadeTo(el, this.effectiveTargetVolume(), 3000);
             this.isPlaying = true;
             this.isLoading = false;
             this.updateBuffering(false);
@@ -276,10 +323,10 @@ class MusicManager {
             this.dispatch('music:playing', { index: this.currentIndex });
           }
         } else {
-          // Wait for canplay, then do the 5s fade once
+          // Wait for canplay, then do the 3s fade once (respect global mute)
           const once = async () => {
             el.removeEventListener('canplay', once);
-            if (this.isMuted) {
+            if (this.isMuted || this.globalMute) {
               el.volume = 0;
               this.currentVolume = 0;
               this.isPlaying = true;
@@ -289,7 +336,7 @@ class MusicManager {
               this.dispatch('music:playing', { index: this.currentIndex });
             } else {
               // First-start signature 3s fade after canplay
-              await this._fadeTo(el, this.targetVolume, 3000);
+              await this._fadeTo(el, this.effectiveTargetVolume(), 3000);
               this.isPlaying = true;
               this.isLoading = false;
               this.updateBuffering(false);
@@ -410,13 +457,11 @@ class MusicManager {
     const el = this.audioEls[this.currentIndex];
     if (!el) return;
 
-    if (opts && opts.smooth) {
-      // Smooth ramp to new target
-      this._fadeTo(el, this.isMuted ? 0 : this.targetVolume, this.SLIDER_SMOOTH);
-    } else {
-      el.volume = this.isMuted ? 0 : this.targetVolume;
-      this.currentVolume = el.volume;
-    }
+    // Respect global mute: do not ramp up if globally muted
+    const target = this.effectiveTargetVolume();
+    const duration = (opts && opts.smooth) ? this.SLIDER_SMOOTH : 0;
+    this._fadeTo(el, target, duration);
+
     this.dispatch('music:volumeChanged', { volume: this.targetVolume });
   }
 
@@ -443,8 +488,10 @@ class MusicManager {
 
   // === Internal helpers ===
   _playWithFadeIn(el, durationMs) {
-    // If muted, remain at 0 but mark playing
-    if (this.isMuted) {
+    // If either music mute or global mute is active, remain at 0 but mark playing
+    if (this.isMuted || this.globalMute) {
+      // Ensure the element is actually playing but inaudible
+      try { el.play?.(); } catch {}
       el.volume = 0;
       this.currentVolume = 0;
       this.isPlaying = true;
@@ -453,7 +500,8 @@ class MusicManager {
       this.dispatch('music:playing', { index: this.currentIndex });
       return;
     }
-    this._fadeTo(el, this.targetVolume, durationMs);
+    // Not muted: ramp to effective target
+    this._fadeTo(el, this.effectiveTargetVolume(), durationMs);
     this.isPlaying = true;
     this.isLoading = false;
     this.updateBuffering(false);
@@ -515,6 +563,22 @@ class MusicManager {
     } catch (e) {
       // safe no-op
     }
+  }
+
+  // Effective target volume considering global mute and local music mute
+  effectiveTargetVolume() {
+    return (this.globalMute || this.isMuted) ? 0 : this.targetVolume;
+  }
+
+  // Apply global mute gate without changing local music mute setting
+  applyGlobalMute(muted) {
+    this.globalMute = !!muted;
+    // Update current element volume immediately, preserving playback state
+    const el = this.audioEls[this.currentIndex];
+    if (!el) return;
+    const target = this.effectiveTargetVolume();
+    // Choose a short ramp to avoid pops when toggling
+    this._fadeTo(el, target, 80);
   }
 
   // Volume fading tween
