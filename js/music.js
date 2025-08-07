@@ -19,8 +19,9 @@ class MusicManager {
     this.globalMute = false;
     // Config
     this.TRACKS = [
+      'sounds/song_house_0.mp3',
       'sounds/song_chill_0.mp3',
-      'sounds/song_chill_1.mp3',
+      'sounds/song_capybara.mp3'
     ];
     this.DEFAULT_VOLUME = 0.45;
     this.DEFAULT_MUTED = false;
@@ -38,7 +39,7 @@ class MusicManager {
     this.SLIDER_SMOOTH = 100;
 
     // Internal state
-    this.audioEls = [null, null];
+    this.audioEls = new Array(this.TRACKS.length).fill(null);
     this.currentIndex = 0;
     this.isInitialized = false;
     this.isLoading = false;
@@ -202,21 +203,29 @@ class MusicManager {
     return el;
   }
 
+  getOrCreateAudio(index) {
+    if (!this.audioEls[index]) {
+      this.audioEls[index] = this.createAudio(index);
+    }
+    return this.audioEls[index];
+  }
+
   ensureInitialized() {
     if (this.isInitialized) return;
 
-    // Restore last track index if available (optional enhancement)
+    // Restore last track index if available and valid for any length
     try {
       const savedIdx = parseInt(localStorage.getItem('music.lastTrackIndex'), 10);
-      if (isFinite(savedIdx) && (savedIdx === 0 || savedIdx === 1)) {
+      if (isFinite(savedIdx) && savedIdx >= 0 && savedIdx < this.TRACKS.length) {
         this.currentIndex = savedIdx;
       }
     } catch (e) {
       // no-op
     }
 
-    this.audioEls[0] = this.createAudio(0);
-    this.audioEls[1] = this.createAudio(1);
+    // Lazily create only the current track's audio element
+    this.getOrCreateAudio(this.currentIndex);
+
     this.isInitialized = true;
     this.dispatch('music:initialized', {});
   }
@@ -287,7 +296,7 @@ class MusicManager {
 
   async play() {
     this.ensureInitialized();
-    const el = this.audioEls[this.currentIndex];
+    const el = this.getOrCreateAudio(this.currentIndex);
 
     // If currently in silence, skip it
     if (this.isInSilence) {
@@ -373,7 +382,7 @@ class MusicManager {
 
   async pause() {
     this.ensureInitialized();
-    const el = this.audioEls[this.currentIndex];
+    const el = this.getOrCreateAudio(this.currentIndex);
     await this._fadeTo(el, 0, this.FADE_OUT_PAUSE);
     el.pause();
     this.isPlaying = false;
@@ -386,26 +395,31 @@ class MusicManager {
   }
 
   async next() {
-    // Persist last track index (optional continuity)
-    try {
-      localStorage.setItem('music.lastTrackIndex', String(this.currentIndex === 0 ? 1 : 0));
-    } catch (e) {
-      // no-op
-    }
     this.ensureInitialized();
+
     // Skip silence if any
     if (this.isInSilence) {
       this.cancelSilence();
     }
-    const currentEl = this.audioEls[this.currentIndex];
-    const nextIndex = this.currentIndex === 0 ? 1 : 0;
-    const nextEl = this.audioEls[nextIndex];
+
+    const fromIndex = this.currentIndex;
+    const toIndex = (fromIndex + 1) % this.TRACKS.length;
+
+    // Persist last track index (optional continuity)
+    try {
+      localStorage.setItem('music.lastTrackIndex', String(toIndex));
+    } catch (e) {
+      // no-op
+    }
+
+    const currentEl = this.getOrCreateAudio(fromIndex);
+    const nextEl = this.getOrCreateAudio(toIndex);
 
     await this._fadeTo(currentEl, 0, this.FADE_OUT_SWITCH);
     currentEl.pause();
     currentEl.currentTime = 0;
 
-    this.currentIndex = nextIndex;
+    this.currentIndex = toIndex;
 
     try {
       const p = nextEl.play();
@@ -424,8 +438,46 @@ class MusicManager {
   }
 
   async prev() {
-    // For two tracks, prev behaves like next
-    return this.next();
+    this.ensureInitialized();
+
+    // Skip silence if any
+    if (this.isInSilence) {
+      this.cancelSilence();
+    }
+
+    const fromIndex = this.currentIndex;
+    const toIndex = (fromIndex - 1 + this.TRACKS.length) % this.TRACKS.length;
+
+    // Persist last track index (optional continuity)
+    try {
+      localStorage.setItem('music.lastTrackIndex', String(toIndex));
+    } catch (e) {
+      // no-op
+    }
+
+    const currentEl = this.getOrCreateAudio(fromIndex);
+    const prevEl = this.getOrCreateAudio(toIndex);
+
+    await this._fadeTo(currentEl, 0, this.FADE_OUT_SWITCH);
+    currentEl.pause();
+    currentEl.currentTime = 0;
+
+    this.currentIndex = toIndex;
+
+    try {
+      const p = prevEl.play();
+      if (p && typeof p.then === 'function') await p;
+      if (prevEl.readyState >= 3) {
+        this._playWithFadeIn(prevEl, this.FADE_IN_SWITCH);
+      } else {
+        this.pendingPlay = true;
+        this.isLoading = true;
+        this.dispatch('music:loading', {});
+      }
+    } catch (e) {
+      console.warn('MusicManager.prev: play blocked', e);
+      this.hintStartNeeded();
+    }
   }
 
   async toggleMute() {
@@ -454,7 +506,7 @@ class MusicManager {
     this.targetVolume = Math.max(0, Math.min(1, vol));
     this.persistSettings();
 
-    const el = this.audioEls[this.currentIndex];
+    const el = this.getOrCreateAudio(this.currentIndex);
     if (!el) return;
 
     // Respect global mute: do not ramp up if globally muted
@@ -574,7 +626,7 @@ class MusicManager {
   applyGlobalMute(muted) {
     this.globalMute = !!muted;
     // Update current element volume immediately, preserving playback state
-    const el = this.audioEls[this.currentIndex];
+    const el = this.getOrCreateAudio(this.currentIndex);
     if (!el) return;
     const target = this.effectiveTargetVolume();
     // Choose a short ramp to avoid pops when toggling
