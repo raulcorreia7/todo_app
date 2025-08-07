@@ -52,6 +52,9 @@
             Loading daily quote...
           </p>
           <!-- Stats are now integrated with filter buttons -->
+          <div class="header-actions">
+            <button id="task-ai-refactor-btn" type="button" class="btn btn--ghost" title="Refactor current task with AI">Refactor with AI</button>
+          </div>
         </div>
       </header>
 
@@ -323,7 +326,6 @@
       <p class="footer-text">
         Vibe Coded by Raúl Correia
         <span class="heart-emoji">❤️</span>
-        with <span class="llm-name">Kimi K2, GLM-4.5 Air, Deepseek R1 0528</span>
         <span class="app-version" id="appVersion"></span>
       </p>
     </div>
@@ -377,9 +379,6 @@
 
     <!-- 8) AI providers (before app; environment already loaded above) -->
     <script src="js/ai-providers.js"></script>
-
-    <!-- Lucide Icons (must be loaded before hydration calls) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- 9) UI micro modules driven by the app (center bar + tooltip) -->
     <script src="js/tooltip-service.js"></script>

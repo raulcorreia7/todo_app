@@ -2,6 +2,42 @@
  * Validation and character counter utilities
  */
 
+// Lightweight runtime task validator/normalizer used across the app.
+// Enforces strict schema: { id, title, description } and coerces description to string.
+function validateTask(task) {
+  const id = task && task.id != null ? task.id : (task && task._id != null ? task._id : null);
+
+  // Normalize title: app historically uses "text" as the visible title field
+  const rawTitle = task && (task.title != null ? task.title : task.text);
+  const title = typeof rawTitle === 'string' ? rawTitle : String(rawTitle ?? '');
+
+  // Coerce description to a plain string and trim
+  let desc = task && task.description != null ? task.description : '';
+  if (typeof desc !== 'string') {
+    try {
+      desc = String(desc);
+    } catch (_) {
+      desc = '';
+    }
+  }
+  desc = desc.trim();
+
+  // Return only the enforced keys
+  return { id, title: title.trim(), description: desc };
+}
+
+// Batch normalization helper
+function validateTasks(tasks) {
+  if (!Array.isArray(tasks)) return [];
+  return tasks.map(validateTask);
+}
+
+// Expose globally for use in app/storage without import system
+if (typeof window !== 'undefined') {
+  window.validateTask = validateTask;
+  window.validateTasks = validateTasks;
+}
+
 class ValidationManager {
   constructor() {
     this.isInitialized = false;
@@ -72,15 +108,15 @@ class ValidationManager {
   validateTaskInput(text, description) {
     const errors = [];
     
-    if (!text || text.trim().length === 0) {
+    if (!text || String(text).trim().length === 0) {
       errors.push('Task title is required');
     }
     
-    if (text && text.length > 500) {
+    if (text && String(text).length > 500) {
       errors.push('Task title must be 500 characters or less');
     }
     
-    if (description && description.length > 500) {
+    if (description && String(description).length > 500) {
       errors.push('Task description must be 500 characters or less');
     }
     

@@ -108,72 +108,6 @@ class TodoApp {
     }
   }
 
-  /**
-   * Refactor text using AI
-   * @param {string} text - The text to refactor
-   * @param {string} type - Type of text to refactor ('title' or 'description')
-   * @returns {Promise<string>} - The refactored text
-   */
-  async refactorTextWithAI(text, type = "general") {
-    try {
-      // Check if AI features are enabled
-      if (!window.AI_CONFIG || !window.AI_CONFIG.enabled) {
-        console.warn("AI features are disabled");
-        return text;
-      }
-
-      // Check if we have API keys
-      const hasOpenAIKey =
-        window.OPENAI_API_KEY && window.OPENAI_API_KEY.trim() !== "";
-      const hasAnthropicKey =
-        window.ANTHROPIC_API_KEY && window.ANTHROPIC_API_KEY.trim() !== "";
-
-      if (!hasOpenAIKey && !hasAnthropicKey) {
-        console.warn("No AI API keys configured");
-        return text;
-      }
-
-      // Show loading state
-      const refactorBtn = document.querySelector(".ai-refactor-btn");
-      if (refactorBtn) {
-        refactorBtn.classList.add("loading");
-      }
-
-      // Check if AI providers are available
-      if (typeof AIProviders !== "undefined" && AIProviders.refactorText) {
-        // Use the AI provider factory
-        return await AIProviders.refactorText(
-          text,
-          window.AI_CONFIG.defaultStyle,
-          {
-            type,
-            maxTokens: window.AI_CONFIG.maxTokens,
-            temperature: window.AI_CONFIG.temperature,
-          }
-        );
-      } else {
-        // Fallback to simple transformation
-        const refactored = text
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
-
-        return refactored;
-      }
-    } catch (error) {
-      console.error("Error refactoring text:", error);
-      // Fallback: return a simple improvement
-      return text
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-    } finally {
-      // Hide loading state
-      if (refactorBtn) {
-        refactorBtn.classList.remove("loading");
-      }
-    }
-  }
 
   /**
    * Wait for all dependencies to load, including settings and UI subsystems
@@ -435,6 +369,80 @@ class TodoApp {
         }
       }
 
+      // Handle per-task AI refactor buttons
+      if (target.closest(".task-ai-refactor-btn")) {
+        e.preventDefault();
+        const btnEl = target.closest(".task-ai-refactor-btn");
+        const taskId = btnEl && btnEl.dataset.taskId;
+        if (taskId) {
+          // Mirror the header button provider-based flow for consistency
+          (async () => {
+            const debugId = Date.now();
+            try {
+              btnEl.disabled = true;
+              btnEl.classList.add("loading");
+              // Resolve active task by id
+              const todo = this.tasks.find((t) => String(t.id) === String(taskId));
+              if (!todo) {
+                console.error("[AI] Task not found for refactor", { taskId, debugId });
+                return;
+              }
+              // Feature detect provider
+              if (!(typeof window !== "undefined" && window.AIProviders && typeof window.AIProviders.refactorTodo === "function")) {
+                console.error("[AI] Provider not available for per-task button", {
+                  hasWindow: typeof window !== "undefined",
+                  hasProviders: typeof window !== "undefined" && !!window.AIProviders,
+                  hasRefactor: typeof window !== "undefined" && window.AIProviders ? typeof window.AIProviders.refactorTodo : "undefined",
+                  debugId
+                });
+                return;
+              }
+              // Call provider
+              const result = await window.AIProviders.refactorTodo({
+                id: todo.id,
+                title: todo.text || todo.title || "",
+                description: todo.description || "",
+                __debugId: debugId
+              });
+              // Validate
+              const valid =
+                result &&
+                String(result.id) === String(todo.id) &&
+                typeof result.title === "string" &&
+                result.title.trim().length > 0 &&
+                typeof result.description === "string" &&
+                result.description.trim().length > 0;
+
+              if (!valid) {
+                console.error("[AI] Invalid AI refactor result from per-task button; unchanged", { result, debugId });
+                return;
+              }
+              // Update task - create a new object reference to ensure re-render
+              const updatedTask = {
+                ...todo,
+                text: result.title.trim(),
+                description: result.description,
+                updatedAt: new Date().toISOString()
+              };
+              
+              // Replace the task in the array
+              const taskIndex = this.tasks.findIndex(t => String(t.id) === String(todo.id));
+              if (taskIndex !== -1) {
+                this.tasks[taskIndex] = updatedTask;
+              }
+
+              this.saveTasks();
+              this.forceRender();
+            } catch (err) {
+              console.error("[AI] Per-task refactor failed", err);
+            } finally {
+              btnEl.classList.remove("loading");
+              btnEl.disabled = false;
+            }
+          })();
+        }
+      }
+
       // Handle task delete buttons
       if (target.closest(".task-delete-btn")) {
         e.preventDefault();
@@ -686,7 +694,60 @@ class TodoApp {
    */
   loadTasks() {
     const oldTaskCount = this.tasks.length;
-    this.tasks = storageManager.getTasks();
+    // Normalize any legacy/invalid shapes on load to ensure description is a string
+    const raw = storageManager.getTasks();
+    try {
+      // Prefer global validator if present (defined in js/validation.js)
+      if (typeof window !== "undefined" && typeof window.validateTasks === "function") {
+        this.tasks = window.validateTasks(raw).map(t => {
+          // Keep internal fields the app uses for rendering/state by remapping:
+          // - title -> text
+          // Note: We intentionally keep other metadata untouched where present.
+          return {
+            id: t.id,
+            text: t.title,
+            description: t.description,
+            completed: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            // Preserve any legacy fields if raw has them (completed/createdAt/updatedAt), but ensure description is string
+            ...(Array.isArray(raw) ? {} : {}),
+          };
+        }).map((t, idx) => {
+          // If raw has corresponding item, merge safe fields from it
+          const r = Array.isArray(raw) ? raw[idx] : null;
+          if (r && typeof r === 'object') {
+            return {
+              ...t,
+              completed: !!r.completed,
+              createdAt: r.createdAt || t.createdAt,
+              updatedAt: r.updatedAt || t.updatedAt
+            };
+          }
+          return t;
+        });
+      } else {
+        // Fallback: minimal coercion without helper
+        this.tasks = Array.isArray(raw) ? raw.map(r => {
+          const title = typeof r.title === "string" ? r.title : (typeof r.text === "string" ? r.text : String(r.title ?? r.text ?? ""));
+          let desc = r && r.description != null ? r.description : "";
+          if (typeof desc !== "string") {
+            try { desc = String(desc); } catch { desc = ""; }
+          }
+          return {
+            id: r.id,
+            text: String(title).trim(),
+            description: String(desc).trim(),
+            completed: !!r.completed,
+            createdAt: r.createdAt || new Date().toISOString(),
+            updatedAt: r.updatedAt || new Date().toISOString()
+          };
+        }) : [];
+      }
+    } catch (e) {
+      console.warn("Task normalization on load failed; using raw tasks", e);
+      this.tasks = Array.isArray(raw) ? raw : [];
+    }
     const newTaskCount = this.tasks.length;
 
     // Mark as dirty if task count changed during load
@@ -795,14 +856,46 @@ class TodoApp {
       return;
     }
 
-    const task = {
+    // Create raw task and normalize to ensure description is a string
+    let task = {
       id: Date.now().toString(),
-      text: text,
-      description: description,
-      completed: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      title: text,
+      description: description
     };
+    try {
+      if (typeof window !== "undefined" && typeof window.validateTask === "function") {
+        const normalized = window.validateTask(task); // { id, title, description }
+        // Remap to internal shape used by app.js renderer/state
+        task = {
+          id: normalized.id,
+          text: normalized.title,
+          description: normalized.description,
+          completed: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      } else {
+        // Fallback coercion
+        task = {
+          id: task.id,
+          text: String(task.title || "").trim(),
+          description: String(task.description || "").trim(),
+          completed: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+    } catch {
+      // On any error, fallback to safe strings
+      task = {
+        id: String(Date.now()),
+        text: String(text || "").trim(),
+        description: String(description || "").trim(),
+        completed: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
 
     this.tasks.unshift(task);
     this.saveTasks();
@@ -895,16 +988,6 @@ class TodoApp {
     if (taskElement) {
       taskElement.classList.add("edit-mode");
       taskElement.classList.remove("exit-edit-mode");
-
-      // Ensure AI refactor buttons are positioned correctly after animation
-      setTimeout(() => {
-        const refactorBtns = taskElement.querySelectorAll(".ai-refactor-btn");
-        refactorBtns.forEach((btn) => {
-          btn.style.right = "1rem";
-          btn.style.top = "50%";
-          btn.style.transform = "translateY(-50%)";
-        });
-      }, 400); // Match the animation duration
     }
 
     this.forceRender();
@@ -930,9 +1013,9 @@ class TodoApp {
     const descriptionInput = document.querySelector(`[data-edit-desc="${id}"]`);
     if (!input) return;
 
-    const newText = input.value.trim();
+    const newText = String(input.value || "").trim();
     const newDescription = descriptionInput
-      ? descriptionInput.value.trim()
+      ? String(descriptionInput.value || "").trim()
       : "";
 
     if (!newText) {
@@ -954,8 +1037,18 @@ class TodoApp {
       return;
     }
 
-    task.text = newText;
-    task.description = newDescription;
+    // Normalize via helper to ensure description remains a string and drop extras
+    try {
+      const normalized = typeof window !== "undefined" && typeof window.validateTask === "function"
+        ? window.validateTask({ id: task.id, title: newText, description: newDescription })
+        : { id: task.id, title: newText, description: String(newDescription || "") };
+
+      task.text = String(normalized.title || "").trim();
+      task.description = String(normalized.description || "").trim();
+    } catch {
+      task.text = newText;
+      task.description = String(newDescription || "").trim();
+    }
     task.updatedAt = new Date().toISOString();
 
     // Add exit animation class to the task item
@@ -1150,14 +1243,10 @@ class TodoApp {
     const isEditing = this.editingTaskId === task.id;
 
     return `
-      <div class="task-item ${task.completed ? "completed" : ""} ${
-      isEditing ? "edit-mode" : ""
-    }" data-task-id="${task.id}">
+      <div class="task-item ${task.completed ? "completed" : ""} ${isEditing ? "edit-mode" : ""}" data-task-id="${task.id}">
         <div class="task-content">
-          <label class="task-checkbox luxury-checkbox" data-task-id="${
-            task.id
-          }">
-            <input type="checkbox" ${task.completed ? "checked" : ""} 
+          <label class="task-checkbox luxury-checkbox" data-task-id="${task.id}">
+            <input type="checkbox" ${task.completed ? "checked" : ""}
                    data-task-id="${task.id}">
             <span class="checkmark"></span>
           </label>
@@ -1169,64 +1258,32 @@ class TodoApp {
               <div class="task-edit">
                 <div class="edit-input-group">
                   <div class="ai-refactor-container">
-                    <input type="text" 
-                           class="task-edit-input luxury-input" 
+                    <input type="text"
+                           class="task-edit-input luxury-input"
                            data-edit-input="${task.id}"
                            value="${this.escapeHtml(task.text)}"
                            maxlength="${this.CONFIG.maxTitleLength}"
                            placeholder="Task title">
-                    <button class="ai-refactor-btn" 
-                            data-refactor-type="title" 
-                            data-task-id="${task.id}"
-                            title="Refactor with AI">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9.5 16.5L3 12l6.5-4.5L16 12l-6.5 4.5z"></path>
-                        <path d="M15 12l6.5-4.5L22 12l-6.5 4.5L15 12z"></path>
-                        <path d="M9.5 7.5L16 3l6.5 4.5"></path>
-                        <path d="M9.5 16.5L16 21l6.5-4.5"></path>
-                      </svg>
-                    </button>
                   </div>
                   <div class="char-counter">
-                    <span class="char-count">${task.text.length}/${
-                    this.CONFIG.maxTitleLength
-                  }</span>
+                    <span class="char-count">${task.text.length}/${this.CONFIG.maxTitleLength}</span>
                   </div>
                 </div>
                 <div class="edit-input-group">
                   <div class="ai-refactor-container">
-                    <textarea class="task-edit-description luxury-textarea" 
+                    <textarea class="task-edit-description luxury-textarea"
                               data-edit-desc="${task.id}"
                               maxlength="500"
                               placeholder="Task description (optional)"
-                              rows="2">${this.escapeHtml(
-                                task.description
-                              )}</textarea>
-                    <button class="ai-refactor-btn" 
-                            data-refactor-type="description" 
-                            data-task-id="${task.id}"
-                            title="Refactor with AI">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9.5 16.5L3 12l6.5-4.5L16 12l-6.5 4.5z"></path>
-                        <path d="M15 12l6.5-4.5L22 12l-6.5 4.5L15 12z"></path>
-                        <path d="M9.5 7.5L16 3l6.5 4.5"></path>
-                        <path d="M9.5 16.5L16 21l6.5-4.5"></path>
-                      </svg>
-                    </button>
+                              rows="2">${this.escapeHtml(task.description)}</textarea>
                   </div>
                   <div class="char-counter">
-                    <span class="desc-count">${
-                      task.description.length
-                    }/500</span>
+                    <span class="desc-count">${task.description.length}/500</span>
                   </div>
                 </div>
                 <div class="edit-actions">
-                  <button class="task-save btn btn--primary" data-task-id="${
-                    task.id
-                  }">Save</button>
-                  <button class="task-cancel btn btn--ghost" data-task-id="${
-                    task.id
-                  }">Cancel</button>
+                  <button class="task-save btn btn--primary" data-task-id="${task.id}">Save</button>
+                  <button class="task-cancel btn btn--ghost" data-task-id="${task.id}">Cancel</button>
                 </div>
               </div>
             `
@@ -1236,9 +1293,7 @@ class TodoApp {
                 ${
                   task.description
                     ? `
-                  <div class="task-description">${this.escapeHtml(
-                    task.description
-                  )}</div>
+                  <div class="task-description">${this.escapeHtml(task.description)}</div>
                 `
                     : ""
                 }
@@ -1248,21 +1303,15 @@ class TodoApp {
           </div>
           
           <div class="task-actions">
-            <button class="task-edit-btn" data-task-id="${
-              task.id
-            }" title="Edit">
+            <button class="task-edit-btn" data-task-id="${task.id}" title="Edit">
               <i data-lucide="pencil" class="lucide-icon" aria-hidden="true"></i>
             </button>
             
-            <button class="task-ai-refactor-btn" data-task-id="${
-              task.id
-            }" title="Refactor with AI">
+            <button class="task-ai-refactor-btn" data-task-id="${task.id}" title="Refactor with AI">
               <i data-lucide="wand-2" class="lucide-icon" aria-hidden="true"></i>
             </button>
             
-            <button class="task-delete-btn" data-task-id="${
-              task.id
-            }" title="Delete">
+            <button class="task-delete-btn" data-task-id="${task.id}" title="Delete">
               <i data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></i>
             </button>
           </div>
@@ -1289,47 +1338,196 @@ class TodoApp {
 
   /**
    * Setup AI refactor button listeners
+   * Wire global "#task-ai-refactor-btn" to refactor the currently active/selected task via generic AIProviders.
    */
   setupAIRefactorListeners() {
-    document.addEventListener("click", (e) => {
-      // Handle AI refactor buttons
-      if (e.target.closest(".ai-refactor-btn")) {
-        e.preventDefault();
-        const button = e.target.closest(".ai-refactor-btn");
-        const taskId = button.dataset.taskId;
-        const refactorType = button.dataset.refactorType;
+    console.debug("[AI] setupAIRefactorListeners init");
 
-        if (taskId && refactorType) {
-          this.refactorWithAI(taskId, refactorType, button);
+    // DOM presence check for the header button
+    try {
+      const exists = !!document.getElementById('task-ai-refactor-btn');
+      console.log("Button exists:", exists);
+    } catch (_) {}
+
+    // Determine active/selected task: prefer currently editing, else first visible, else first in filtered list.
+    var getActiveTodo = () => {
+      const debugPick = {};
+      if (this.editingTaskId) {
+        var t = this.tasks.find((x) => x.id === this.editingTaskId);
+        if (t) {
+          debugPick.by = "editingTaskId";
+          debugPick.id = t.id;
+          return t;
         }
       }
-
-      // Handle task AI refactor button (for entire task)
-      if (e.target.closest(".task-ai-refactor-btn")) {
-        e.preventDefault();
-        const button = e.target.closest(".task-ai-refactor-btn");
-        const taskId = button.dataset.taskId;
-
-        if (taskId) {
-          this.refactorEntireTaskWithAI(taskId, button);
+      var el = document.querySelector(".task-item.edit-mode") || document.querySelector(".task-item.hover") || document.querySelector(".task-item");
+      var id = el && el.getAttribute("data-task-id");
+      if (id) {
+        var tt = this.tasks.find((x) => String(x.id) === String(id));
+        if (tt) {
+          debugPick.by = "domSelection";
+          debugPick.id = tt.id;
+          return tt;
         }
       }
-    });
+      var list = this.getFilteredTasks();
+      const chosen = list && list.length ? list[0] : null;
+      if (chosen) {
+        debugPick.by = "filteredHead";
+        debugPick.id = chosen.id;
+      }
+      console.debug("[AI] getActiveTodo selection", debugPick);
+      return chosen;
+    };
 
-    // Handle AI refactor button positioning when entering/exiting edit mode
-    document.addEventListener("animationend", (e) => {
-      if (e.target.classList.contains("task-item")) {
-        if (e.target.classList.contains("edit-mode")) {
-          // Position AI refactor buttons properly when entering edit mode
-          const refactorBtns = e.target.querySelectorAll(".ai-refactor-btn");
-          refactorBtns.forEach((btn) => {
-            btn.style.right = "1rem";
-            btn.style.top = "50%";
-            btn.style.transform = "translateY(-50%)";
+    var btn = document.getElementById("task-ai-refactor-btn");
+    // Introspect the current onclick handler if any
+    try {
+      const onclickText = btn && btn.onclick ? btn.onclick.toString() : "onclick not set, using addEventListener";
+      console.log("Handler attached:", onclickText);
+    } catch (_) {}
+
+    if (!btn) {
+      console.warn("[AI] Refactor button #task-ai-refactor-btn not found in DOM at listener setup");
+      return;
+    }
+    console.debug("[AI] Attaching click handler to #task-ai-refactor-btn");
+    // Diagnostic: check computed pointer-events and visibility to detect overlay or CSS blocking clicks
+    try {
+      const cs = window.getComputedStyle(btn);
+      console.debug("[AI] Button computed style", { pointerEvents: cs.pointerEvents, display: cs.display, visibility: cs.visibility, opacity: cs.opacity });
+    } catch (_) {}
+    // Capture-phase diagnostic to detect if clicks reach the element at all
+    btn.addEventListener("click", (ev) => {
+      try {
+        console.debug("[AI] Capture reached on header button", { type: ev.type, target: ev.target && (ev.target.id || ev.target.className), time: Date.now() });
+      } catch (_) {}
+    }, true);
+    btn.onclick = null;
+    btn.addEventListener("click", async (e) => {
+      console.time("RefactorFlow");
+      e.preventDefault();
+      const debugId = Date.now();
+      console.log("[AI] Start refactor", debugId);
+      console.debug("[AI] Refactor button clicked");
+      console.timeLog("RefactorFlow", "Step 1: Button clicked");
+
+      // Feature detection logs (direct provider usage)
+      const hasWindow = typeof window !== "undefined";
+      const hasProviders = hasWindow && !!window.AIProviders;
+      const hasRefactor = hasProviders && typeof window.AIProviders.refactorTodo === "function";
+      console.debug("[AI] Feature detect (provider)", { hasWindow, hasProviders, hasRefactor });
+      console.log("[DEBUG] AIProviders instance:", window.AIProviders);
+      console.log("[DEBUG] refactorTodo type:", typeof window.AIProviders?.refactorTodo);
+
+      try {
+        // Wrap entire flow to capture crashes
+        try {
+          var todo = getActiveTodo();
+          console.debug("[AI] Active todo resolved", {
+            id: todo && todo.id,
+            titleLen: todo && (todo.text || todo.title || "").length,
+            descLen: todo && (todo.description || "").length
           });
+          if (!todo) {
+            console.error("[AI] No active todo to refactor");
+            console.timeEnd("RefactorFlow");
+            return;
+          }
+
+          // Log the outgoing payload shape/lengths
+          const outTitle = (todo.text || todo.title || "");
+          const outDesc = (todo.description || "");
+          console.log("[AI] Sending task:", { id: todo.id, title: outTitle.length, desc: outDesc.length }, debugId);
+          console.timeLog("RefactorFlow", "Step 2: Payload prepared");
+
+          var prevLabel = btn.innerText;
+          btn.disabled = true;
+          btn.innerText = "Refactoring…";
+
+
+
+          console.debug("[AI] Invoking provider via window.AIProviders.refactorTodo", { debugId });
+          console.timeLog("RefactorFlow", "Step 3: Invoking provider");
+          if (!(typeof window !== "undefined" && window.AIProviders && typeof window.AIProviders.refactorTodo === "function")) {
+            console.error("[AI] Provider not available - aborting refactor", {
+              hasWindow: typeof window !== "undefined",
+              hasProviders: typeof window !== "undefined" && !!window.AIProviders,
+              hasRefactor: typeof window !== "undefined" && window.AIProviders ? typeof window.AIProviders.refactorTodo : "undefined",
+              debugId
+            });
+            console.timeEnd("RefactorFlow");
+            return;
+          }
+          var result = await window.AIProviders.refactorTodo({
+            id: todo.id,
+            title: outTitle,
+            description: outDesc,
+            __debugId: debugId // transient debug flow id
+          });
+          console.timeLog("RefactorFlow", "Step 4: Provider returned");
+
+          console.debug("[AI] Provider result received", {
+            ok: !!result,
+            hasId: !!(result && result.id),
+            titleType: result && typeof result.title,
+            descIsArray: result && Array.isArray(result.description),
+            debugId
+          });
+
+          var valid =
+            result &&
+            String(result.id) === String(todo.id) &&
+            typeof result.title === "string" &&
+            result.title.trim().length > 0 &&
+            typeof result.description === "string" &&
+            result.description.trim().length > 0;
+
+          if (!valid) {
+            console.error("[AI] Invalid AI refactor result; leaving todo unchanged", { result, debugId });
+            console.timeEnd("RefactorFlow");
+            return;
+          }
+
+          var target = this.tasks.find((t) => String(t.id) === String(todo.id));
+          if (!target) {
+            console.error("[AI] Active todo disappeared before update", { debugId });
+            console.timeEnd("RefactorFlow");
+            return;
+          }
+
+          // Use description directly as string
+          const normalized = (typeof window !== "undefined" && typeof window.validateTask === "function")
+            ? window.validateTask({ id: target.id, title: result.title, description: result.description })
+            : { id: target.id, title: String(result.title || ""), description: String(result.description || "") };
+
+          // Create a new object reference to ensure re-render
+          const updatedTask = {
+            ...target,
+            text: String(normalized.title || "").trim(),
+            description: String(normalized.description || "").trim(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          // Replace the task in the array
+          const taskIndex = this.tasks.findIndex(t => String(t.id) === String(target.id));
+          if (taskIndex !== -1) {
+            this.tasks[taskIndex] = updatedTask;
+          }
+
+          this.saveTasks();
+          this.forceRender();
+          console.timeLog("RefactorFlow", "Step 5: State updated and render triggered");
+        } catch (e) {
+          console.error("[CRITICAL] Handler crash:", e);
         }
+      } finally {
+        btn.disabled = false;
+        btn.innerText = prevLabel || "Refactor with AI";
+        try { console.timeEnd("RefactorFlow"); } catch (_) {}
       }
     });
+
   }
 
   /**
@@ -1348,16 +1546,16 @@ class TodoApp {
 
     try {
       // Get the current text
-      const currentText = type === "title" ? task.text : task.description;
+      const currentText = type === "title" ? String(task.text || "") : String(task.description || "");
 
       // Use the refactorTextWithAI method which can be customized for different AI providers
-      const refactoredText = await this.refactorTextWithAI(currentText);
+      const refactoredText = String(await this.refactorTextWithAI(currentText) || "");
 
       // Update the task with the refactored text
       if (type === "title") {
-        task.text = refactoredText;
+        task.text = String(refactoredText || "").trim();
       } else {
-        task.description = refactoredText;
+        task.description = String(refactoredText || "").trim();
       }
 
       task.updatedAt = new Date().toISOString();
@@ -1411,7 +1609,7 @@ class TodoApp {
 
     try {
       // Combine title and description for AI processing
-      const fullText = `${task.text}\n${task.description}`;
+      const fullText = `${String(task.text || "")}\n${String(task.description || "")}`;
 
       // Use the refactorTextWithAI method
       const refactoredText = await this.refactorTextWithAI(fullText, "full");
@@ -1422,11 +1620,11 @@ class TodoApp {
 
       if (lines.length > 1) {
         // If there are multiple lines, use the first as title and the rest as description
-        task.text = lines[0].trim();
-        task.description = lines.slice(1).join("\n").trim();
+        task.text = String(lines[0] || "").trim();
+        task.description = String(lines.slice(1).join("\n") || "").trim();
       } else {
         // If only one line, use it as title and leave description empty
-        task.text = lines[0].trim();
+        task.text = String(lines[0] || "").trim();
         task.description = "";
       }
 
@@ -1783,10 +1981,51 @@ class TodoApp {
  * Also create global app instance safely after DOM is ready to avoid early errors.
  */
 document.addEventListener("DOMContentLoaded", function () {
+  console.debug("[AI] DOMContentLoaded");
+  try { console.log("[BOOT] DOMContentLoaded fired"); } catch (_) {}
+  try { console.log("Button exists:", !!document.getElementById('task-ai-refactor-btn')); } catch (_) {}
+
+  // Network layer inspection: fetch interception (install once)
+  try {
+    if (!window.__fetchInterceptInstalled) {
+      const originalFetch = window.fetch;
+      window.fetch = function(...args) {
+        try { console.log("[NETWORK] Fetch call to:", args[0]); } catch (_) {}
+        return originalFetch.apply(this, args);
+      };
+      window.__fetchInterceptInstalled = true;
+      console.debug("[NETWORK] fetch interception installed");
+    }
+  } catch (e) {
+    console.warn("[NETWORK] Failed to install fetch interception", e);
+  }
+
+  // Provider readiness diagnostics (no facade installers/guards)
+  const checkAI = () => {
+    try {
+      const ok = typeof window !== "undefined"
+        && !!window.AIProviders
+        && typeof window.AIProviders.refactorTodo === "function";
+      console[ok ? "debug" : "warn"]("[AI] Provider " + (ok ? "ready" : "not ready"), {
+        hasAIProviders: typeof window !== "undefined" && !!window.AIProviders,
+        hasMethod: typeof (window.AIProviders && window.AIProviders.refactorTodo)
+      });
+      return ok;
+    } catch (e) {
+      console.warn("[AI] Provider check failed", e);
+      return false;
+    }
+  };
+
+  // No legacy facade creation. We call window.AIProviders.refactorTodo directly where needed.
+
+  try { console.log("[BOOT] setupAIRefactorListeners invoked? about to instantiate app"); } catch (_) {}
+
   // Create global todo app
   try {
     if (!window.todoApp) {
       window.todoApp = new TodoApp();
+      console.debug("[AI] TodoApp created; listeners and AI wiring should be set up");
     }
   } catch (e) {
     console.warn("TodoApp init failed:", e);
@@ -1834,3 +2073,4 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   } catch (_) {}
 });
+

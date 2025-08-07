@@ -1,294 +1,297 @@
 /**
  * AI Providers Module
- * Handles different AI service providers for text refactoring
+ * Single LLM7 provider for todo refactoring.
+ * Preserves class/window singleton API.
  */
+
+/* global fetch */
+
+// Internal constants and logging guard
+const AI_CFG = Object.freeze({
+  MODEL: "gpt-4o-mini-2024-07-18",
+  BASE_URL: "https://api.llm7.io/v1",
+  API_KEY: "unused" // LLM7 is keyless; kept for interface compatibility
+});
+const AI_LOG = true;
+
+function log(...args) {
+  if (AI_LOG)
+    try {
+      console.log(...args);
+    } catch (_) {}
+}
+function warn(...args) {
+  if (AI_LOG)
+    try {
+      console.warn(...args);
+    } catch (_) {}
+}
+function err(...args) {
+  try {
+    console.error(...args);
+  } catch (_) {}
+}
+
+// Utility: sanitize strings for prompt display (no quotes escaping needed since we don't embed in JSON)
+function toStringSafe(v) {
+  return String(v == null ? "" : v);
+}
+
+// Title polishing: keep meaning, remove filler, normalize spacing/case, trim punctuation
+function polishTitle(raw) {
+  let s = toStringSafe(raw).trim();
+  s = s.replace(/\s+/g, " ");
+  s = s.replace(/[\u2013\u2014]/g, "-"); // normalize dashes
+  s = s.replace(/\s*([:;,.!?])\s*/g, "$1 "); // tidy punctuation spacing
+  s = s.replace(/[!?.]{2,}$/g, (match) => match[0]); // reduce repeated punct at end
+  s = s.replace(/^\W+|\W+$/g, ""); // strip leading/trailing non-word
+  // Sentence case but preserve ALLCAPS words/acronyms
+  if (s) {
+    const first = s.charAt(0).toUpperCase();
+    const rest = s.slice(1);
+    s = first + rest.replace(/\b([A-Z])([a-z]+)\b/g, (m, a, b) => a + b); // keep existing capitalization mostly
+  }
+  return s;
+}
+
+
+class LLM7Provider {
+  constructor() {
+    this.apiKey = AI_CFG.API_KEY;
+    this.model = AI_CFG.MODEL;
+    this.baseUrl = AI_CFG.BASE_URL;
+    log("[AI] LLM7Provider initialized");
+  }
+
+  buildTodoRefactorMessages(todo) {
+    try {
+      const idVal = todo && todo.id != null ? todo.id : null;
+      const rawTitle = (todo && (todo.text != null ? todo.text : todo.title)) || "";
+      const rawDescription = (todo && todo.description != null ? todo.description : "");
+
+      const systemMsg = {
+        role: "system",
+        content: [
+          "You are a precision noise removal specialist and clarity enhancer.",
+          "Task: Convert an input JSON object representing a todo item into a JSON object with exactly the keys: id, title, description.",
+          "Core mission: Find a sweet spot remove noise while preserving 100% of the original meaning and substance.",
+          "Guidelines:",
+          "- id must match the input id (same value and type).",
+          "- title: Remove ALL noise and filler words aggressively. Preserve only the core meaning and essential information. Cut out: um, uh, like, just, really, basically, actually, sort of, kind of, unnecessary adverbs, redundant phrases. Keep the exact same meaning, just cleaner and more direct.",
+          "- description: Aggressively eliminate noise, repetition, and irrelevant content. Preserve all substantive information, steps, and context. Remove: filler words, redundant explanations, obvious statements, irrelevant details, wordiness. Keep all meaningful content while making it concise and clear.",
+          "- Your primary goal is noise removal and clarity improvement. The output must contain the exact same meaning and information as the input, but stripped of all non-essential elements.",
+          "- Do not include any additional keys or metadata.",
+          "- Output must be a single JSON object only (no explanations or code fences)."
+        ].join("\n"),
+      };
+
+      // Escape input only, no extra normalization or preview shaping here
+      const inputTodo = {
+        id: idVal,
+        title: toStringSafe(rawTitle),
+        description: toStringSafe(rawDescription)
+      };
+
+      const userMsg = {
+        role: "user",
+        content: JSON.stringify({ todo: inputTodo })
+      };
+
+      return [systemMsg, userMsg];
+    } catch (e) {
+      err("LLM7Provider.buildTodoRefactorMessages failed:", e);
+      return [];
+    }
+  }
+
+  parseModelJSON(content) {
+    try {
+      if (typeof content !== "string") return null;
+      const text = content.trim();
+
+      // Try strict JSON parse first
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        // If the model returned extra prose, extract the first JSON object region
+        const firstBrace = text.indexOf("{");
+        const lastBrace = text.lastIndexOf("}");
+        if (firstBrace === -1 || lastBrace === -1) return null;
+        const sliced = text.slice(firstBrace, lastBrace + 1);
+        parsed = JSON.parse(sliced);
+      }
+
+      // Accept either a direct object with expected keys or a wrapper shape
+      // 1) Direct: { id, title, description }
+      // 2) Wrapper: { result: { id, title, description } } or { data: { ... } }
+      let obj = parsed;
+      if (obj && typeof obj === "object" && !("id" in obj) && ("todo" in obj || "result" in obj || "data" in obj)) {
+        obj = obj.result || obj.data || obj.todo;
+      }
+
+      if (!obj || typeof obj !== "object") return null;
+      if (!("id" in obj) || !("title" in obj) || !("description" in obj)) return null;
+
+      // Escape output only; do not rewrite meaning
+      const id = obj.id;
+      const title = toStringSafe(obj.title);
+      const description = toStringSafe(obj.description);
+
+      return { id, title, description };
+    } catch (e) {
+      err("LLM7Provider.parseModelJSON failed:", e);
+      return null;
+    }
+  }
+
+  async refactorTodo(todo) {
+    if (typeof this.buildTodoRefactorMessages !== "function") {
+      err("Critical: buildTodoRefactorMessages undefined!");
+      return null;
+    }
+    try {
+      const debugId = todo && todo.__debugId;
+      const messages = this.buildTodoRefactorMessages(todo);
+      const payload = { model: this.model, messages, stream: false };
+
+      log("[AI] Sending to API:", this.baseUrl, { model: this.model, debugId });
+
+      const res = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      })
+        .then(async (r) => {
+          try {
+            log("[AI] API status:", r.status, { debugId });
+          } catch (_) {}
+          return r;
+        })
+        .catch((e) => {
+          err("[AI] fetch error:", e, { debugId });
+          throw e;
+        });
+
+      if (!res || !res.ok) {
+        let bodyText = "";
+        try {
+          bodyText = await res.text();
+        } catch (_) {}
+        throw new Error(
+          `llm7 API error: ${res ? res.status : "unknown"} ${
+            res ? res.statusText : ""
+          } ${bodyText ? "- " + bodyText : ""}`
+        );
+      }
+
+      const data = await res.json();
+      const content =
+        data &&
+        data.choices &&
+        data.choices[0] &&
+        data.choices[0].message &&
+        data.choices[0].message.content
+          ? data.choices[0].message.content
+          : null;
+
+      if (!content) {
+        err("llm7: missing content in response", { debugId });
+        return null;
+      }
+
+      const parsed = this.parseModelJSON(content);
+
+      // Enforce id consistency if input has an id
+      if (parsed && todo && "id" in todo) {
+        try {
+          const inputId = todo.id;
+          if (typeof inputId !== "undefined" && inputId !== null) {
+            if (JSON.stringify(parsed.id) !== JSON.stringify(inputId)) {
+              warn("llm7: parsed id does not match input id", {
+                debugId,
+                inputId,
+                parsedId: parsed.id,
+              });
+              return null;
+            }
+          }
+        } catch (_) {
+          return null;
+        }
+      }
+
+      return parsed;
+    } catch (err0) {
+      err("llm7 network/error:", err0);
+      return null;
+    }
+  }
+}
 
 class AIProviders {
   constructor() {
-    this.providers = {
-      openai: null,
-      anthropic: null
-    };
-    
-    this.initialize();
-  }
-
-  /**
-   * Initialize AI providers
-   */
-  initialize() {
-    // Check if AI features are enabled
-    if (!window.AI_CONFIG || !window.AI_CONFIG.enabled) {
-      console.warn('AI features are disabled');
-      return;
-    }
-
-    // Initialize available providers based on API keys
-    if (window.OPENAI_API_KEY && window.OPENAI_API_KEY.trim() !== '') {
-      this.providers.openai = new OpenAIProvider();
-    }
-
-    if (window.ANTHROPIC_API_KEY && window.ANTHROPIC_API_KEY.trim() !== '') {
-      this.providers.anthropic = new AnthropicProvider();
-    }
-  }
-
-  /**
-   * Get the appropriate AI provider based on configuration
-   * @returns {Object|null} - The AI provider instance
-   */
-  getProvider() {
-    // Check if we have a preferred provider
-    if (window.AI_CONFIG && window.AI_CONFIG.preferredProvider) {
-      const preferred = window.AI_CONFIG.preferredProvider.toLowerCase();
-      if (this.providers[preferred]) {
-        return this.providers[preferred];
-      }
-    }
-
-    // Fall back to the first available provider
-    for (const key in this.providers) {
-      if (this.providers[key]) {
-        return this.providers[key];
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Refactor text using the configured AI provider
-   * @param {string} text - The text to refactor
-   * @param {string} style - The refactoring style
-   * @param {Object} options - Additional options
-   * @returns {Promise<string>} - The refactored text
-   */
-  async refactorText(text, style = 'simple', options = {}) {
-    const provider = this.getProvider();
-    
-    if (!provider) {
-      console.warn('No AI provider available');
-      return this.fallbackRefactor(text);
-    }
-
+    this.provider = new LLM7Provider();
+    log("[AI] AIProviders initialized");
     try {
-      return await provider.refactorText(text, style, options);
-    } catch (error) {
-      console.error('AI refactor error:', error);
-      return this.fallbackRefactor(text);
-    }
+      console.assert(
+        typeof this.refactorTodo === "function",
+        "refactorTodo method missing!"
+      );
+    } catch (_) {}
   }
 
-  /**
-   * Fallback refactoring method when AI is unavailable
-   * @param {string} text - The text to refactor
-   * @returns {string} - The refactored text
-   */
+  async refactorTodo(todo) {
+    try {
+      log("[AI] AIProviders.refactorTodo received task:", {
+        id: todo && todo.id,
+        titleLen: ((todo && (todo.title || todo.text)) || "").length,
+        descLen: ((todo && todo.description) || "").length,
+        debugId: todo && todo.__debugId,
+      });
+    } catch (_) {}
+
+    // Ensure we only pass a pure JSON structure through the provider
+    const safe = {
+      id: todo && todo.id != null ? todo.id : null,
+      title: toStringSafe(todo && (todo.text != null ? todo.text : todo.title)),
+      description: toStringSafe(todo && todo.description)
+    };
+
+    return await this.provider.refactorTodo(safe);
+  }
+
+  // Keep method for API parity; use a deterministic local cleanup as fallback
+  async refactorText(text, style = "simple", options = {}) {
+    return this.fallbackRefactor(text);
+  }
+
+  // Local deterministic formatter for simple cases
   fallbackRefactor(text) {
-    // Simple improvements that don't require AI
-    return text
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    const s = toStringSafe(text).trim().replace(/\s+/g, " ");
+    return polishTitle(s);
   }
 
-  /**
-   * Check if AI features are available
-   * @returns {boolean} - True if AI features are available
-   */
   isAvailable() {
-    return this.getProvider() !== null;
+    // LLM7 is keyless; always available
+    return true;
   }
 }
 
-/**
- * OpenAI Provider Implementation
- */
-class OpenAIProvider {
-  constructor() {
-    this.apiKey = window.OPENAI_API_KEY;
-    this.model = window.AI_CONFIG?.openaiModel || 'gpt-3.5-turbo';
-    this.baseUrl = window.AI_CONFIG?.openaiBaseUrl || 'https://api.openai.com/v1';
-  }
-
-  /**
-   * Refactor text using OpenAI API
-   * @param {string} text - The text to refactor
-   * @param {string} style - The refactoring style
-   * @param {Object} options - Additional options
-   * @returns {Promise<string>} - The refactored text
-   */
-  async refactorText(text, style = 'simple', options = {}) {
-    const prompt = this.buildPrompt(text, style, options);
-    
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that refactors text to improve clarity, grammar, and style.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: options.maxTokens || 500,
-        temperature: options.temperature || 0.7
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
-  }
-
-  /**
-   * Build the prompt for text refactoring
-   * @param {string} text - The text to refactor
-   * @param {string} style - The refactoring style
-   * @param {Object} options - Additional options
-   * @returns {string} - The constructed prompt
-   */
-  buildPrompt(text, style, options) {
-    const type = options.type || 'general';
-    let instructions = '';
-
-    switch (type) {
-      case 'title':
-        instructions = 'Refactor the following task title to be more clear, concise, and impactful. ';
-        break;
-      case 'description':
-        instructions = 'Refactor the following task description to improve clarity, grammar, and readability. ';
-        break;
-      default:
-        instructions = 'Refactor the following text to improve clarity, grammar, and style. ';
-    }
-
-    switch (style) {
-      case 'simple':
-        instructions += 'Make minor improvements to grammar, spelling, and clarity.';
-        break;
-      case 'professional':
-        instructions += 'Make the text more professional and formal.';
-        break;
-      case 'casual':
-        instructions += 'Make the text more casual and conversational.';
-        break;
-      default:
-        instructions += 'Make the text clearer and more concise.';
-    }
-
-    return `${instructions}\n\nText to refactor:\n${text}`;
-  }
-}
-
-/**
- * Anthropic Provider Implementation
- */
-class AnthropicProvider {
-  constructor() {
-    this.apiKey = window.ANTHROPIC_API_KEY;
-    this.model = window.AI_CONFIG?.anthropicModel || 'claude-3-haiku-20240307';
-    this.baseUrl = window.AI_CONFIG?.anthropicBaseUrl || 'https://api.anthropic.com';
-  }
-
-  /**
-   * Refactor text using Anthropic API
-   * @param {string} text - The text to refactor
-   * @param {string} style - The refactoring style
-   * @param {Object} options - Additional options
-   * @returns {Promise<string>} - The refactored text
-   */
-  async refactorText(text, style = 'simple', options = {}) {
-    const prompt = this.buildPrompt(text, style, options);
-    
-    const response = await fetch(`${this.baseUrl}/v1/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_tokens: options.maxTokens || 500,
-        temperature: options.temperature || 0.7,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.content[0].text.trim();
-  }
-
-  /**
-   * Build the prompt for text refactoring
-   * @param {string} text - The text to refactor
-   * @param {string} style - The refactoring style
-   * @param {Object} options - Additional options
-   * @returns {string} - The constructed prompt
-   */
-  buildPrompt(text, style, options) {
-    const type = options.type || 'general';
-    let instructions = '';
-
-    switch (type) {
-      case 'title':
-        instructions = 'Refactor the following task title to be more clear, concise, and impactful. ';
-        break;
-      case 'description':
-        instructions = 'Refactor the following task description to improve clarity, grammar, and readability. ';
-        break;
-      default:
-        instructions = 'Refactor the following text to improve clarity, grammar, and style. ';
-    }
-
-    switch (style) {
-      case 'simple':
-        instructions += 'Make minor improvements to grammar, spelling, and clarity.';
-        break;
-      case 'professional':
-        instructions += 'Make the text more professional and formal.';
-        break;
-      case 'casual':
-        instructions += 'Make the text more casual and conversational.';
-        break;
-      default:
-        instructions += 'Make the text clearer and more concise.';
-    }
-
-    return `${instructions}\n\nText to refactor:\n${text}`;
-  }
-}
-
-// Create global AI provider factory
+// Singleton/export
 const aiProviders = new AIProviders();
 
-// Export for debugging
-if (window.DEV) {
+// Global exposure for app integration
+try {
   window.AIProviders = aiProviders;
-}
+  window.AIProvidersReady = true;
+} catch (_) {}
 
-// Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { AIProviders: aiProviders, OpenAIProvider, AnthropicProvider };
-}
+// Provider readiness audit (top-level, on load)
+try {
+  log("[DEBUG] AIProviders instance:", window.AIProviders);
+  log("[DEBUG] refactorTodo type:", typeof window.AIProviders?.refactorTodo);
+} catch (_) {}

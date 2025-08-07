@@ -58,11 +58,27 @@ class StorageManager {
             if (!data) return [];
             
             const parsed = JSON.parse(data);
-            if (parsed.version !== this.version) {
-                return this.migrateData(parsed);
-            }
+            const tasks = (parsed && Array.isArray(parsed.tasks)) ? parsed.tasks
+                         : (Array.isArray(parsed) ? parsed : []);
             
-            return Array.isArray(parsed.tasks) ? parsed.tasks : [];
+            // One-time migration/normalization on load:
+            // - Coerce description to string
+            // - Normalize to strict schema at the boundary using global validateTask when available
+            const normalized = (typeof window !== 'undefined' && typeof window.validateTasks === 'function')
+              ? window.validateTasks(tasks)
+              : tasks.map((t) => {
+                  const id = t && t.id != null ? t.id : null;
+                  const rawTitle = t && (t.title != null ? t.title : t.text);
+                  const title = typeof rawTitle === 'string' ? rawTitle : String(rawTitle ?? '');
+                  let desc = t && t.description != null ? t.description : '';
+                  if (typeof desc !== 'string') {
+                    try { desc = String(desc); } catch { desc = ''; }
+                  }
+                  return { id, title: title.trim(), description: String(desc).trim() };
+                });
+    
+            // Return normalized minimal objects (id,title,description)
+            return normalized;
         } catch (error) {
             console.warn('Failed to load tasks from storage:', error);
             return [];
@@ -77,9 +93,25 @@ class StorageManager {
         if (!this.isReady()) return false;
         
         try {
+            const safeList = Array.isArray(tasks) ? tasks : [];
+    
+            // Normalize every task to strict schema before persisting
+            const normalized = (typeof window !== 'undefined' && typeof window.validateTasks === 'function')
+              ? window.validateTasks(safeList)
+              : safeList.map((t) => {
+                  const id = t && t.id != null ? t.id : null;
+                  const rawTitle = t && (t.title != null ? t.title : t.text);
+                  const title = typeof rawTitle === 'string' ? rawTitle : String(rawTitle ?? '');
+                  let desc = t && t.description != null ? t.description : '';
+                  if (typeof desc !== 'string') {
+                    try { desc = String(desc); } catch { desc = ''; }
+                  }
+                  return { id, title: title.trim(), description: String(desc).trim() };
+                });
+    
             const data = {
                 version: this.version,
-                tasks: Array.isArray(tasks) ? tasks : [],
+                tasks: normalized,
                 lastUpdated: new Date().toISOString()
             };
             localStorage.setItem(this.key, JSON.stringify(data));
@@ -245,15 +277,40 @@ class StorageManager {
 
     /**
      * Migrate old data format to new version
-     * @param {Object} oldData - Old data format
-     * @returns {Array} Migrated tasks
+     * @param {Object|Array} oldData - Old data format
+     * @returns {Array} Migrated tasks (normalized to {id,title,description})
      */
     migrateData(oldData) {
-        if (Array.isArray(oldData)) {
-            // Old format was just an array of tasks
-            return oldData;
+        const legacy = Array.isArray(oldData)
+          ? oldData
+          : (oldData && Array.isArray(oldData.tasks) ? oldData.tasks : []);
+    
+        const normalized = (typeof window !== 'undefined' && typeof window.validateTasks === 'function')
+          ? window.validateTasks(legacy)
+          : legacy.map((t) => {
+              const id = t && t.id != null ? t.id : null;
+              const rawTitle = t && (t.title != null ? t.title : t.text);
+              const title = typeof rawTitle === 'string' ? rawTitle : String(rawTitle ?? '');
+              let desc = t && t.description != null ? t.description : '';
+              if (typeof desc !== 'string') {
+                try { desc = String(desc); } catch { desc = ''; }
+              }
+              return { id, title: title.trim(), description: String(desc).trim() };
+            });
+    
+        // Persist migrated shape under current version to avoid repeated migration
+        try {
+          const data = {
+            version: this.version,
+            tasks: normalized,
+            lastUpdated: new Date().toISOString()
+          };
+          localStorage.setItem(this.key, JSON.stringify(data));
+        } catch (_) {
+          // best-effort; non-fatal
         }
-        return [];
+    
+        return normalized;
     }
 
     /**
