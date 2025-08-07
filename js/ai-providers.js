@@ -10,7 +10,7 @@
 const AI_CFG = Object.freeze({
   MODEL: "gpt-4o-mini-2024-07-18",
   BASE_URL: "https://api.llm7.io/v1",
-  API_KEY: "unused" // LLM7 is keyless; kept for interface compatibility
+  API_KEY: "+7WA+v1Gdie9whBlV2tUOjCE8SyF7Klaawfp0Obh4P5r07vx9hYHGSwzvr1Qpxvnnqvo5cBrQ9OXnAVOjb46CsejOp97rxqob722N87LgJrgdzg8kI3GPmEwpLat" // LLM7 is keyless; kept for interface compatibility
 });
 const AI_LOG = true;
 
