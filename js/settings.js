@@ -256,41 +256,12 @@ class SettingsManager {
           }
         });
       }
-
+ 
       // Achievements chime toggle (optional subtle audio)
       if (!utilitiesContainer.querySelector('#achvChimeToggle')) {
-        const row = document.createElement('div');
-        row.className = 'settings-row';
-        row.innerHTML = `
-          <label class="settings-checkbox" style="display:flex;align-items:center;gap:10px;">
-            <input type="checkbox" id="achvChimeToggle" />
-            <span class="checkmark" aria-hidden="true"></span>
-            <span>Achievements chime</span>
-          </label>
-        `;
-        utilitiesContainer.appendChild(row);
-
-        const toggle = row.querySelector('#achvChimeToggle');
-        // Initialize from persisted settings (fallback true for premium feedback)
-        const persisted = storageManager.getSettings ? storageManager.getSettings() : {};
-        this.achievementsChime = typeof persisted.achievementsChime === 'boolean' ? persisted.achievementsChime : false;
-        toggle.checked = !!this.achievementsChime;
-
-        toggle.addEventListener('change', () => {
-          this.achievementsChime = toggle.checked;
-          this.saveSettings();
-          // Notify others
-          if (typeof bus !== 'undefined') {
-            bus.dispatchEvent(new CustomEvent('settingsChanged', { detail: { achievementsChime: this.achievementsChime } }));
-          }
-          // Soft feedback if chime enabled and sound allowed
-          try {
-            const notMuted = typeof audioManager === 'undefined' ? true : !(audioManager.getGlobalMute && audioManager.getGlobalMute());
-            if (this.achievementsChime && notMuted && typeof audioManager !== 'undefined') {
-              audioManager.play('toggle');
-            }
-          } catch (_) {}
-        });
+        // Build the row via helper, but do NOT append it to the DOM per request.
+        const row = this.createAchievementsChimeRow();
+        // utilitiesContainer.appendChild(row); // intentionally disabled: do not add to HTML
       }
     }
   }
@@ -1009,8 +980,48 @@ class SettingsManager {
       achievementsChime: !!this.achievementsChime
     };
   }
+ 
+  /**
+   * Construct the Achievements Chime row and wire its behavior, without appending to DOM.
+   * @returns {HTMLDivElement} The constructed row element (not attached).
+   */
+  createAchievementsChimeRow() {
+    const row = document.createElement('div');
+    row.className = 'settings-row';
+    row.innerHTML = `
+      <label class="settings-checkbox" style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="achvChimeToggle" />
+        <span class="checkmark" aria-hidden="true"></span>
+        <span>Achievements chime</span>
+      </label>
+    `;
+ 
+    const toggle = row.querySelector('#achvChimeToggle');
+    // Initialize from persisted settings (fallback false)
+    const persisted = storageManager.getSettings ? storageManager.getSettings() : {};
+    this.achievementsChime = typeof persisted.achievementsChime === 'boolean' ? persisted.achievementsChime : false;
+    toggle.checked = !!this.achievementsChime;
+ 
+    toggle.addEventListener('change', () => {
+      this.achievementsChime = toggle.checked;
+      this.saveSettings();
+      // Notify others
+      if (typeof bus !== 'undefined') {
+        bus.dispatchEvent(new CustomEvent('settingsChanged', { detail: { achievementsChime: this.achievementsChime } }));
+      }
+      // Soft feedback if chime enabled and sound allowed
+      try {
+        const notMuted = typeof audioManager === 'undefined' ? true : !(audioManager.getGlobalMute && audioManager.getGlobalMute());
+        if (this.achievementsChime && notMuted && typeof audioManager !== 'undefined') {
+          audioManager.play('toggle');
+        }
+      } catch (_) {}
+    });
+ 
+    return row;
+  }
 }
-
+ 
 // Create global settings manager
 const settingsManager = new SettingsManager();
 
