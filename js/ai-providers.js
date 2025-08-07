@@ -79,9 +79,11 @@ class LLM7Provider {
           "- id must match the input id (same value and type).",
           "- title: Remove ALL noise and filler words aggressively. Preserve only the core meaning and essential information. Cut out: um, uh, like, just, really, basically, actually, sort of, kind of, unnecessary adverbs, redundant phrases. Keep the exact same meaning, just cleaner and more direct.",
           "- description: Aggressively eliminate noise, repetition, and irrelevant content. Preserve all substantive information, steps, and context. Remove: filler words, redundant explanations, obvious statements, irrelevant details, wordiness. Keep all meaningful content while making it concise and clear.",
+          "- If the description becomes empty after refactoring, return the original description instead of an empty string.",
           "- Your primary goal is noise removal and clarity improvement. The output must contain the exact same meaning and information as the input, but stripped of all non-essential elements.",
+          "- If the description is empty, even after refactoring, and there is a relevant title that is absolutely not noise, generate a description.",
           "- Do not include any additional keys or metadata.",
-          "- Output must be a single JSON object only (no explanations or code fences)."
+          "- Output must be a single JSON object only (no explanations or code fences).",
         ].join("\n"),
       };
 
@@ -261,7 +263,8 @@ class AIProviders {
       description: toStringSafe(todo && todo.description)
     };
 
-    return await this.provider.refactorTodo(safe);
+    const result = await this.provider.refactorTodo(safe);
+    return result;
   }
 
   // Keep method for API parity; use a deterministic local cleanup as fallback

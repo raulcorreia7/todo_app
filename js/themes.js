@@ -13,10 +13,19 @@ class ThemeManager {
                 accent: '#0f3460',
                 text: '#e94560',
                 glow: '#e94560',
+                glowPrimary: '#ff6b6b',
+                glowSecondary: '#ffd93d',
+                dangerGlow: '#e94560',
+                dangerShadow: 'rgba(233, 69, 96, 0.5)',
+                particleColor: '#ffffff',
+                particleCount: 60,
+                particleSize: 4,
                 shadow: 'rgba(233, 69, 96, 0.3)',
                 glass: 'rgba(26, 26, 46, 0.8)',
                 border: 'rgba(233, 69, 96, 0.2)',
-                tags: ['dark', 'cool']
+                tags: ['dark', 'cool'],
+                animationDuration: '2.5s',
+                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
             },
             ivory: {
                 name: 'Ivory',
@@ -25,10 +34,19 @@ class ThemeManager {
                 accent: '#dee2e6',
                 text: '#495057',
                 glow: '#6c757d',
+                glowPrimary: '#ffd700',
+                glowSecondary: '#ff8c00',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#8b4513',
+                particleCount: 35,
+                particleSize: 2,
                 shadow: 'rgba(108, 117, 125, 0.2)',
                 glass: 'rgba(248, 249, 250, 0.8)',
                 border: 'rgba(108, 117, 125, 0.1)',
-                tags: ['light']
+                tags: ['light'],
+                animationDuration: '2.0s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             champagne: {
                 name: 'Champagne',
@@ -37,10 +55,19 @@ class ThemeManager {
                 accent: '#daa520',
                 text: '#8b4513',
                 glow: '#daa520',
+                glowPrimary: '#ffd700',
+                glowSecondary: '#ff8c00',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#8b4513',
+                particleCount: 40,
+                particleSize: 3,
                 shadow: 'rgba(218, 165, 32, 0.3)',
                 glass: 'rgba(255, 248, 231, 0.8)',
                 border: 'rgba(218, 165, 32, 0.2)',
-                tags: ['light', 'warm']
+                tags: ['light', 'warm'],
+                animationDuration: '2.2s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             graphite: {
                 name: 'Graphite',
@@ -49,10 +76,19 @@ class ThemeManager {
                 accent: '#666666',
                 text: '#cccccc',
                 glow: '#999999',
+                glowPrimary: '#c0c0c0',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.5)',
+                particleColor: '#ffffff',
+                particleCount: 50,
+                particleSize: 3,
                 shadow: 'rgba(153, 153, 153, 0.3)',
                 glass: 'rgba(44, 44, 44, 0.8)',
                 border: 'rgba(153, 153, 153, 0.2)',
-                tags: ['dark']
+                tags: ['dark'],
+                animationDuration: '2.3s',
+                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
             },
             aurora: {
                 name: 'Aurora',
@@ -61,10 +97,19 @@ class ThemeManager {
                 accent: '#16213e',
                 text: '#00ff88',
                 glow: '#00ff88',
+                glowPrimary: '#00ff88',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#ff4757',
+                dangerShadow: 'rgba(255, 71, 87, 0.5)',
+                particleColor: '#00ff88',
+                particleCount: 70,
+                particleSize: 5,
                 shadow: 'rgba(0, 255, 136, 0.3)',
                 glass: 'rgba(10, 10, 10, 0.8)',
                 border: 'rgba(0, 255, 136, 0.2)',
-                tags: ['dark', 'cool']
+                tags: ['dark', 'cool'],
+                animationDuration: '3.0s',
+                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
             },
             arcticSky: {
                 name: 'Arctic Sky',
@@ -73,10 +118,19 @@ class ThemeManager {
                 accent: '#4da6ff',
                 text: '#2c5282',
                 glow: '#4da6ff',
+                glowPrimary: '#4da6ff',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#4da6ff',
+                particleCount: 45,
+                particleSize: 3,
                 shadow: 'rgba(77, 166, 255, 0.3)',
                 glass: 'rgba(230, 242, 255, 0.7)',
                 border: 'rgba(77, 166, 255, 0.2)',
-                tags: ['light', 'cool']
+                tags: ['light', 'cool'],
+                animationDuration: '2.4s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             emerald: {
                 name: 'Emerald',
@@ -85,10 +139,19 @@ class ThemeManager {
                 accent: '#2ecc71',
                 text: '#e8f8f5',
                 glow: '#2ecc71',
+                glowPrimary: '#2ecc71',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#e74c3c',
+                dangerShadow: 'rgba(231, 76, 60, 0.5)',
+                particleColor: '#2ecc71',
+                particleCount: 55,
+                particleSize: 4,
                 shadow: 'rgba(46, 204, 113, 0.3)',
                 glass: 'rgba(12, 74, 62, 0.8)',
                 border: 'rgba(46, 204, 113, 0.2)',
-                tags: ['dark', 'cool']
+                tags: ['dark', 'cool'],
+                animationDuration: '2.6s',
+                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
             },
             sakura: {
                 name: 'Sakura',
@@ -97,10 +160,19 @@ class ThemeManager {
                 accent: '#ffb3ba',
                 text: '#8b2635',
                 glow: '#ff69b4',
+                glowPrimary: '#ff69b4',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#ff69b4',
+                particleCount: 40,
+                particleSize: 3,
                 shadow: 'rgba(255, 105, 180, 0.3)',
                 glass: 'rgba(255, 245, 245, 0.8)',
                 border: 'rgba(255, 105, 180, 0.2)',
-                tags: ['light', 'warm']
+                tags: ['light', 'warm'],
+                animationDuration: '2.1s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             pearl: {
                 name: 'Pearl',
@@ -109,10 +181,19 @@ class ThemeManager {
                 accent: '#d4af37',
                 text: '#4b0082',
                 glow: '#d4af37',
+                glowPrimary: '#ffd700',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#4b0082',
+                particleCount: 38,
+                particleSize: 2,
                 shadow: 'rgba(212, 175, 55, 0.3)',
                 glass: 'rgba(248, 248, 255, 0.8)',
                 border: 'rgba(212, 175, 55, 0.2)',
-                tags: ['light', 'warm']
+                tags: ['light', 'warm'],
+                animationDuration: '2.0s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             mint: {
                 name: 'Mint',
@@ -121,10 +202,19 @@ class ThemeManager {
                 accent: '#2dd4bf',
                 text: '#006400',
                 glow: '#2dd4bf',
+                glowPrimary: '#2dd4bf',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#2dd4bf',
+                particleCount: 42,
+                particleSize: 3,
                 shadow: 'rgba(45, 212, 191, 0.3)',
                 glass: 'rgba(240, 255, 240, 0.8)',
                 border: 'rgba(45, 212, 191, 0.2)',
-                tags: ['light', 'cool']
+                tags: ['light', 'cool'],
+                animationDuration: '2.2s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             coral: {
                 name: 'Coral',
@@ -133,10 +223,19 @@ class ThemeManager {
                 accent: '#ff7f50',
                 text: '#8b0000',
                 glow: '#ff7f50',
+                glowPrimary: '#ff7f50',
+                glowSecondary: '#ffd700',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#ff7f50',
+                particleCount: 41,
+                particleSize: 3,
                 shadow: 'rgba(255, 127, 80, 0.3)',
                 glass: 'rgba(255, 240, 245, 0.8)',
                 border: 'rgba(255, 127, 80, 0.2)',
-                tags: ['light', 'warm']
+                tags: ['light', 'warm'],
+                animationDuration: '2.1s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             frost: {
                 name: 'Frost',
@@ -145,10 +244,19 @@ class ThemeManager {
                 accent: '#22d3ee',
                 text: '#000080',
                 glow: '#22d3ee',
+                glowPrimary: '#22d3ee',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#22d3ee',
+                particleCount: 44,
+                particleSize: 3,
                 shadow: 'rgba(34, 211, 238, 0.3)',
                 glass: 'rgba(240, 248, 255, 0.8)',
                 border: 'rgba(34, 211, 238, 0.2)',
-                tags: ['light', 'cool']
+                tags: ['light', 'cool'],
+                animationDuration: '2.3s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             lavender: {
                 name: 'Lavender',
@@ -157,10 +265,19 @@ class ThemeManager {
                 accent: '#a78bfa',
                 text: '#4b0082',
                 glow: '#a78bfa',
+                glowPrimary: '#a78bfa',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#dc3545',
+                dangerShadow: 'rgba(220, 53, 69, 0.4)',
+                particleColor: '#a78bfa',
+                particleCount: 43,
+                particleSize: 3,
                 shadow: 'rgba(167, 139, 250, 0.3)',
                 glass: 'rgba(245, 243, 255, 0.8)',
                 border: 'rgba(167, 139, 250, 0.2)',
-                tags: ['light', 'cool']
+                tags: ['light', 'cool'],
+                animationDuration: '2.2s',
+                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
             },
             amethyst: {
                 name: 'Amethyst',
@@ -169,10 +286,19 @@ class ThemeManager {
                 accent: '#9b59b6',
                 text: '#dda0dd',
                 glow: '#9b59b6',
+                glowPrimary: '#9b59b6',
+                glowSecondary: '#ffffff',
+                dangerGlow: '#e74c3c',
+                dangerShadow: 'rgba(231, 76, 60, 0.5)',
+                particleColor: '#9b59b6',
+                particleCount: 58,
+                particleSize: 4,
                 shadow: 'rgba(155, 89, 182, 0.3)',
                 glass: 'rgba(75, 0, 130, 0.8)',
                 border: 'rgba(155, 89, 182, 0.2)',
-                tags: ['dark', 'cool']
+                tags: ['dark', 'cool'],
+                animationDuration: '2.7s',
+                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
             },
             burgundy: {
                 name: 'Burgundy',
@@ -181,10 +307,19 @@ class ThemeManager {
                 accent: '#dc143c',
                 text: '#f8f8ff',
                 glow: '#dc143c',
+                glowPrimary: '#dc143c',
+                glowSecondary: '#ffd700',
+                dangerGlow: '#dc143c',
+                dangerShadow: 'rgba(220, 20, 60, 0.5)',
+                particleColor: '#ffffff',
+                particleCount: 52,
+                particleSize: 4,
                 shadow: 'rgba(220, 20, 60, 0.3)',
                 glass: 'rgba(128, 0, 32, 0.8)',
                 border: 'rgba(220, 20, 60, 0.2)',
-                tags: ['dark', 'warm']
+                tags: ['dark', 'warm'],
+                animationDuration: '2.4s',
+                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
             }
         };
 
@@ -282,9 +417,18 @@ class ThemeManager {
         root.style.setProperty('--accent-color', theme.accent);
         root.style.setProperty('--color-text', theme.text);
         root.style.setProperty('--glow-color', theme.glow);
+        root.style.setProperty('--glow-primary', theme.glowPrimary);
+        root.style.setProperty('--glow-secondary', theme.glowSecondary);
+        root.style.setProperty('--danger-glow-color', theme.dangerGlow);
+        root.style.setProperty('--danger-glow-shadow', theme.dangerShadow);
+        root.style.setProperty('--particle-color', theme.particleColor);
+        root.style.setProperty('--particle-count', theme.particleCount);
+        root.style.setProperty('--particle-size', theme.particleSize);
         root.style.setProperty('--shadow-color', theme.shadow);
         root.style.setProperty('--color-glass', theme.glass);
         root.style.setProperty('--color-border', theme.border);
+        root.style.setProperty('--animation-duration', theme.animationDuration);
+        root.style.setProperty('--animation-easing', theme.animationEasing);
 
         // Remove old theme classes to avoid conflicts
         document.body.className = document.body.className.replace(/theme-\w+/g, '');

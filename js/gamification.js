@@ -30,6 +30,14 @@ class GamificationManager {
   init() {
     this.loadData();
     this.isInitialized = true;
+    
+    // Register reset handler for resetting achievements
+    if (typeof bus !== 'undefined' && typeof bus.registerResetHandler === 'function') {
+      bus.registerResetHandler(() => {
+        console.log('[Gamification] Reset handler called - resetting achievements');
+        this.resetStats();
+      });
+    }
   }
 
   loadData() {
@@ -42,6 +50,10 @@ class GamificationManager {
     this.firstTaskCreated = data.firstTaskCreated || false;
     this.firstTaskDeleted = data.firstTaskDeleted || false;
     this.firstTaskEdited = data.firstTaskEdited || false;
+    
+    // Load AI statistics
+    this.aiEditCount = data.aiEditCount || 0;
+    this.aiWordsEdited = data.aiWordsEdited || 0;
   }
 
   saveData() {
@@ -51,7 +63,9 @@ class GamificationManager {
       dailyStats: this.dailyStats,
       firstTaskCreated: this.firstTaskCreated,
       firstTaskDeleted: this.firstTaskDeleted,
-      firstTaskEdited: this.firstTaskEdited
+      firstTaskEdited: this.firstTaskEdited,
+      aiEditCount: this.aiEditCount,
+      aiWordsEdited: this.aiWordsEdited
     });
   }
 
@@ -128,6 +142,18 @@ class GamificationManager {
       this.unlockAchievement(AchievementDefinitions.getAchievementById('first_task_deleted'));
     }
     
+    this.saveData();
+    this.updateUI();
+  }
+
+  incrementAIEditCount() {
+    this.aiEditCount++;
+    this.saveData();
+    this.updateUI();
+  }
+
+  incrementAIWordsEdited(wordCount) {
+    this.aiWordsEdited += wordCount;
     this.saveData();
     this.updateUI();
   }
@@ -262,6 +288,11 @@ class GamificationManager {
       'plus-circle': '➕',
       'trash-2': '🗑️',
       'edit': '✏️',
+      // AI achievement icons
+      'ai-bronze': '🥉',
+      'ai-silver': '🥈',
+      'ai-gold': '🥇',
+      'divine-editor': '✨',
       // Add emojis from affirmations.js
       '🌱': '🌱',
       '🍃': '🍃',
@@ -315,13 +346,11 @@ class GamificationManager {
       }
     } catch (_) {}
     
-    // Gentle fade out + tiny idle delay between queue items for cadence
+    // Gentle fade out
     setTimeout(() => {
       notification.classList.add('exit');
       setTimeout(() => {
         notification.remove();
-        // Idle delay (150–250ms) before next item to avoid stacked feel
-        setTimeout(() => this.processAchievementQueue(), 180);
       }, 600);
     }, 2500);
   }
@@ -335,8 +364,17 @@ class GamificationManager {
     this.isProcessingQueue = true;
     const achievement = this.achievementQueue.shift();
     
-    // Show the achievement
+    // Show the achievement with individual processing
     await this.showZenAchievementNotification(achievement);
+    
+    // Add a small delay before processing the next achievement to ensure they trigger individually
+    if (this.achievementQueue.length > 0) {
+      setTimeout(() => {
+        this.processAchievementQueue();
+      }, 2000); // 2000ms delay between achievements
+    } else {
+      this.isProcessingQueue = false;
+    }
   }
 
   /**
@@ -431,6 +469,8 @@ class GamificationManager {
     this.firstTaskEdited = false;
     this.achievementQueue = [];
     this.isProcessingQueue = false;
+    this.aiEditCount = 0;
+    this.aiWordsEdited = 0;
     this.saveData();
     this.updateUI();
   }
@@ -450,7 +490,9 @@ class GamificationManager {
       firstTaskCreated: this.firstTaskCreated,
       firstTaskDeleted: this.firstTaskDeleted,
       firstTaskEdited: this.firstTaskEdited,
-      dailyCompleted: this.checkDailyCompletion()
+      dailyCompleted: this.checkDailyCompletion(),
+      aiEditCount: this.aiEditCount,
+      aiWordsEdited: this.aiWordsEdited
     };
   }
 }

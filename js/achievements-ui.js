@@ -84,9 +84,26 @@ class AchievementsUI {
       return Math.min((stats.dailyStats.edited / 3) * 100, 100);
     }
     
+    // For AI achievements
+    if (achievement.id === 'ai_editor_bronze') {
+      return Math.min((stats.aiEditCount / 1) * 100, 100);
+    }
+    
+    if (achievement.id === 'ai_editor_silver') {
+      return Math.min((stats.aiEditCount / 5) * 100, 100);
+    }
+    
+    if (achievement.id === 'ai_editor_gold') {
+      return Math.min((stats.aiEditCount / 20) * 100, 100);
+    }
+    
+    if (achievement.id === 'divine_editor') {
+      return Math.min((stats.aiWordsEdited / 50) * 100, 100);
+    }
+    
     // For boolean achievements
-    if (achievement.id === 'first_task_created' || 
-        achievement.id === 'first_task_deleted' || 
+    if (achievement.id === 'first_task_created' ||
+        achievement.id === 'first_task_deleted' ||
         achievement.id === 'first_task_edited' ||
         achievement.id === 'daily_harmony') {
       return stats[achievement.id.replace('first_task_', '').replace('daily_', '')] ? 100 : 0;
@@ -165,6 +182,11 @@ class AchievementsUI {
         'plus-circle': '➕',
         'trash-2': '🗑️',
         'edit': '✏️',
+        // AI achievement icons
+        'ai-bronze': '🥉',
+        'ai-silver': '🥈',
+        'ai-gold': '🥇',
+        'divine-editor': '✨',
         // Add emojis from affirmations.js
         '🌱': '🌱',
         '🍃': '🍃',

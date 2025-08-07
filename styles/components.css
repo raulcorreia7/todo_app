@@ -1,4 +1,4 @@
-/* Luxury Components - Premium Design System */
+l/* Luxury Components - Premium Design System */
 
 /* ===== Lucide Icons (base) ===== */
 .lucide-icon {
@@ -496,6 +496,7 @@
   transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
+  
 }
 
 .task-item:hover {
@@ -932,6 +933,149 @@
   }
 }
 
+/* Task item states - maintain visual consistency */
+.task-item.completed,
+.task-item.disabled {
+  opacity: 0.7;
+}
+
+/* Task content styling in completed/disabled state */
+.task-item.completed .task-title,
+.task-item.disabled .task-title {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Task-action buttons maintain consistent appearance */
+.task-actions .task-edit-btn,
+.task-actions .task-delete-btn,
+.task-actions .task-ai-refactor-btn,
+.task-actions .ai-refactor-btn {
+  transition: all var(--transition-normal);
+}
+
+/* Delete button remains fully functional in all states */
+.task-actions .task-delete-btn {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Delete button overrides for any disabled state */
+.task-actions .task-delete-btn:disabled,
+.task-actions .task-delete-btn.disabled,
+.task-actions .task-delete-btn[disabled] {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Delete button functionality in completed/disabled containers */
+.task-item.completed .task-actions .task-delete-btn,
+.task-item.disabled .task-actions .task-delete-btn {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Edit and AI refactor buttons are disabled in completed/disabled task containers */
+.task-item.completed .task-actions .task-edit-btn,
+.task-item.completed .task-actions .task-ai-refactor-btn,
+.task-item.completed .task-actions .ai-refactor-btn,
+.task-item.disabled .task-actions .task-edit-btn,
+.task-item.disabled .task-actions .task-ai-refactor-btn,
+.task-item.disabled .task-actions .ai-refactor-btn {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: grayscale(100%) !important;
+  -webkit-filter: grayscale(100%) !important;
+}
+
+/* Override individual disabled states for edit/AI buttons */
+.task-actions .task-edit-btn:disabled,
+.task-actions .task-edit-btn.disabled,
+.task-actions .task-edit-btn[disabled],
+.task-actions .task-ai-refactor-btn:disabled,
+.task-actions .task-ai-refactor-btn.disabled,
+.task-actions .task-ai-refactor-btn[disabled],
+.task-actions .ai-refactor-btn:disabled,
+.task-actions .ai-refactor-btn.disabled,
+.task-actions .ai-refactor-btn[disabled] {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: grayscale(100%) !important;
+  -webkit-filter: grayscale(100%) !important;
+}
+
+/* Hover states - delete button maintains hover, edit/AI buttons don't respond */
+.task-item.completed .task-actions .task-delete-btn:hover,
+.task-item.disabled .task-actions .task-delete-btn:hover {
+  opacity: 1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 0 20px var(--glow-color) !important;
+}
+
+/* Edit and AI refactor buttons show no hover response in completed/disabled state */
+.task-item.completed .task-actions .task-edit-btn:hover,
+.task-item.completed .task-actions .task-ai-refactor-btn:hover,
+.task-item.completed .task-actions .ai-refactor-btn:hover,
+.task-item.disabled .task-actions .task-edit-btn:hover,
+.task-item.disabled .task-actions .task-ai-refactor-btn:hover,
+.task-item.disabled .task-actions .ai-refactor-btn:hover {
+  opacity: 0.4 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Legacy delete button rules - keep for backward compatibility */
+.task-delete-btn {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+}
+
+/* Override any disabled state styling for delete buttons */
+.task-delete-btn:disabled,
+.task-delete-btn.disabled,
+.task-delete-btn[disabled] {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+/* Ensure delete buttons work in completed task containers */
+.task-completed .task-delete-btn {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+}
+
 .task-ai-refactor-btn::before {
   content: '';
   position: absolute;
@@ -1184,40 +1328,6 @@
   }
 }
 
-/* Success effect after AI refactor */
-.ai-refactor-btn.success {
-  animation: aiSuccess 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.ai-refactor-btn.success::before {
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.6), transparent);
-  animation: aiSuccessGlow 0.6s ease-out;
-}
-
-@keyframes aiSuccess {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes aiSuccessGlow {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(2);
-  }
-}
 
 /* Header Statistics Display */
 .header-stats {
@@ -1379,69 +1489,6 @@
   min-width: 80px;
 }
 
-/* Save button success animation */
-.task-save.success {
-  position: relative;
-  overflow: hidden;
-  animation: saveSuccess 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.task-save.success::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.6), transparent);
-  transform: translate(-50%, -50%);
-  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: -1;
-}
-
-.task-save.success::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-  text-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
-  animation: checkmark 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s forwards;
-}
-
-@keyframes saveSuccess {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 4px 15px var(--shadow-color);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 4px 15px var(--shadow-color);
-  }
-}
-
-@keyframes checkmark {
-  0% {
-    transform: translate(-50%, -50%) scale(0) rotate(-45deg);
-    opacity: 0;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2) rotate(-10deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
 
 .luxury-input:focus,
 .luxury-textarea:focus {
@@ -1684,40 +1731,6 @@
   transform: translateY(0) scale(0.95);
 }
 
-/* Success effect after save */
-.edit-actions .btn--primary.success {
-  animation: saveSuccess 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.edit-actions .btn--primary.success::before {
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.6), transparent);
-  animation: saveSuccessGlow 0.6s ease-out;
-}
-
-@keyframes saveSuccess {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes saveSuccessGlow {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(2);
-  }
-}
 
 /* Responsive adjustments for edit mode */
 @media (max-width: 768px) {
@@ -1761,10 +1774,6 @@
   opacity: 0.9;
 }
 
-.char-counter.success {
-  color: #10b981;
-  opacity: 0.9;
-}
 
 /* Edit Actions Styling */
 .edit-actions {
@@ -1900,10 +1909,6 @@
   opacity: 0.9;
 }
 
-.char-counter.success {
-  color: #10b981;
-  opacity: 0.9;
-}
 
 /* Reverse order of edit actions - Cancel then Save */
 .edit-actions .btn:first-child {
@@ -5578,4 +5583,32 @@ diff>
 
 .ai-refactor-loading .ai-refactor-btn {
   opacity: 0.6;
+}
+
+/* Task completion button states - only disable edit and AI-edit buttons */
+.task-completed .task-edit-btn,
+.task-completed .task-ai-refactor-btn,
+.task-completed .edit-btn,
+.task-completed .ai-edit-btn {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+  transition: opacity 0.3s ease;
+}
+
+.task-completed .task-edit-btn:hover,
+.task-completed .task-ai-refactor-btn:hover,
+.task-completed .edit-btn:hover,
+.task-completed .ai-edit-btn:hover {
+  opacity: 0.8;
+  transform: none;
+  box-shadow: none;
+}
+
+.task-completed .task-edit-btn:disabled,
+.task-completed .task-ai-refactor-btn:disabled,
+.task-completed .edit-btn:disabled,
+.task-completed .ai-edit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

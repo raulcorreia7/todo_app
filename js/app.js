@@ -326,10 +326,18 @@ class TodoApp {
     document.addEventListener("change", (e) => {
       // Handle checkbox changes
       if (e.target.matches('.task-checkbox input[type="checkbox"]')) {
+        console.log(`[DEBUG] Checkbox change event detected for task ${e.target.dataset.taskId}`);
+        console.log(`[DEBUG] Checkbox checked state: ${e.target.checked}`);
+        console.log(`[DEBUG] Event target:`, e.target);
+        console.log(`[DEBUG] Event target dataset:`, e.target.dataset);
+        
         e.preventDefault();
         const taskId = e.target.dataset.taskId;
         if (taskId) {
+          console.log(`[DEBUG] Calling toggleTask for task ${taskId}`);
           this.toggleTask(taskId);
+        } else {
+          console.warn(`[DEBUG] No taskId found in checkbox dataset`);
         }
       }
     });
@@ -410,29 +418,34 @@ class TodoApp {
                 String(result.id) === String(todo.id) &&
                 typeof result.title === "string" &&
                 result.title.trim().length > 0 &&
-                typeof result.description === "string" &&
-                result.description.trim().length > 0;
+                typeof result.description === "string";
 
               if (!valid) {
                 console.error("[AI] Invalid AI refactor result from per-task button; unchanged", { result, debugId });
                 return;
               }
-              // Update task - create a new object reference to ensure re-render
-              const updatedTask = {
-                ...todo,
-                text: result.title.trim(),
-                description: result.description,
-                updatedAt: new Date().toISOString()
+
+              // Check if AI returned empty description and preserve original if so
+              const aiDescription = result.description.trim();
+              const originalDescription = todo.description || "";
+              const finalDescription = aiDescription.length > 0 ? aiDescription : originalDescription;
+              
+              if (aiDescription.length === 0 && originalDescription.length > 0) {
+                console.log("[AI] AI returned empty description, preserving original", {
+                  taskId: todo.id,
+                  originalLength: originalDescription.length,
+                  debugId
+                });
+              }
+              // Use description directly as string with fallback (variables already declared above)
+              // Create modified result with fallback description
+              const resultWithFallback = {
+                ...result,
+                description: finalDescription
               };
               
-              // Replace the task in the array
-              const taskIndex = this.tasks.findIndex(t => String(t.id) === String(todo.id));
-              if (taskIndex !== -1) {
-                this.tasks[taskIndex] = updatedTask;
-              }
-
-              this.saveTasks();
-              this.forceRender();
+              // Process the AI refactor response with all side effects
+              await this.processAIRefactorResponse(resultWithFallback, todo, debugId);
             } catch (err) {
               console.error("[AI] Per-task refactor failed", err);
             } finally {
@@ -633,6 +646,7 @@ class TodoApp {
         btn.classList.add("hint");
         setTimeout(() => btn.classList.remove("hint"), 3000);
       });
+
     }
 
     // Keyboard shortcuts
@@ -754,19 +768,53 @@ class TodoApp {
     if (oldTaskCount !== newTaskCount) {
       this.markDirty("load");
     }
+
+    // Initialize button states for all loaded tasks - but only if DOM is ready
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      this.tasks.forEach(task => {
+        this.updateTaskButtonStates(task.id, task.completed);
+        
+        // Ensure delete button is always enabled for all loaded tasks
+        const taskElement = document.querySelector(`[data-task-id="${task.id}"]`);
+        if (taskElement) {
+          const deleteBtn = taskElement.querySelector('.task-delete-btn');
+          if (deleteBtn) {
+            console.log(`[DEBUG] Force-enabling delete button for loaded task ${task.id}`);
+            deleteBtn.disabled = false;
+            deleteBtn.removeAttribute('disabled');
+            deleteBtn.classList.remove('disabled');
+          }
+        }
+      });
+    } else {
+      // If DOM isn't ready, defer button state updates until render
+      console.log(`[DEBUG] Deferring button state updates until DOM is ready`);
+    }
   }
 
   /**
    * Save tasks to storage
    */
   saveTasks() {
-    storageManager.setTasks(this.tasks);
+    console.log(`[DEBUG] saveTasks called with ${this.tasks.length} tasks`);
+    console.log(`[DEBUG] Tasks to save:`, this.tasks.map(t => ({ id: t.id, completed: t.completed, text: t.text })));
+    
+    try {
+      storageManager.setTasks(this.tasks);
+      console.log(`[DEBUG] Tasks saved to storage successfully`);
+    } catch (error) {
+      console.error(`[DEBUG] Failed to save tasks to storage:`, error);
+    }
+    
     this.markDirty("save");
 
     // Dispatch tasksUpdated event to notify other components
     if (typeof bus !== "undefined") {
+      console.log(`[DEBUG] Dispatching tasksUpdated event via bus`);
       bus.dispatchEvent(new CustomEvent("tasksUpdated"));
     }
+    
+    console.log(`[DEBUG] saveTasks completed`);
   }
 
   /**
@@ -929,16 +977,32 @@ class TodoApp {
    * Toggle task completion
    */
   toggleTask(id) {
+    console.log(`[DEBUG] toggleTask called for task ${id}`);
+    console.log(`[DEBUG] Current tasks array:`, this.tasks.map(t => ({ id: t.id, completed: t.completed })));
+    
     const task = this.tasks.find((t) => t.id === id);
     if (!task) {
       console.warn(`Task with ID ${id} not found`);
       return;
     }
 
+    const wasCompleted = task.completed;
     task.completed = !task.completed;
     task.updatedAt = new Date().toISOString();
 
+    console.log(`[DEBUG] Task ${id} state changed from ${wasCompleted} to ${task.completed}`);
+    console.log(`[DEBUG] Task object after toggle:`, { id: task.id, completed: task.completed, text: task.text });
+
+    // Update button states immediately - but only if DOM is ready
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      console.log(`[DEBUG] Calling updateTaskButtonStates for task ${id} with completed=${task.completed}`);
+      this.updateTaskButtonStates(id, task.completed);
+    } else {
+      console.log(`[DEBUG] Deferring button state update until DOM is ready`);
+    }
+
     this.saveTasks();
+    console.log(`[DEBUG] Tasks saved after toggle. Current state:`, this.tasks.map(t => ({ id: t.id, completed: t.completed })));
 
     // Play sound
     if (typeof audioManager !== "undefined") {
@@ -953,6 +1017,114 @@ class TodoApp {
         gamificationManager.completeTask();
       }
     }
+  }
+
+  /**
+   * Update button states for a task based on completion status
+   * @param {string} taskId - The ID of the task
+   * @param {boolean} isCompleted - Whether the task is completed
+   */
+  updateTaskButtonStates(taskId, isCompleted) {
+    console.log(`[DEBUG] updateTaskButtonStates called for task ${taskId}, isCompleted: ${isCompleted}`);
+    console.log(`[DEBUG] Call stack:`, new Error().stack);
+    
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (!taskElement) {
+      console.log(`[DEBUG] Task element not found for task ${taskId}`);
+      return;
+    }
+    
+    console.log(`[DEBUG] Task element found:`, taskElement);
+    console.log(`[DEBUG] Task element classes before update: ${taskElement.className}`);
+    
+    const editBtn = taskElement.querySelector('.task-edit-btn');
+    const aiBtn = taskElement.querySelector('.task-ai-refactor-btn');
+    
+    console.log(`[DEBUG] Found buttons - editBtn: ${!!editBtn}, aiBtn: ${!!aiBtn}`);
+    
+    // Check if buttons already have the correct state to avoid unnecessary updates
+    const editBtnNeedsUpdate = editBtn && (isCompleted && !editBtn.disabled) || (!isCompleted && editBtn.disabled);
+    const aiBtnNeedsUpdate = aiBtn && (isCompleted && !aiBtn.disabled) || (!isCompleted && aiBtn.disabled);
+    
+    if (editBtnNeedsUpdate || aiBtnNeedsUpdate) {
+      console.log(`[DEBUG] Buttons need update - editBtn: ${editBtnNeedsUpdate}, aiBtn: ${aiBtnNeedsUpdate}`);
+      
+      if (isCompleted) {
+        // Disable buttons when task is completed
+        console.log(`[DEBUG] Disabling buttons for completed task ${taskId}`);
+        if (editBtn) {
+          console.log(`[DEBUG] Disabling edit button - before: disabled=${editBtn.disabled}, classes=${editBtn.className}`);
+          editBtn.disabled = true;
+          editBtn.classList.add('disabled');
+          console.log(`[DEBUG] After disabling - disabled=${editBtn.disabled}, classes=${editBtn.className}`);
+        }
+        if (aiBtn) {
+          console.log(`[DEBUG] Disabling AI button - before: disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
+          aiBtn.disabled = true;
+          aiBtn.classList.add('disabled');
+          console.log(`[DEBUG] After disabling - disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
+        }
+        taskElement.classList.add('task-completed');
+        console.log(`[DEBUG] Added task-completed class to task element`);
+      } else {
+        // Enable buttons when task is reopened
+        console.log(`[DEBUG] Enabling buttons for reopened task ${taskId}`);
+        if (editBtn) {
+          console.log(`[DEBUG] Enabling edit button - before: disabled=${editBtn.disabled}, classes=${editBtn.className}`);
+          editBtn.disabled = false;
+          editBtn.classList.remove('disabled');
+          console.log(`[DEBUG] After enabling - disabled=${editBtn.disabled}, classes=${editBtn.className}`);
+        }
+        if (aiBtn) {
+          console.log(`[DEBUG] Enabling AI button - before: disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
+          aiBtn.disabled = false;
+          aiBtn.classList.remove('disabled');
+          console.log(`[DEBUG] After enabling - disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
+        }
+        taskElement.classList.remove('task-completed');
+        console.log(`[DEBUG] Removed task-completed class from task element`);
+      }
+    } else {
+      console.log(`[DEBUG] Buttons already in correct state, skipping update`);
+    }
+    
+    // Ensure delete button is always enabled regardless of task state
+    const deleteBtn = taskElement.querySelector('.task-delete-btn');
+    if (deleteBtn) {
+      console.log(`[DEBUG] Ensuring delete button is enabled for task ${taskId}`);
+      deleteBtn.disabled = false;
+      deleteBtn.removeAttribute('disabled');
+      deleteBtn.classList.remove('disabled');
+      
+      // Force re-render of delete button
+      deleteBtn.style.display = 'inline-flex';
+      deleteBtn.style.opacity = '1';
+      deleteBtn.style.pointerEvents = 'auto';
+      deleteBtn.style.cursor = 'pointer';
+    }
+    
+    // Log final state
+    setTimeout(() => {
+      console.log(`[DEBUG] Final state check for task ${taskId}:`);
+      console.log(`- Task element classes: ${taskElement.className}`);
+      if (editBtn) {
+        console.log(`- Edit button: disabled=${editBtn.disabled}, classes=${editBtn.className}`);
+      }
+      if (aiBtn) {
+        console.log(`- AI button: disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
+      }
+      
+      // Check delete button state specifically
+      if (deleteBtn) {
+        console.log(`- Delete button: disabled=${deleteBtn.disabled}, classes=${deleteBtn.className}`);
+        console.log(`- Delete button has disabled attr: ${deleteBtn.hasAttribute('disabled')}`);
+        console.log(`- Delete button computed style:`, {
+          opacity: window.getComputedStyle(deleteBtn).opacity,
+          cursor: window.getComputedStyle(deleteBtn).cursor,
+          pointerEvents: window.getComputedStyle(deleteBtn).pointerEvents
+        });
+      }
+    }, 100);
   }
 
   /**
@@ -1177,9 +1349,9 @@ class TodoApp {
     this.tasks = [];
     this.saveTasks();
 
-    // Update gamification
-    if (typeof gamificationManager !== "undefined") {
-      gamificationManager.resetStats();
+    // Update gamification via event-driven approach
+    if (typeof bus !== "undefined") {
+      bus.dispatchEvent(new CustomEvent('resetToDefaults'));
     }
   }
 
@@ -1201,18 +1373,26 @@ class TodoApp {
    * Render the todo list
    */
   render() {
+    console.log(`[DEBUG] render() called`);
+    console.log(`[DEBUG] Current tasks in render:`, this.tasks.map(t => ({ id: t.id, completed: t.completed, text: t.text })));
+    
     const taskList = document.getElementById("taskList");
     const emptyState = document.getElementById("emptyState");
 
-    if (!taskList || !emptyState) return;
+    if (!taskList || !emptyState) {
+      console.log(`[DEBUG] render() failed: taskList or emptyState not found`);
+      return;
+    }
 
     const filteredTasks = this.getFilteredTasks();
+    console.log(`[DEBUG] Filtered tasks (${this.currentFilter}):`, filteredTasks.map(t => ({ id: t.id, completed: t.completed, text: t.text })));
 
     // Legacy task count element no longer present
     // Statistics are now handled by the header-stats component
 
     // Show/hide empty state
     if (filteredTasks.length === 0) {
+      console.log(`[DEBUG] No filtered tasks, showing empty state`);
       emptyState.style.display = "block";
       taskList.innerHTML = "";
       return;
@@ -1221,9 +1401,12 @@ class TodoApp {
     emptyState.style.display = "none";
 
     // Render tasks
-    taskList.innerHTML = filteredTasks
+    const renderedHTML = filteredTasks
       .map((task) => this.renderTask(task))
       .join("");
+    
+    console.log(`[DEBUG] Rendering ${filteredTasks.length} tasks with HTML length: ${renderedHTML.length}`);
+    taskList.innerHTML = renderedHTML;
 
     // Setup task event listeners
     this.setupTaskEventListeners();
@@ -1232,8 +1415,30 @@ class TodoApp {
     try {
       if (window.lucide && typeof lucide.createIcons === "function") {
         lucide.createIcons();
+        console.log(`[DEBUG] Lucide icons hydrated`);
       }
     } catch (_) {}
+
+    // Update button states for all rendered tasks to ensure proper disabled/enabled state
+    console.log(`[DEBUG] render() completed, updating button states for ${filteredTasks.length} tasks`);
+    filteredTasks.forEach(task => {
+      console.log(`[DEBUG] Updating button state for task ${task.id}: completed=${task.completed}`);
+      this.updateTaskButtonStates(task.id, task.completed);
+      
+      // Ensure delete button is always enabled for all tasks
+      const taskElement = document.querySelector(`[data-task-id="${task.id}"]`);
+      if (taskElement) {
+        const deleteBtn = taskElement.querySelector('.task-delete-btn');
+        if (deleteBtn) {
+          console.log(`[DEBUG] Force-enabling delete button for task ${task.id} during render`);
+          deleteBtn.disabled = false;
+          deleteBtn.removeAttribute('disabled');
+          deleteBtn.classList.remove('disabled');
+        }
+      }
+    });
+    
+    console.log(`[DEBUG] render() completed successfully`);
   }
 
   /**
@@ -1480,13 +1685,25 @@ class TodoApp {
             String(result.id) === String(todo.id) &&
             typeof result.title === "string" &&
             result.title.trim().length > 0 &&
-            typeof result.description === "string" &&
-            result.description.trim().length > 0;
+            typeof result.description === "string";
 
           if (!valid) {
             console.error("[AI] Invalid AI refactor result; leaving todo unchanged", { result, debugId });
             console.timeEnd("RefactorFlow");
             return;
+          }
+
+          // Check if AI returned empty description and preserve original if so
+          const aiDescription = result.description.trim();
+          const originalDescription = todo.description || "";
+          const finalDescription = aiDescription.length > 0 ? aiDescription : originalDescription;
+          
+          if (aiDescription.length === 0 && originalDescription.length > 0) {
+            console.log("[AI] AI returned empty description, preserving original", {
+              taskId: todo.id,
+              originalLength: originalDescription.length,
+              debugId
+            });
           }
 
           var target = this.tasks.find((t) => String(t.id) === String(todo.id));
@@ -1496,10 +1713,10 @@ class TodoApp {
             return;
           }
 
-          // Use description directly as string
+          // Use description directly as string with fallback (variables already declared above)
           const normalized = (typeof window !== "undefined" && typeof window.validateTask === "function")
-            ? window.validateTask({ id: target.id, title: result.title, description: result.description })
-            : { id: target.id, title: String(result.title || ""), description: String(result.description || "") };
+            ? window.validateTask({ id: target.id, title: result.title, description: finalDescription })
+            : { id: target.id, title: String(result.title || ""), description: String(finalDescription || "") };
 
           // Create a new object reference to ensure re-render
           const updatedTask = {
@@ -1515,9 +1732,9 @@ class TodoApp {
             this.tasks[taskIndex] = updatedTask;
           }
 
-          this.saveTasks();
-          this.forceRender();
-          console.timeLog("RefactorFlow", "Step 5: State updated and render triggered");
+          // Process the AI refactor response with all side effects
+          await this.processAIRefactorResponse(result, target, debugId);
+          console.timeLog("RefactorFlow", "Step 5: State updated and side effects processed");
         } catch (e) {
           console.error("[CRITICAL] Handler crash:", e);
         }
@@ -1973,6 +2190,128 @@ class TodoApp {
 
     // Initial check
     updateFooterVisibility();
+  }
+
+  /**
+   * Process AI refactor response and handle all side effects
+   * @param {Object} result - The AI refactor result
+   * @param {Object} originalTask - The original task that was refactored
+   * @param {string} debugId - Debug ID for tracking
+   */
+  async processAIRefactorResponse(result, originalTask, debugId) {
+    console.log("[AI] Processing refactor response with side effects", { debugId });
+    
+    // Validate the result
+    const valid = result &&
+      String(result.id) === String(originalTask.id) &&
+      typeof result.title === "string" &&
+      result.title.trim().length > 0 &&
+      typeof result.description === "string";
+
+    if (!valid) {
+      console.error("[AI] Invalid AI refactor result; leaving task unchanged", { result, debugId });
+      return false;
+    }
+
+    // Check if AI returned empty description and preserve original if so
+    const aiDescription = result.description.trim();
+    const originalDescription = originalTask.description || "";
+    const finalDescription = aiDescription.length > 0 ? aiDescription : originalDescription;
+    
+    if (aiDescription.length === 0 && originalDescription.length > 0) {
+      console.log("[AI] AI returned empty description, preserving original", {
+        taskId: originalTask.id,
+        originalLength: originalDescription.length,
+        debugId
+      });
+    }
+
+    // Find the target task in our tasks array
+    const target = this.tasks.find((t) => String(t.id) === String(originalTask.id));
+    if (!target) {
+      console.error("[AI] Original task disappeared before update", { debugId });
+      return false;
+    }
+
+    // Normalize the result using validation if available
+    const normalized = (typeof window !== "undefined" && typeof window.validateTask === "function")
+      ? window.validateTask({ id: target.id, title: result.title, description: result.description })
+      : { id: target.id, title: String(result.title || ""), description: String(result.description || "") };
+
+    // Create a new object reference to ensure re-render
+    const updatedTask = {
+      ...target,
+      text: String(normalized.title || "").trim(),
+      description: String(normalized.description || "").trim(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Replace the task in the array
+    const taskIndex = this.tasks.findIndex(t => String(t.id) === String(target.id));
+    if (taskIndex !== -1) {
+      this.tasks[taskIndex] = updatedTask;
+    }
+
+    // Save tasks and trigger re-render
+    this.saveTasks();
+    this.forceRender();
+
+    // Trigger nebula pulse animation
+    const applyNebulaEffect = (element) => {
+      if (!element) return;
+      
+      // Remove any existing animation classes first
+      element.classList.remove('ai-edit-nebula');
+      
+      // Force a reflow to ensure the animation starts fresh
+      void element.offsetWidth;
+      
+      // Add the animation class
+      element.classList.add('ai-edit-nebula');
+      
+      // Clean up after animation completes
+      const onAnimationEnd = () => {
+        element.classList.remove('ai-edit-nebula');
+        element.removeEventListener('animationend', onAnimationEnd);
+      };
+      
+      element.addEventListener('animationend', onAnimationEnd);
+      
+      // Fallback cleanup in case animationend doesn't fire
+      setTimeout(() => {
+        element.classList.remove('ai-edit-nebula');
+      }, 1500); // Maximum animation duration + buffer
+    };
+
+    // Find the task element and apply nebula effect after DOM is fully updated
+    setTimeout(() => {
+      const taskElement = document.querySelector(`[data-task-id="${target.id}"]`);
+      if (taskElement) {
+        applyNebulaEffect(taskElement);
+      }
+    }, 100);
+
+    // Play AI edit sound
+    if (typeof audioManager !== "undefined" && typeof audioManager.generateAIEditSound === "function") {
+      try {
+        await audioManager.generateAIEditSound();
+      } catch (soundError) {
+        console.warn("[AI] Failed to play AI edit sound:", soundError);
+      }
+    }
+
+    // Update gamification (this will handle achievement checking internally)
+    if (typeof gamificationManager !== "undefined" && typeof gamificationManager.incrementAIEditCount === "function") {
+      gamificationManager.incrementAIEditCount();
+    }
+    if (typeof gamificationManager !== "undefined" && typeof gamificationManager.incrementAIWordsEdited === "function") {
+      const originalWords = (originalTask.text || originalTask.title || "").split(/\s+/).length;
+      const newWords = (result.title || "").split(/\s+/).length;
+      gamificationManager.incrementAIWordsEdited(originalWords, newWords);
+    }
+
+    console.log("[AI] AI refactor response processed successfully", { debugId });
+    return true;
   }
 }
 

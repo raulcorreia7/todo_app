@@ -169,6 +169,11 @@
   --stat-label-color: rgba(255, 255, 255, 0.6);
   --stat-value-color: var(--color-text);
   --stat-label-hover-opacity: 1;
+
+  /* Enhanced stat text contrast for light themes */
+  --stat-label-color-light: rgba(0, 0, 0, 0.7);
+  --stat-value-color-light: var(--color-text);
+  --stat-label-hover-opacity-light: 1;
   --stat-value-hover-opacity: 1;
 
   --stat-progress-ring-bg-color: color-mix(in oklab, var(--color-border) 60%, transparent);
@@ -241,6 +246,12 @@
   --danger-highlight: rgba(199, 44, 72, 0.5);
 }
 
+/* Light theme specific stat text variables */
+[data-theme="ivory"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
+}
+
 [data-theme="champagne"] {
   --color-primary: #fff8e7;
   --color-secondary: #f3e5ab;
@@ -273,6 +284,12 @@
   --danger-highlight: rgba(178, 34, 34, 0.4);
 }
 
+/* Light theme specific stat text variables */
+[data-theme="champagne"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
+}
+
 [data-theme="graphite"] {
   --color-primary: #2c2c2c;
   --color-secondary: #404040;
@@ -303,6 +320,12 @@
   --danger-shadow-ghost: rgba(255, 99, 71, 0.15);
   --danger-shadow-ghost-hover: rgba(255, 99, 71, 0.25);
   --danger-highlight: rgba(255, 99, 71, 0.4);
+}
+
+/* Light theme specific stat text variables */
+[data-theme="pearl"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
 }
 
 [data-theme="aurora"] {
@@ -369,6 +392,12 @@
   --danger-highlight: rgba(219, 112, 147, 0.4);
 }
 
+/* Light theme specific stat text variables */
+[data-theme="sakura"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
+}
+
 
 [data-theme="arcticSky"] {
   --color-primary: #e6f2ff;
@@ -402,6 +431,18 @@
   --danger-highlight: rgba(220, 53, 69, 0.4);
 }
 
+/* Light theme specific stat text variables */
+[data-theme="mint"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
+}
+
+/* Light theme specific stat text variables */
+[data-theme="arcticSky"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
+}
+
 /* Font Classes */
 .font-inter {
   font-family: var(--font-inter);
@@ -409,6 +450,12 @@
 
 .font-playfair {
   font-family: var(--font-playfair);
+}
+
+/* Light theme specific stat text variables */
+[data-theme="coral"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
 }
 
 .font-sf {
@@ -422,6 +469,18 @@
     --space-lg: 1rem;
     --space-xl: 1.5rem;
   }
+}
+
+/* Light theme specific stat text variables */
+[data-theme="lavender"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
+}
+
+/* Light theme specific stat text variables */
+[data-theme="frost"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
 }
 
 /* Generic Tooltip */

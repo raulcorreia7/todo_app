@@ -19,6 +19,15 @@ class StorageManager {
     init() {
         this.isInitialized = true;
         this.settingsLoaded = this.checkLocalStorageAccess();
+        
+        // Register reset handler for clearing tasks
+        if (typeof bus !== 'undefined' && typeof bus.registerResetHandler === 'function') {
+            bus.registerResetHandler(() => {
+                console.log('[Storage] Reset handler called - clearing all tasks');
+                this.clearAllTasks();
+            });
+        }
+        
         return true;
     }
 
@@ -74,7 +83,12 @@ class StorageManager {
                   if (typeof desc !== 'string') {
                     try { desc = String(desc); } catch { desc = ''; }
                   }
-                  return { id, title: title.trim(), description: String(desc).trim() };
+                  return {
+                    id,
+                    title: title.trim(),
+                    description: String(desc).trim(),
+                    completed: t && t.completed != null ? t.completed : false
+                  };
                 });
     
             // Return normalized minimal objects (id,title,description)
@@ -106,7 +120,12 @@ class StorageManager {
                   if (typeof desc !== 'string') {
                     try { desc = String(desc); } catch { desc = ''; }
                   }
-                  return { id, title: title.trim(), description: String(desc).trim() };
+                  return {
+                    id,
+                    title: title.trim(),
+                    description: String(desc).trim(),
+                    completed: t && t.completed != null ? t.completed : false
+                  };
                 });
     
             const data = {
@@ -118,6 +137,31 @@ class StorageManager {
             return true;
         } catch (error) {
             console.warn('Failed to save tasks to storage:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Clear all tasks from storage
+     * @returns {boolean} Whether the operation succeeded
+     */
+    clearAllTasks() {
+        if (!this.isReady()) return false;
+        
+        try {
+            // Get the current data structure
+            const data = localStorage.getItem(this.key);
+            if (data) {
+                const parsed = JSON.parse(data);
+                // Clear tasks array but preserve other data
+                parsed.tasks = [];
+                parsed.lastUpdated = new Date().toISOString();
+                localStorage.setItem(this.key, JSON.stringify(parsed));
+            }
+            console.log('[Storage] All tasks cleared successfully');
+            return true;
+        } catch (error) {
+            console.warn('Failed to clear tasks from storage:', error);
             return false;
         }
     }
@@ -177,6 +221,22 @@ class StorageManager {
             console.warn('Failed to load stats:', error);
             return this.getDefaultStats();
         }
+    }
+
+    /**
+     * Get statistics data
+     * @returns {Object} Statistics data
+     */
+    getStatistics() {
+      return this.getStats();
+    }
+
+    /**
+     * Set statistics data
+     * @param {Object} stats - Statistics data
+     */
+    setStatistics(stats) {
+      return this.saveStats(stats);
     }
 
     /**
@@ -268,7 +328,7 @@ class StorageManager {
         return {
             theme: 'emerald',
             darkMode: true,
-            soundEnabled: false,
+            soundEnabled: true,
             volume: 50,
             animations: true,
             font: 'inter'
@@ -295,7 +355,12 @@ class StorageManager {
               if (typeof desc !== 'string') {
                 try { desc = String(desc); } catch { desc = ''; }
               }
-              return { id, title: title.trim(), description: String(desc).trim() };
+              return {
+                id,
+                title: title.trim(),
+                description: String(desc).trim(),
+                completed: t && t.completed != null ? t.completed : false
+              };
             });
     
         // Persist migrated shape under current version to avoid repeated migration

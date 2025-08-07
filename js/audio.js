@@ -676,9 +676,11 @@ class AudioManager {
   }
 
   /**
-   * Play victory sound - simple basic sound
+   * Play victory sound with configurable volume and duration scaling
+   * @param {number} volumeScale - Volume scaling factor (default: 1)
+   * @param {number} durationScale - Duration scaling factor (default: 1)
    */
-  playVictory() {
+  playVictory(volumeScale = 1, durationScale = 1) {
     const now = this.audioContext.currentTime;
 
     // Main frequencies for the victory fanfare
@@ -691,16 +693,16 @@ class AudioManager {
       oscillator.type = 'sine';
       oscillator.frequency.value = freq;
 
-      const startTime = now + (index * 0.2);
+      const startTime = now + (index * 0.2 * durationScale);
       gainNode.gain.setValueAtTime(0, startTime);
-      gainNode.gain.linearRampToValueAtTime(0.18, startTime + 0.09);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.72);
+      gainNode.gain.linearRampToValueAtTime(0.18 * volumeScale, startTime + 0.09 * durationScale);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.72 * durationScale);
 
       oscillator.connect(gainNode);
       gainNode.connect(this.masterGain);
 
       oscillator.start(startTime);
-      oscillator.stop(startTime + 0.8);
+      oscillator.stop(startTime + 0.8 * durationScale);
     });
   }
 
@@ -780,9 +782,11 @@ class AudioManager {
   }
 
   /**
-   * Play reward sound when reaching maximum step with harmonic evolution
+   * Play reward sound with configurable volume and duration scaling
+   * @param {number} volumeScale - Volume scaling factor (default: 1)
+   * @param {number} durationScale - Duration scaling factor (default: 1)
    */
-  playRewardSound() {
+  playRewardSound(volumeScale = 1, durationScale = 1) {
     const now = this.audioContext.currentTime;
 
     // Create a subtle but satisfying reward sound
@@ -796,41 +800,23 @@ class AudioManager {
 
       // Use sine wave for a pure, gentle sound
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(freq, now + index * 0.08);
+      oscillator.frequency.setValueAtTime(freq, now + index * 0.08 * durationScale);
 
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(1200, now);
       filter.Q.setValueAtTime(3, now);
 
-      gainNode.gain.setValueAtTime(0, now + index * 0.08);
-      gainNode.gain.linearRampToValueAtTime(0.08, now + index * 0.08 + 0.03);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.4);
+      gainNode.gain.setValueAtTime(0, now + index * 0.08 * durationScale);
+      gainNode.gain.linearRampToValueAtTime(0.08 * volumeScale, now + index * 0.08 * durationScale + 0.03 * durationScale);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 * durationScale + 0.4 * durationScale);
 
       oscillator.connect(filter);
       filter.connect(gainNode);
       gainNode.connect(this.masterGain);
 
-      oscillator.start(now + index * 0.08);
-      oscillator.stop(now + index * 0.08 + 0.4);
+      oscillator.start(now + index * 0.08 * durationScale);
+      oscillator.stop(now + index * 0.08 * durationScale + 0.4 * durationScale);
     });
-
-    // Add a very subtle "shimmer" effect
-    const shimmerOsc = this.audioContext.createOscillator();
-    const shimmerGain = this.audioContext.createGain();
-
-    shimmerOsc.type = 'sine';
-    shimmerOsc.frequency.setValueAtTime(1500, now);
-    shimmerOsc.frequency.exponentialRampToValueAtTime(2500, now + 0.3);
-
-    shimmerGain.gain.setValueAtTime(0, now);
-    shimmerGain.gain.linearRampToValueAtTime(0.018, now + 0.045);
-    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-
-    shimmerOsc.connect(shimmerGain);
-    shimmerGain.connect(this.masterGain);
-
-    shimmerOsc.start(now);
-    shimmerOsc.stop(now + 0.3);
   }
 
   /**
@@ -875,12 +861,43 @@ class AudioManager {
     }
     this.currentStep = Math.floor(Math.random() * this.maxSteps);
   }
+
+  /**
+   * Generate AI edit feedback using existing victory sound with reduced parameters
+   * Uses the victory sound system for consistency but with subtle adjustments
+   */
+  async generateAIEditSound() {
+    // If globally muted, skip generating WebAudio nodes to save CPU
+    if (this.globalMuted === true) {
+      return;
+    }
+
+    // Initialize audio on first user interaction
+    if (!this.audioInitialized) {
+      await this.initializeAudio();
+    }
+
+    if (!this.isReady()) {
+      console.warn('Audio not ready. Please initialize audio first.');
+      return;
+    }
+
+    try {
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+      
+      // Use existing victory sound with reduced volume/duration for subtlety
+      this.playVictory(0.4, 1.3); // 4% volume, 15% duration
+    } catch (error) {
+      console.warn('Failed to play AI edit sound:', error);
+    }
+  }
 }
 
 // Create global audio manager
 const audioManager = new AudioManager();
 
-// Export for debugging
-if (window.DEV) {
-  window.audioManager = audioManager;
-}
+// Export for debugging and public use
+window.audioManager = audioManager;
+

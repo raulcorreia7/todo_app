@@ -60,11 +60,35 @@
 .modal.active .modal-content {
   transform: scale(1);
   /* Soft breathing glow effect */
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.25),
     0 0 0 1px var(--color-border),
     0 0 20px var(--glow-color);
   animation: softBreathingGlow 4s ease-in-out infinite;
+}
+
+/* Danger modal glow - red-based for dangerous actions */
+.modal.danger.active .modal-content {
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px var(--color-border),
+    0 0 20px var(--danger-glow-color);
+  animation: softBreathingGlowDanger 4s ease-in-out infinite;
+}
+
+@keyframes softBreathingGlowDanger {
+  0%, 100% {
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.25),
+      0 0 0 1px var(--color-border),
+      0 0 20px var(--danger-glow-color);
+  }
+  50% {
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.25),
+      0 0 0 1px var(--color-border),
+      0 0 30px var(--danger-glow-color);
+  }
 }
 
 @keyframes softBreathingGlow {
@@ -355,12 +379,12 @@
 /* Enhanced modal border glow on delete */
 .modal.deleting .modal-content {
   border-color: var(--accent-color);
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.25),
     0 0 0 1px var(--accent-color),
-    0 0 40px var(--danger-shadow),
+    0 0 40px var(--danger-glow-shadow),
     0 0 60px var(--accent-color),
-    0 0 80px var(--danger-shadow);
+    0 0 80px var(--danger-glow-shadow);
 }
 
 /* Default modal glow - enhanced for better visibility */
@@ -385,14 +409,16 @@
   }
 }
 
-/* Delete modal styling - same as regular modal */
+/* Delete modal styling with theme-adaptive danger glow */
 .modal.delete-modal.active .modal-content {
-  animation: none;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px var(--danger-border),
+    0 0 20px var(--danger-glow-color);
 }
 
-/* Delete modal header - same as regular modal */
 .modal.delete-modal .modal-header::after {
-  background: linear-gradient(90deg, transparent, var(--glow-color), transparent);
+  background: linear-gradient(90deg, transparent, var(--danger-glow-color), transparent);
   opacity: 0.3;
 }
 
@@ -404,10 +430,10 @@
 
 /* Outer modal glow effect - fade out animation */
 .modal.deleting {
-  box-shadow: 
+  box-shadow:
     0 0 240px var(--danger-text),
-    0 0 480px var(--danger-shadow),
-    0 0 720px var(--danger-shadow),
+    0 0 480px var(--danger-glow-shadow),
+    0 0 720px var(--danger-glow-shadow),
     inset 0 0 150px rgba(255, 255, 255, 0.12);
     
   /* Add a fade out/breathe out animation */
@@ -416,26 +442,26 @@
 
 @keyframes glowFadeOut {
   0% {
-    box-shadow: 
+    box-shadow:
       0 0 240px var(--danger-text),
-      0 0 480px var(--danger-shadow),
-      0 0 720px var(--danger-shadow),
+      0 0 480px var(--danger-glow-shadow),
+      0 0 720px var(--danger-glow-shadow),
       inset 0 0 150px rgba(255, 255, 255, 0.12);
     opacity: 1;
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 300px var(--danger-text),
-      0 0 600px var(--danger-shadow),
-      0 0 900px var(--danger-shadow),
+      0 0 600px var(--danger-glow-shadow),
+      0 0 900px var(--danger-glow-shadow),
       inset 0 0 180px rgba(255, 255, 255, 0.15);
     opacity: 0.9;
   }
   100% {
-    box-shadow: 
+    box-shadow:
       0 0 360px var(--danger-text),
-      0 0 720px var(--danger-shadow),
-      0 0 1080px var(--danger-shadow),
+      0 0 720px var(--danger-glow-shadow),
+      0 0 1080px var(--danger-glow-shadow),
       inset 0 0 210px rgba(255, 255, 255, 0.18);
     opacity: 0.7;
   }
@@ -450,7 +476,7 @@
   border-radius: 50%;
   opacity: 0;
   pointer-events: none;
-  box-shadow: 0 0 10px var(--danger-text);
+  box-shadow: 0 0 10px var(--danger-glow-color);
 }
 
 .modal.deleting .particle {
@@ -461,17 +487,17 @@
   0% {
     opacity: 1;
     transform: translate(0, 0) scale(1);
-    box-shadow: 0 0 10px var(--danger-text);
+    box-shadow: 0 0 10px var(--danger-glow-color);
   }
   50% {
     opacity: 0.8;
     transform: translate(calc(var(--tx) * 0.5), calc(var(--ty) * 0.5)) scale(0.7);
-    box-shadow: 0 0 15px var(--danger-text);
+    box-shadow: 0 0 15px var(--danger-glow-color);
   }
   100% {
     opacity: 0;
     transform: translate(var(--tx), var(--ty)) scale(0);
-    box-shadow: 0 0 5px var(--danger-text);
+    box-shadow: 0 0 5px var(--danger-glow-color);
   }
 }
 
@@ -484,7 +510,7 @@
   border-radius: 50%;
   opacity: 0;
   pointer-events: none;
-  box-shadow: 0 0 5px var(--danger-text);
+  box-shadow: 0 0 5px var(--danger-glow-color);
 }
 
 .modal.deleting .ambient-particle {

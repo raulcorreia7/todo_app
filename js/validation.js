@@ -124,6 +124,123 @@ class ValidationManager {
   }
 
   /**
+   * Test cases for validation
+   */
+  runValidationTests() {
+    const tests = [
+      {
+        name: "Title-only task validation",
+        input: { text: "Test task", description: "" },
+        expected: []
+      },
+      {
+        name: "Task with description validation",
+        input: { text: "Test task", description: "This is a description" },
+        expected: []
+      },
+      {
+        name: "Empty title validation",
+        input: { text: "", description: "Description" },
+        expected: ['Task title is required']
+      },
+      {
+        name: "Missing title validation",
+        input: { text: null, description: "Description" },
+        expected: ['Task title is required']
+      },
+      {
+        name: "Long title validation",
+        input: { text: "x".repeat(501), description: "" },
+        expected: ['Task title must be 500 characters or less']
+      },
+      {
+        name: "Long description validation",
+        input: { text: "Valid title", description: "x".repeat(501) },
+        expected: ['Task description must be 500 characters or less']
+      },
+      {
+        name: "Title-only task with whitespace",
+        input: { text: "  Task with spaces  ", description: "" },
+        expected: []
+      }
+    ];
+
+    console.log("[Validation Tests] Running", tests.length, "test cases...");
+    
+    let passed = 0;
+    let failed = 0;
+
+    tests.forEach((test, index) => {
+      const result = this.validateTaskInput(test.input.text, test.input.description);
+      const passedTest = JSON.stringify(result) === JSON.stringify(test.expected);
+      
+      if (passedTest) {
+        passed++;
+        console.log(`[Test ${index + 1}] ✓ ${test.name}`);
+      } else {
+        failed++;
+        console.error(`[Test ${index + 1}] ✗ ${test.name}`);
+        console.error(`  Expected: ${JSON.stringify(test.expected)}`);
+        console.error(`  Got: ${JSON.stringify(result)}`);
+      }
+    });
+
+    console.log(`[Validation Tests] Results: ${passed} passed, ${failed} failed`);
+    return { passed, failed, total: tests.length };
+  }
+
+  /**
+   * Test task normalization for title-only tasks
+   */
+  runNormalizationTests() {
+    const tests = [
+      {
+        name: "Title-only task normalization",
+        input: { id: "123", title: "Test task", description: undefined },
+        expected: { id: "123", title: "Test task", description: "" }
+      },
+      {
+        name: "Task with null description",
+        input: { id: "456", title: "Another task", description: null },
+        expected: { id: "456", title: "Another task", description: "" }
+      },
+      {
+        name: "Task with empty string description",
+        input: { id: "789", title: "Task with empty desc", description: "" },
+        expected: { id: "789", title: "Task with empty desc", description: "" }
+      },
+      {
+        name: "Task with non-string description",
+        input: { id: "101", title: "Task", description: 123 },
+        expected: { id: "101", title: "Task", description: "" }
+      }
+    ];
+
+    console.log("[Normalization Tests] Running", tests.length, "test cases...");
+    
+    let passed = 0;
+    let failed = 0;
+
+    tests.forEach((test, index) => {
+      const result = validateTask(test.input);
+      const passedTest = JSON.stringify(result) === JSON.stringify(test.expected);
+      
+      if (passedTest) {
+        passed++;
+        console.log(`[Test ${index + 1}] ✓ ${test.name}`);
+      } else {
+        failed++;
+        console.error(`[Test ${index + 1}] ✗ ${test.name}`);
+        console.error(`  Expected: ${JSON.stringify(test.expected)}`);
+        console.error(`  Got: ${JSON.stringify(result)}`);
+      }
+    });
+
+    console.log(`[Normalization Tests] Results: ${passed} passed, ${failed} failed`);
+    return { passed, failed, total: tests.length };
+  }
+
+  /**
    * Show validation error
    */
   showValidationError(message) {

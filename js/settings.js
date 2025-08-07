@@ -237,7 +237,7 @@ class SettingsManager {
                 .show({
                   title: 'Reset to Defaults',
                   message:
-                    'Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences.',
+                    'Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences, clear all tasks, and reset all statistics.',
                   cancelText: 'Cancel',
                   confirmText: 'Reset',
                   confirmStyle: 'danger'
@@ -251,7 +251,7 @@ class SettingsManager {
             console.warn('modalManager.show threw an error, falling back to window.confirm', err);
           }
 
-          if (window.confirm('Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences.')) {
+          if (window.confirm('Are you sure you want to reset to default settings? This will revert your theme, font, and sound preferences, clear all tasks, and reset all statistics.')) {
             doReset();
           }
         });
@@ -270,6 +270,14 @@ class SettingsManager {
    * Reset all settings back to default values with a single source of truth
    */
   resetToDefaults() {
+    console.log('[Settings] Reset to defaults initiated');
+    
+    // Dispatch resetToDefaults event to allow all subsystems to reset themselves
+    if (typeof bus !== 'undefined') {
+      console.log('[Settings] Dispatching resetToDefaults event');
+      bus.dispatchEvent(new CustomEvent('resetToDefaults'));
+    }
+
     // Pull defaults from storage manager
     const defaults = typeof storageManager !== 'undefined' && storageManager.getDefaultSettings
       ? storageManager.getDefaultSettings()
@@ -301,12 +309,25 @@ class SettingsManager {
 
     // Notify other components
     if (typeof bus !== 'undefined') {
-      bus.dispatchEvent(new CustomEvent('settingsChanged'));
+      bus.dispatchEvent(new CustomEvent('settingsChanged', {
+        detail: this.getSettings()
+      }));
+      
+      // Dispatch tasksUpdated event to ensure UI components reload/update
+      bus.dispatchEvent(new CustomEvent('tasksUpdated'));
+      
+      // Trigger reset handlers when resetToDefaults event is dispatched
+      bus.addEventListener('resetToDefaults', () => {
+        console.log('[Settings] Received resetToDefaults event, triggering reset handlers');
+        bus.triggerReset();
+      });
     }
 
     if (typeof audioManager !== 'undefined') {
       audioManager.play('settings');
     }
+    
+    console.log('[Settings] Reset to defaults completed');
   }
 
   updateVolumeIcon(icon, isEnabled) {

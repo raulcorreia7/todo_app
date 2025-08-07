@@ -6,6 +6,8 @@
 class StatisticsManager {
   constructor() {
     this.isInitialized = false;
+    this.aiEditCount = 0;
+    this.aiWordsEdited = 0;
     
     this.init();
   }
@@ -13,6 +15,14 @@ class StatisticsManager {
   init() {
     this.setupEventListeners();
     this.isInitialized = true;
+    
+    // Register reset handler for resetting statistics
+    if (typeof bus !== 'undefined' && typeof bus.registerResetHandler === 'function') {
+      bus.registerResetHandler(() => {
+        console.log('[Statistics] Reset handler called - resetting all statistics');
+        this.resetAllStats();
+      });
+    }
   }
 
   setupEventListeners() {
@@ -42,6 +52,57 @@ class StatisticsManager {
       if (karmaEl && gamificationManager.karmaPoints !== undefined) {
         karmaEl.textContent = gamificationManager.karmaPoints;
       }
+    }
+  }
+
+  incrementAIEditCount() {
+    this.aiEditCount++;
+    this.save();
+  }
+  
+  incrementAIWordsEdited(wordCount) {
+    this.aiWordsEdited += wordCount;
+    this.save();
+  }
+  
+  save() {
+    // Save AI statistics to storage
+    const existingData = storageManager.getStatistics() || {};
+    storageManager.setStatistics({
+      ...existingData,
+      aiEditCount: this.aiEditCount,
+      aiWordsEdited: this.aiWordsEdited
+    });
+  }
+  
+  load() {
+    // Load AI statistics from storage
+    const data = storageManager.getStatistics() || {};
+    this.aiEditCount = data.aiEditCount || 0;
+    this.aiWordsEdited = data.aiWordsEdited || 0;
+  }
+
+  /**
+   * Reset all statistics to default values
+   * @returns {boolean} Whether the operation succeeded
+   */
+  resetAllStats() {
+    try {
+      // Reset AI statistics
+      this.aiEditCount = 0;
+      this.aiWordsEdited = 0;
+      
+      // Reset storage statistics
+      storageManager.saveStats(storageManager.getDefaultStats());
+      
+      // Update UI
+      this.updateStatistics();
+      
+      console.log('[Statistics] All statistics reset successfully');
+      return true;
+    } catch (error) {
+      console.warn('Failed to reset statistics:', error);
+      return false;
     }
   }
 

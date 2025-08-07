@@ -67,6 +67,38 @@ const ACHIEVEMENTS = {
     icon: 'edit',
     condition: (stats) => stats.firstTaskEdited,
     conditionText: 'Edit your first task'
+  },
+  ai_editor_bronze: {
+    id: 'ai_editor_bronze',
+    name: 'Budding Insight',
+    description: 'Complete 1 AI edit',
+    icon: 'ai-bronze',
+    condition: (stats) => stats.aiEditCount >= 1,
+    conditionText: 'Complete 1 AI edit'
+  },
+  ai_editor_silver: {
+    id: 'ai_editor_silver',
+    name: 'Flourishing Clarity',
+    description: 'Complete 5 AI edits',
+    icon: 'ai-silver',
+    condition: (stats) => stats.aiEditCount >= 5,
+    conditionText: 'Complete 5 AI edits'
+  },
+  ai_editor_gold: {
+    id: 'ai_editor_gold',
+    name: 'Blossoming Wisdom',
+    description: 'Complete 20 AI edits',
+    icon: 'ai-gold',
+    condition: (stats) => stats.aiEditCount >= 20,
+    conditionText: 'Complete 20 AI edits'
+  },
+  divine_editor: {
+    id: 'divine_editor',
+    name: 'Luminous Expression',
+    description: 'Edit over 50 words with AI',
+    icon: 'divine-editor',
+    condition: (stats) => stats.aiWordsEdited >= 50,
+    conditionText: 'Edit 50 words with AI'
   }
 };
 
@@ -98,6 +130,11 @@ function renderAchievementIcon(iconName) {
     'plus-circle': '➕',
     'trash-2': '🗑️',
     'edit': '✏️',
+    // AI achievement icons
+    'ai-bronze': '🥉',
+    'ai-silver': '🥈',
+    'ai-gold': '🥇',
+    'divine-editor': '✨',
     // Add emojis from affirmations.js
     '🌱': '🌱',
     '🍃': '🍃',

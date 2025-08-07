@@ -7,6 +7,7 @@ class EventBus {
     constructor() {
         this.events = new Map();
         this.componentReady = new Map();
+        this.resetHandlers = [];
         this.isInitialized = false;
         // Debug flag to trace events in console. Toggle at runtime: bus.debug = true/false
         this.debug = false;
@@ -236,6 +237,35 @@ class EventBus {
 
             this.addEventListener('componentReady', handler);
         });
+    }
+
+    /**
+     * Register a reset handler function
+     * @param {Function} handler - Reset handler function to call when resetToDefaults event is triggered
+     */
+    registerResetHandler(handler) {
+        console.log('[Bus] Registering reset handler');
+        if (typeof handler !== 'function') {
+            console.warn('[Bus] Reset handler must be a function');
+            return;
+        }
+        this.resetHandlers.push(handler);
+    }
+
+    /**
+     * Trigger all registered reset handlers
+     */
+    triggerReset() {
+        console.log('[Bus] Triggering reset handlers, count:', this.resetHandlers.length);
+        this.resetHandlers.forEach((handler, index) => {
+            try {
+                console.log(`[Bus] Executing reset handler ${index + 1}/${this.resetHandlers.length}`);
+                handler();
+            } catch (error) {
+                console.error(`[Bus] Error in reset handler ${index + 1}:`, error);
+            }
+        });
+        console.log('[Bus] All reset handlers completed');
     }
 }
 
