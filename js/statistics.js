@@ -19,7 +19,6 @@ class StatisticsManager {
     // Register reset handler for resetting statistics
     if (typeof bus !== 'undefined' && typeof bus.registerResetHandler === 'function') {
       bus.registerResetHandler(() => {
-        console.log('[Statistics] Reset handler called - resetting all statistics');
         this.resetAllStats();
       });
     }
@@ -98,7 +97,6 @@ class StatisticsManager {
       // Update UI
       this.updateStatistics();
       
-      console.log('[Statistics] All statistics reset successfully');
       return true;
     } catch (error) {
       console.warn('Failed to reset statistics:', error);

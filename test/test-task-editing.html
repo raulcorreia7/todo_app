@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Editing Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/interactions.css">
+    <style>
+        body {
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .test-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .console-output {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #taskList {
+            margin: 20px 0;
+        }
+        .task-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Task Editing Feature Test</h1>
+        
+        <div class="test-section">
+            <h2>Test Controls</h2>
+            <div class="controls">
+                <button onclick="addTestTask()">Add Test Task</button>
+                <button onclick="clearConsole()">Clear Console</button>
+                <button onclick="testManualEdit()">Test Manual Edit</button>
+                <button onclick="testAIEdit()">Test AI Edit</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="testResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Console Output</h2>
+            <div id="consoleOutput" class="console-output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Current Tasks</h2>
+            <div id="taskList"></div>
+        </div>
+    </div>
+
+    <script src="js/bus.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let consoleOutput = [];
+        let testTaskId = null;
+
+        function logToConsole(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            consoleOutput.push(logEntry);
+            updateConsoleDisplay();
+        }
+
+        function updateConsoleDisplay() {
+            const consoleElement = document.getElementById('consoleOutput');
+            consoleElement.innerHTML = consoleOutput.join('<br>');
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleOutput = [];
+            updateConsoleDisplay();
+        }
+
+        function addTestResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result test-${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+            logToConsole(`TEST ${type.toUpperCase()}: ${message}`);
+        }
+
+        function addTestTask() {
+            if (window.todoApp && window.todoApp.addTask) {
+                const input = document.getElementById('newTaskInput');
+                if (input) {
+                    input.value = 'Test Task for Editing';
+                    const event = new Event('input', { bubbles: true });
+                    input.dispatchEvent(event);
+                    window.todoApp.addTask();
+                    addTestResult('Test task added successfully', 'success');
+                } else {
+                    addTestResult('New task input not found', 'error');
+                }
+            } else {
+                addTestResult('TodoApp not initialized', 'error');
+            }
+        }
+
+        function testManualEdit() {
+            if (!window.todoApp || !window.todoApp.tasks || window.todoApp.tasks.length === 0) {
+                addTestResult('No tasks available for testing manual edit', 'error');
+                return;
+            }
+
+            const task = window.todoApp.tasks[0];
+            testTaskId = task.id;
+            addTestResult(`Starting manual edit test for task: ${task.text}`, 'info');
+
+            // Start editing
+            window.todoApp.startEdit(task.id);
+            addTestResult(`Edit mode started for task ${task.id}`, 'success');
+
+            // Simulate Enter key press in the input field
+            setTimeout(() => {
+                const input = document.querySelector(`[data-edit-input="${task.id}"]`);
+                if (input) {
+                    const enterEvent = new KeyboardEvent('keydown', {
+                        key: 'Enter',
+                        code: 'Enter',
+                        keyCode: 13,
+                        which: 13,
+                        bubbles: true
+                    });
+                    input.dispatchEvent(enterEvent);
+                    addTestResult('Enter key pressed in edit input', 'success');
+                } else {
+                    addTestResult('Edit input not found', 'error');
+                }
+            }, 500);
+        }
+
+        function testAIEdit() {
+            if (!window.todoApp || !window.todoApp.tasks || window.todoApp.tasks.length === 0) {
+                addTestResult('No tasks available for testing AI edit', 'error');
+                return;
+            }
+
+            const task = window.todoApp.tasks[0];
+            addTestResult(`Starting AI edit test for task: ${task.text}`, 'info');
+
+            // Simulate AI edit by directly calling the processAIRefactorResponse method
+            const mockResult = {
+                id: task.id,
+                title: 'AI-Edited Task Title',
+                description: 'This was edited by AI'
+            };
+
+            window.todoApp.processAIRefactorResponse(mockResult, task, 'test-debug-id')
+                .then(success => {
+                    if (success) {
+                        addTestResult('AI edit processed successfully', 'success');
+                    } else {
+                        addTestResult('AI edit failed', 'error');
+                    }
+                })
+                .catch(error => {
+                    addTestResult(`AI edit error: ${error.message}`, 'error');
+                });
+        }
+
+        function updateTaskList() {
+            const taskListDiv = document.getElementById('taskList');
+            if (window.todoApp && window.todoApp.tasks) {
+                taskListDiv.innerHTML = window.todoApp.tasks.map(task => 
+                    `<div class="task-item">
+                        <strong>${task.text}</strong>
+                        ${task.description ? `<br><small>${task.description}</small>` : ''}
+                        <br><small>ID: ${task.id}, Dirty: ${task.isDirty}, Completed: ${task.completed}</small>
+                    </div>`
+                ).join('');
+            }
+        }
+
+        // Override console.log to capture our debug messages
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+            ).join(' ');
+            logToConsole(`CONSOLE: ${message}`);
+        };
+
+        // Monitor task changes
+        if (typeof bus !== 'undefined') {
+            bus.addEventListener('tasksUpdated', () => {
+                logToConsole('tasksUpdated event received');
+                updateTaskList();
+            });
+
+            bus.addEventListener('autoSaved', () => {
+                logToConsole('autoSaved event received');
+                addTestResult('Auto-save triggered', 'success');
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            logToConsole('Test page loaded');
+            addTestResult('Test page initialized successfully', 'success');
+            
+            // Wait for app to initialize
+            setTimeout(() => {
+                if (window.todoApp && window.todoApp.isInitialized) {
+                    addTestResult('TodoApp initialized successfully', 'success');
+                    updateTaskList();
+                } else {
+                    addTestResult('TodoApp not initialized', 'error');
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

@@ -85,7 +85,6 @@ class MusicManager {
     // App ready only ensures initialization and UI enablement; no auto-play
     const attachAppReadyListener = () => {
       if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
-        console.log('[MusicManager] Bus available, setting up event listeners');
         const onAppReady = () => {
           // Do nothing but keep initialized; allow UI to be enabled.
           if (typeof bus.removeEventListener === 'function') {
@@ -95,9 +94,7 @@ class MusicManager {
         bus.addEventListener('app:ready', onAppReady);
         
         // Listen for centerbar:ready event before setting up other listeners
-        console.log('[MusicManager] Adding centerbar:ready event listener');
         bus.addEventListener('centerbar:ready', (e) => {
-          console.log('[MusicManager] Center bar is ready, setting up event listeners');
           // Now that center bar is ready, set up the actual event listeners
           this.setupCenterBarEventListeners();
         });
@@ -113,11 +110,9 @@ class MusicManager {
               this.applyGlobalMute(!detail.soundEnabled);
             }
           } catch (err) {
-            console.warn('[MusicManager] settingsChanged listener failed', err);
           }
         });
       } else {
-        console.warn('[MusicManager] Bus not available, retrying...');
         setTimeout(attachAppReadyListener, 100);
       }
     };
@@ -148,7 +143,6 @@ class MusicManager {
         this.gapMaxSeconds = this.GAP_MAX_DEFAULT;
       }
     } catch (e) {
-      console.warn('MusicManager: failed to read settings, using defaults', e);
       this.targetVolume = this.DEFAULT_VOLUME;
       this.isMuted = this.DEFAULT_MUTED;
       this.gapEnabled = this.GAP_ENABLED_DEFAULT;
@@ -165,7 +159,6 @@ class MusicManager {
       localStorage.setItem('music.gapMinSeconds', String(this.gapMinSeconds));
       localStorage.setItem('music.gapMaxSeconds', String(this.gapMaxSeconds));
     } catch (e) {
-      console.warn('MusicManager: failed to persist settings', e);
     }
   }
 
@@ -249,16 +242,13 @@ class MusicManager {
    * Setup event listeners for center bar actions
    */
   setupCenterBarEventListeners() {
-    console.log('[MusicManager] Setting up center bar event listeners');
     
     if (typeof bus === 'undefined' || typeof bus.addEventListener !== 'function') {
-      console.warn('[MusicManager] Bus not available for event wiring');
       return;
     }
 
     // Open/close the music UI popover (no playback here)
     bus.addEventListener('centerbar:music', (e) => {
-      console.log('[MusicManager] Received centerbar:music event', e.detail);
       try {
         if (typeof window.musicPlayer !== 'undefined' && typeof window.musicPlayer.toggleUI === 'function') {
           const anchor = e.detail?.anchor || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
@@ -266,22 +256,18 @@ class MusicManager {
           return;
         }
       } catch (err) {
-        console.warn('[MusicManager] Failed to delegate to MusicPlayer.toggleUI', err);
       }
       // No UI controller available: ignore to avoid unintended playback
     });
 
     // Wire transport controls dispatched by MusicPlayer UI
     bus.addEventListener('music:prev', () => {
-      console.log('[MusicManager] bus music:prev -> prev()');
       this.prev();
     });
     bus.addEventListener('music:next', () => {
-      console.log('[MusicManager] bus music:next -> next()');
       this.next();
     });
     bus.addEventListener('music:toggle', () => {
-      console.log('[MusicManager] bus music:toggle -> togglePlay()');
       this.togglePlay();
     });
 
@@ -375,7 +361,6 @@ class MusicManager {
         // When canplay resolves via _playWithFadeIn, music:playing will be sent; started will be emitted on actual start.
       }
     } catch (e) {
-      console.warn('MusicManager.play: failed, likely policy. Waiting for user gesture.', e);
       this.hintStartNeeded();
     }
   }
@@ -432,7 +417,6 @@ class MusicManager {
         this.dispatch('music:loading', {});
       }
     } catch (e) {
-      console.warn('MusicManager.next: play blocked', e);
       this.hintStartNeeded();
     }
   }
@@ -475,7 +459,6 @@ class MusicManager {
         this.dispatch('music:loading', {});
       }
     } catch (e) {
-      console.warn('MusicManager.prev: play blocked', e);
       this.hintStartNeeded();
     }
   }

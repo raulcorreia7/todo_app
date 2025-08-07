@@ -334,11 +334,9 @@ class ThemeManager {
      * Initialize theme system
      */
     init() {
-        console.log('ThemeManager: Initializing...');
         
         // Load theme from settings first (this will be called before DOM is ready)
         this.loadTheme();
-        console.log('ThemeManager: Loaded theme:', this.currentTheme);
         
         // Setup CSS variables with the loaded theme
         this.setupCSSVariables();
@@ -347,7 +345,6 @@ class ThemeManager {
         this.setupEventListeners();
         
         this.isInitialized = true;
-        console.log('ThemeManager: Initialized successfully');
 
         // Mark as ready
         if (typeof bus !== 'undefined') {
@@ -356,7 +353,6 @@ class ThemeManager {
         
         // Listen for settings loaded event to ensure proper initialization
         document.addEventListener('settingsLoaded', (event) => {
-            console.log('ThemeManager: Settings loaded event received:', event.detail);
             if (event.detail && event.detail.theme && event.detail.theme !== this.currentTheme) {
                 this.changeTheme(event.detail.theme);
             }
@@ -375,26 +371,21 @@ class ThemeManager {
      * Load theme from settings
      */
     loadTheme() {
-        console.log('ThemeManager: Loading theme...');
         
         // Try to get theme from settings manager if available
         if (typeof settingsManager !== 'undefined' && settingsManager.isReady()) {
             const settings = settingsManager.getSettings();
             this.currentTheme = settings.theme || 'emerald';
-            console.log('ThemeManager: Got theme from settings:', this.currentTheme);
         } else {
             // Fallback to default theme if settings manager not ready
             this.currentTheme = 'emerald';
-            console.log('ThemeManager: Settings manager not ready, using default theme:', this.currentTheme);
         }
         
         // Ensure we have a valid theme
         if (!this.themes[this.currentTheme]) {
             this.currentTheme = 'emerald';
-            console.log('ThemeManager: Invalid theme, falling back to emerald');
         }
         
-        console.log('ThemeManager: Final theme selected:', this.currentTheme);
     }
 
     /**
@@ -405,11 +396,9 @@ class ThemeManager {
         const theme = this.themes[this.currentTheme];
 
         if (!theme) {
-            console.warn('ThemeManager: No theme found for', this.currentTheme);
             return;
         }
 
-        console.log('ThemeManager: Setting CSS variables for theme', this.currentTheme, theme);
 
         // Set CSS variables on :root for global access
         root.style.setProperty('--primary-color', theme.primary);
@@ -436,7 +425,6 @@ class ThemeManager {
         // Add data-theme attribute for CSS selectors that need it
         document.documentElement.setAttribute('data-theme', this.currentTheme);
 
-        console.log('ThemeManager: CSS variables set. --color-text =', getComputedStyle(root).getPropertyValue('--color-text'));
     }
 
     /**
@@ -483,7 +471,6 @@ class ThemeManager {
      */
     changeTheme(themeName) {
         if (!this.themes[themeName]) {
-            console.warn(`Theme ${themeName} not found`);
             return;
         }
 
@@ -704,7 +691,5 @@ class ThemeManager {
 }
 
 // Initialize theme manager
-console.log('ThemeManager: Creating instance...');
 const themeManager = new ThemeManager();
-console.log('ThemeManager: Instance created, calling init...');
 themeManager.init();

@@ -36,12 +36,10 @@ class ModalManager {
     
     // Check if elements exist before adding event listeners
     if (!this.overlay || !this.closeButton || !this.cancelButton || !this.confirmButton || !this.modal) {
-      console.warn('Modal elements not found, retrying...');
       setTimeout(() => this.init(), 100);
       return;
     }
     
-    console.log('Modal elements found, initializing...');
     
     // Setup event listeners
     this.overlay.addEventListener('click', () => this.close());
@@ -59,7 +57,6 @@ class ModalManager {
     // Listen for centerbar:settings event from center bar
     if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
       bus.addEventListener('centerbar:settings', (event) => {
-        console.log('[ModalManager] Received centerbar:settings event', event.detail);
         // Settings panel is handled by settingsManager
         if (typeof settingsManager !== 'undefined' && typeof settingsManager.toggleSettings === 'function') {
           settingsManager.toggleSettings(event.detail?.anchor);
@@ -70,7 +67,6 @@ class ModalManager {
     // Also listen for settingsChanged event to update UI when settings change
     if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
       bus.addEventListener('settingsChanged', (event) => {
-        console.log('[ModalManager] Received settingsChanged event', event.detail);
         // Update UI if needed
         if (typeof settingsManager !== 'undefined') {
           settingsManager.updateUI();

@@ -85,7 +85,6 @@ class AudioManager {
       this.masterGain.gain.value = (this.volume / 100) * 0.85;
 
       this.isInitialized = true;
-      console.log('Audio manager initialized');
 
       // Audio context will be initialized on first user interaction
       this.audioInitialized = false;
@@ -116,7 +115,6 @@ class AudioManager {
       // Also listen for settingsChanged event to update UI when settings change
       if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
         bus.addEventListener('settingsChanged', (event) => {
-          console.log('[AudioManager] Received settingsChanged event', event.detail);
           if (event.detail && event.detail.globalMute !== undefined) {
             this.setGlobalMute(!!event.detail.globalMute);
             // keep legacy enabled in sync
@@ -152,7 +150,6 @@ class AudioManager {
       }
 
       this.audioInitialized = true;
-      console.log('Audio context initialized successfully');
       return true;
     } catch (error) {
       console.warn('Failed to initialize audio context:', error);

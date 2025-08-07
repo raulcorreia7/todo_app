@@ -5612,3 +5612,66 @@ diff>
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Dirty State Visual Indicator */
+.task-item.dirty {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.task-item.dirty::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-color), var(--glow-color));
+  opacity: 0.8;
+  animation: dirtyPulse 2s ease-in-out infinite;
+}
+
+@keyframes dirtyPulse {
+  0%, 100% {
+    opacity: 0.6;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+  }
+}
+
+/* Dirty state indicator for edit mode */
+.task-item.edit-mode.dirty {
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 40px rgba(99, 102, 241, 0.2);
+}
+
+.task-item.edit-mode.dirty::before {
+  height: 4px;
+  opacity: 1;
+  background: linear-gradient(90deg, var(--accent-color), var(--glow-color), var(--accent-color));
+  background-size: 200% 100%;
+  animation: dirtyShine 3s linear infinite, dirtyPulse 2s ease-in-out infinite;
+}
+
+@keyframes dirtyShine {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Mobile dirty state adjustments */
+@media (max-width: 768px) {
+  .task-item.dirty::before {
+    height: 2px;
+  }
+  
+  .task-item.edit-mode.dirty::before {
+    height: 3px;
+  }
+}

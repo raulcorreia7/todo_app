@@ -581,7 +581,6 @@ class AnimationManager {
         const theme = themeManager.getTheme(themeName);
         if (!theme) return;
 
-        console.log(`AnimationManager: Theme changed to ${themeName}`);
 
         // Update canvas styling based on theme
         this.updateCanvasForTheme(theme);

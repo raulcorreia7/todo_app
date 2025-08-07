@@ -17,7 +17,6 @@ const AI_LOG = true;
 function log(...args) {
   if (AI_LOG)
     try {
-      console.log(...args);
     } catch (_) {}
 }
 function warn(...args) {
@@ -60,7 +59,6 @@ class LLM7Provider {
     this.apiKey = AI_CFG.API_KEY;
     this.model = AI_CFG.MODEL;
     this.baseUrl = AI_CFG.BASE_URL;
-    log("[AI] LLM7Provider initialized");
   }
 
   buildTodoRefactorMessages(todo) {
@@ -78,10 +76,13 @@ class LLM7Provider {
           "Guidelines:",
           "- id must match the input id (same value and type).",
           "- title: Remove ALL noise and filler words aggressively. Preserve only the core meaning and essential information. Cut out: um, uh, like, just, really, basically, actually, sort of, kind of, unnecessary adverbs, redundant phrases. Keep the exact same meaning, just cleaner and more direct.",
-          "- description: Aggressively eliminate noise, repetition, and irrelevant content. Preserve all substantive information, steps, and context. Remove: filler words, redundant explanations, obvious statements, irrelevant details, wordiness. Keep all meaningful content while making it concise and clear.",
+          "- description: Aggressively eliminate noise, repetition, and irrelevant content. Preserve all substantive information, steps, and context. Remove: filler words, redundant explanations, obvious statements, irrelevant details, wordiness. Keep all meaningful content while making it concise and clear, unless disconnected to the title.",
           "- If the description becomes empty after refactoring, return the original description instead of an empty string.",
-          "- Your primary goal is noise removal and clarity improvement. The output must contain the exact same meaning and information as the input, but stripped of all non-essential elements.",
+          "- Your primary goal is noise removal and clarity improvement. The output must be as be as close to the same meaning and information as the input, but stripped of all non-essential elements.",
           "- If the description is empty, even after refactoring, and there is a relevant title that is absolutely not noise, generate a description.",
+          "- If possible the description should be short, sweet, clean, professional, zen, subtle, premium.",
+          "- If the description can be broken down to bullet points, do it, and use new lines.",
+          "- Fully refactor the description if its completly disconnected from the title.",
           "- Do not include any additional keys or metadata.",
           "- Output must be a single JSON object only (no explanations or code fences).",
         ].join("\n"),
@@ -157,7 +158,6 @@ class LLM7Provider {
       const messages = this.buildTodoRefactorMessages(todo);
       const payload = { model: this.model, messages, stream: false };
 
-      log("[AI] Sending to API:", this.baseUrl, { model: this.model, debugId });
 
       const res = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
@@ -169,7 +169,6 @@ class LLM7Provider {
       })
         .then(async (r) => {
           try {
-            log("[AI] API status:", r.status, { debugId });
           } catch (_) {}
           return r;
         })
@@ -237,7 +236,6 @@ class LLM7Provider {
 class AIProviders {
   constructor() {
     this.provider = new LLM7Provider();
-    log("[AI] AIProviders initialized");
     try {
       console.assert(
         typeof this.refactorTodo === "function",
@@ -248,12 +246,6 @@ class AIProviders {
 
   async refactorTodo(todo) {
     try {
-      log("[AI] AIProviders.refactorTodo received task:", {
-        id: todo && todo.id,
-        titleLen: ((todo && (todo.title || todo.text)) || "").length,
-        descLen: ((todo && todo.description) || "").length,
-        debugId: todo && todo.__debugId,
-      });
     } catch (_) {}
 
     // Ensure we only pass a pure JSON structure through the provider
@@ -295,6 +287,4 @@ try {
 
 // Provider readiness audit (top-level, on load)
 try {
-  log("[DEBUG] AIProviders instance:", window.AIProviders);
-  log("[DEBUG] refactorTodo type:", typeof window.AIProviders?.refactorTodo);
 } catch (_) {}

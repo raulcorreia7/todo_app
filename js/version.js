@@ -30,7 +30,6 @@ function getGitCommitCount() {
                     throw new Error('Invalid commit count');
                 })
                 .catch(error => {
-                    console.log('Could not fetch commit-count.txt:', error);
                 });
         }
 
@@ -72,8 +71,6 @@ window.appVersion = appVersion;
 
 // For debugging
 if (window.DEV) {
-    console.log(`App Version: ${appVersion}`);
-    console.log(`Git Commit Count: ${getGitCommitCount()}`);
 }
 
 // Display version in footer

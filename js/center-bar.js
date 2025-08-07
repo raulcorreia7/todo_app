@@ -19,9 +19,6 @@ class CenterBar {
         this.isInitialized = false;
     }
 
-    log(...args) {
-        if (this.debug) console.debug('[CenterBar]', ...args);
-    }
 
     /**
      * Check if center bar is ready
@@ -36,7 +33,6 @@ class CenterBar {
     dispatch(name, detail) {
         try {
             if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
-                this.log('dispatch', name, detail || {});
                 bus.dispatchEvent(new CustomEvent(name, { detail }));
                 return true;
             }
@@ -68,7 +64,6 @@ class CenterBar {
     }
 
     handleSettings() {
-        console.log('[CenterBar] Handling settings action');
         
         // microinteraction: pulse when opening
         try {
@@ -87,29 +82,22 @@ class CenterBar {
         if (this.dispatch('centerbar:settings', { 
             anchor: document.getElementById('cabSettings') || document.getElementById('settingsBtn') || null
         })) {
-            console.log('[CenterBar] Settings event dispatched via bus');
             return;
         }
 
-        console.warn('[CenterBar] Settings event not dispatched, falling back to direct call');
         
         // 2) Direct manager
         if (typeof settingsManager?.toggleSettings === 'function') {
             try { 
-                console.log('[CenterBar] Calling settingsManager.toggleSettings() directly');
                 settingsManager.toggleSettings(); 
-                console.log('[CenterBar] settingsManager.toggleSettings() called successfully');
                 return;
             } catch (e) { 
-                console.warn('settings toggle failed', e); 
             }
         }
         
-        console.error('[CenterBar] Failed to open settings panel - no method available');
     }
 
     handleSound() {
-        console.log('[CenterBar] Handling sound action');
         this.ensureAudioUnlockedOnce();
 
         // Primary path: dispatch centerbar:sound so managers handle canonical toggle + emit standardized events
@@ -129,7 +117,6 @@ class CenterBar {
                 this.updateSoundButtonState();
                 return;
             } catch (e) {
-                console.warn('[CenterBar] settingsManager.toggleSoundEnabled failed', e);
             }
         } else if (typeof audioManager !== 'undefined' && typeof audioManager.setGlobalMute === 'function') {
             try {
@@ -142,7 +129,6 @@ class CenterBar {
                 this.updateSoundButtonState();
                 return;
             } catch (e) {
-                console.warn('[CenterBar] audioManager.setGlobalMute fallback failed', e);
             }
         }
 
@@ -160,7 +146,6 @@ class CenterBar {
             return;
         }
 
-        console.error('[CenterBar] Failed to toggle sound - no method available');
     }
 
     updateSoundButtonState() {
@@ -209,7 +194,6 @@ class CenterBar {
     }
 
     handleMusic() {
-        console.log('[CenterBar] Handling music action');
         this.ensureAudioUnlockedOnce();
 
         // Always open/close the music UI via bus; do NOT trigger playback here.
@@ -227,7 +211,6 @@ class CenterBar {
             return;
         }
 
-        console.warn('[CenterBar] centerbar:music not handled; applying DOM fallback to dispatch event');
         // Fallback: if no listener handled it, try to dispatch via DOM CustomEvent
         try {
             const ev = new CustomEvent('centerbar:music', { detail: { anchor } });
@@ -326,7 +309,6 @@ class CenterBar {
     }
 
     handleTest() {
-        console.log('[CenterBar] Handling test action');
 
         // microinteraction: brief sparkle ring
         try {
@@ -353,7 +335,6 @@ class CenterBar {
     }
 
     handleClear() {
-        console.log('[CenterBar] Handling clear action');
 
         // microinteraction: broom micro-sweep
         try {
@@ -380,7 +361,6 @@ class CenterBar {
     }
 
     handleDelete() {
-        console.log('[CenterBar] Handling delete action');
 
         // microinteraction: danger shake
         try {
@@ -407,10 +387,8 @@ class CenterBar {
     }
 
     onClick(e) {
-        this.log('onClick event triggered');
         const el = e.target?.closest?.('[data-action]');
         if (!el) {
-            this.log('No element with data-action found');
             return;
         }
 
@@ -419,13 +397,10 @@ class CenterBar {
         // We only ever toggle .is-playing/.is-paused for #cabMusic from music bus events,
         // NOT on arbitrary clicks here.
         const action = el.getAttribute('data-action');
-        this.log(`Found action: ${action}`);
 
         if (action && this.actions[action]) {
-            this.log('Executing action:', action);
             this.actions[action]();
         } else {
-            this.log(`No handler found for action: ${action}`);
         }
     }
 
@@ -495,7 +470,6 @@ class CenterBar {
     tryWireOnce() {
         const bar = document.getElementById('centerActionBar');
         if (!bar) {
-            this.log('centerActionBar not found');
             return false;
         }
         this.bar = bar;
@@ -504,14 +478,11 @@ class CenterBar {
             // Use event delegation for better performance and reliability
             bar.addEventListener('click', this.onClick.bind(this), { passive: true, capture: false });
             this._wired = true;
-            this.log('Event listener attached to centerActionBar');
         }
 
         // Check if buttons are found
         const buttons = bar.querySelectorAll('[data-action]');
-        this.log(`Found ${buttons.length} buttons with data-action:`);
         buttons.forEach(btn => {
-            this.log(`  - ${btn.id}: ${btn.getAttribute('data-action')}`);
         });
 
         // Hydrate Lucide icons within the Center Action Bar container
@@ -624,7 +595,6 @@ class CenterBar {
         } catch (_) {}
 
         this.wireScrollHideCenterBar();
-        this.log('wired');
         return true;
     }
 
@@ -632,14 +602,12 @@ class CenterBar {
      * Initialize center bar with DOM ready check
      */
     init() {
-        console.log('CenterBar: Initializing...');
         
         // Check if DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 this.tryWireOnce();
                 this.isInitialized = true;
-                console.log('CenterBar: Initialized successfully');
                 
                 // Mark as ready on bus
                 if (typeof bus !== 'undefined' && typeof bus.markReady === 'function') {
@@ -653,7 +621,6 @@ class CenterBar {
             // DOM is already ready
             this.tryWireOnce();
             this.isInitialized = true;
-            console.log('CenterBar: Initialized successfully');
             
             // Mark as ready on bus
             if (typeof bus !== 'undefined' && typeof bus.markReady === 'function') {

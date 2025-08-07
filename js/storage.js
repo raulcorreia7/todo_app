@@ -23,7 +23,6 @@ class StorageManager {
         // Register reset handler for clearing tasks
         if (typeof bus !== 'undefined' && typeof bus.registerResetHandler === 'function') {
             bus.registerResetHandler(() => {
-                console.log('[Storage] Reset handler called - clearing all tasks');
                 this.clearAllTasks();
             });
         }
@@ -73,7 +72,7 @@ class StorageManager {
             // One-time migration/normalization on load:
             // - Coerce description to string
             // - Normalize to strict schema at the boundary using global validateTask when available
-            const normalized = (typeof window !== 'undefined' && typeof window.validateTasks === 'function')
+            const normalized = (typeof window !== "undefined" && typeof window.validateTasks === 'function')
               ? window.validateTasks(tasks)
               : tasks.map((t) => {
                   const id = t && t.id != null ? t.id : null;
@@ -106,11 +105,13 @@ class StorageManager {
     setTasks(tasks) {
         if (!this.isReady()) return false;
         
+        // Debug: Log save attempt
+        
         try {
             const safeList = Array.isArray(tasks) ? tasks : [];
     
             // Normalize every task to strict schema before persisting
-            const normalized = (typeof window !== 'undefined' && typeof window.validateTasks === 'function')
+            const normalized = (typeof window !== "undefined" && typeof window.validateTasks === "function")
               ? window.validateTasks(safeList)
               : safeList.map((t) => {
                   const id = t && t.id != null ? t.id : null;
@@ -127,18 +128,32 @@ class StorageManager {
                     completed: t && t.completed != null ? t.completed : false
                   };
                 });
+            
     
             const data = {
                 version: this.version,
                 tasks: normalized,
                 lastUpdated: new Date().toISOString()
             };
+            
             localStorage.setItem(this.key, JSON.stringify(data));
+            
+            // Debug: Verify the save
+            const savedData = localStorage.getItem(this.key);
+            
             return true;
         } catch (error) {
-            console.warn('Failed to save tasks to storage:', error);
+            console.error('[DEBUG] Failed to save tasks to storage:', error);
             return false;
         }
+    }
+
+    /**
+     * Save tasks to storage (alias for setTasks for compatibility)
+     * @param {Array} tasks - Array of task objects
+     */
+    saveTasks(tasks) {
+        return this.setTasks(tasks);
     }
 
     /**
@@ -158,7 +173,6 @@ class StorageManager {
                 parsed.lastUpdated = new Date().toISOString();
                 localStorage.setItem(this.key, JSON.stringify(parsed));
             }
-            console.log('[Storage] All tasks cleared successfully');
             return true;
         } catch (error) {
             console.warn('Failed to clear tasks from storage:', error);
@@ -345,7 +359,7 @@ class StorageManager {
           ? oldData
           : (oldData && Array.isArray(oldData.tasks) ? oldData.tasks : []);
     
-        const normalized = (typeof window !== 'undefined' && typeof window.validateTasks === 'function')
+        const normalized = (typeof window !== "undefined" && typeof window.validateTasks === "function")
           ? window.validateTasks(legacy)
           : legacy.map((t) => {
               const id = t && t.id != null ? t.id : null;

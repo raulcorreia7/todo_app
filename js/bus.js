@@ -18,7 +18,6 @@ class EventBus {
      */
     init() {
         this.isInitialized = true;
-        console.log('Event bus initialized');
     }
 
     /**
@@ -56,10 +55,8 @@ class EventBus {
      * @param {Object} options - Event options
      */
     addEventListener(type, listener, options = {}) {
-        console.log(`[Bus] Adding listener for event: ${type}`);
         
         if (!this.isReady()) {
-            console.warn(`Event bus not ready, queuing listener for: ${type}`);
             // Queue the listener for when bus is ready
             if (!this._queuedListeners) this._queuedListeners = [];
             this._queuedListeners.push({ type, listener, options });
@@ -68,10 +65,8 @@ class EventBus {
 
         if (!this.events.has(type)) {
             this.events.set(type, []);
-            console.log(`[Bus] Created new event array for type: ${type}`);
         }
         this.events.get(type).push({ listener, options });
-        console.log(`[Bus] Total listeners for ${type}: ${this.events.get(type).length}`);
     }
 
     /**
@@ -95,10 +90,8 @@ class EventBus {
      * @returns {boolean} Whether the event was handled
      */
     dispatchEvent(event) {
-        console.log(`[Bus] Dispatching event: ${event.type}`, event.detail);
         
         if (!this.isReady()) {
-            console.warn(`Event bus not ready, queuing event: ${event.type}`);
             if (!this._queuedEvents) this._queuedEvents = [];
             this._queuedEvents.push(event);
             return false;
@@ -130,22 +123,13 @@ class EventBus {
             } catch (_) {
                 snapshot = '[unserializable]';
             }
-            try {
-                console.debug('[bus] dispatch', {
-                    type,
-                    detail: snapshot,
-                    t: new Date().toISOString()
-                });
-            } catch (_) {}
         }
 
         if (!this.events.has(type)) {
-            console.log(`[Bus] No listeners for event type: ${type}`);
             return true; // No listeners, but not an error
         }
 
         const listeners = this.events.get(type);
-        console.log(`[Bus] Found ${listeners.length} listeners for event: ${type}`);
         
         listeners.forEach(({ listener, options }) => {
             try {
@@ -244,9 +228,7 @@ class EventBus {
      * @param {Function} handler - Reset handler function to call when resetToDefaults event is triggered
      */
     registerResetHandler(handler) {
-        console.log('[Bus] Registering reset handler');
         if (typeof handler !== 'function') {
-            console.warn('[Bus] Reset handler must be a function');
             return;
         }
         this.resetHandlers.push(handler);
@@ -256,16 +238,13 @@ class EventBus {
      * Trigger all registered reset handlers
      */
     triggerReset() {
-        console.log('[Bus] Triggering reset handlers, count:', this.resetHandlers.length);
         this.resetHandlers.forEach((handler, index) => {
             try {
-                console.log(`[Bus] Executing reset handler ${index + 1}/${this.resetHandlers.length}`);
                 handler();
             } catch (error) {
                 console.error(`[Bus] Error in reset handler ${index + 1}:`, error);
             }
         });
-        console.log('[Bus] All reset handlers completed');
     }
 }
 

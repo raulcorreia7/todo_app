@@ -47,9 +47,6 @@ class MusicPlayer {
     this.init();
   }
 
-  log(...args) { try { console.debug('[MusicPlayer]', ...args); } catch (_) {} }
-  warn(...args) { try { console.warn('[MusicPlayer]', ...args); } catch (_) {} }
-  err(...args) { try { console.error('[MusicPlayer]', ...args); } catch (_) {} }
 
   isReady() {
     return this.isInitialized;
@@ -75,7 +72,6 @@ class MusicPlayer {
         this.wireControls();
         this.subscribeBus();
         this.isInitialized = true;
-        this.log('initialized');
 
         // Mark ready on bus (optional)
         try {
@@ -84,7 +80,6 @@ class MusicPlayer {
           }
         } catch (_) {}
       } catch (e) {
-        this.err('init failed', e);
       }
     };
 
@@ -186,7 +181,6 @@ class MusicPlayer {
     // Transport events (bus-first, with safe fallbacks)
     this.btnPrev?.addEventListener('click', (e) => {
       e.preventDefault();
-      this.log('prev clicked');
       this.busDispatch('music:prev');
       // optional direct fallback
       try { if (typeof window.musicManager?.prev === 'function') window.musicManager.prev(); } catch (_) {}
@@ -194,7 +188,6 @@ class MusicPlayer {
 
     this.btnPlayPause?.addEventListener('click', (e) => {
       e.preventDefault();
-      this.log('toggle clicked');
       this.busDispatch('music:toggle');
       // optional direct fallback
       try { if (typeof window.musicManager?.togglePlay === 'function') window.musicManager.togglePlay(); } catch (_) {}
@@ -202,7 +195,6 @@ class MusicPlayer {
 
     this.btnNext?.addEventListener('click', (e) => {
       e.preventDefault();
-      this.log('next clicked');
       this.busDispatch('music:next');
       // optional direct fallback
       try { if (typeof window.musicManager?.next === 'function') window.musicManager.next(); } catch (_) {}
@@ -231,7 +223,6 @@ class MusicPlayer {
         this.handle.style.left = pct + '%';
         // inform music system
         this.busDispatch('music:setVolume', { volume: t });
-        this.log('volume', t.toFixed(2));
       };
 
       const start = (e) => {
@@ -268,38 +259,31 @@ class MusicPlayer {
       this.buffering = isBuf;
       this.setPlaying(true);
       this.pop.classList.toggle('is-buffering', isBuf);
-      this.log('music:playing', { buffering: isBuf });
     });
 
     bus.addEventListener('music:paused', () => {
       this.setPlaying(false);
-      this.log('music:paused');
     });
 
     bus.addEventListener('music:buffering', (e) => {
       const isBuf = !!(e.detail && e.detail.buffering);
       this.buffering = isBuf;
       this.pop.classList.toggle('is-buffering', isBuf);
-      this.log('music:buffering', { buffering: isBuf });
     });
 
     bus.addEventListener('music:silenceStart', () => {
       this.pop.classList.add('is-silent');
-      this.log('music:silenceStart');
     });
 
     bus.addEventListener('music:silenceEnd', () => {
       this.pop.classList.remove('is-silent');
-      this.log('music:silenceEnd');
     });
 
     bus.addEventListener('music:hintStart', () => {
-      this.log('music:hintStart');
     });
 
     // Open/close from center bar action
     bus.addEventListener('centerbar:music', (e) => {
-      this.log('Received centerbar:music event');
       const anchor = e.detail?.anchor || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
       this.lastAnchorEl = anchor;
       this.toggleUI(anchor);
@@ -396,13 +380,11 @@ class MusicPlayer {
       document.addEventListener('keydown', this._onKeyDown, true);
     } catch (_) {}
 
-    this.log('open');
   }
 
   close() {
     if (!this.pop) return;
     if (this.pinned) {
-      this.log('close requested but pinned');
       return;
     }
     this.pop.classList.remove('open');
@@ -428,7 +410,6 @@ class MusicPlayer {
       }
     } catch (_) {}
 
-    this.log('close');
   }
 
   toggleUI(anchorEl) {

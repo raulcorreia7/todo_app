@@ -34,7 +34,6 @@ class GamificationManager {
     // Register reset handler for resetting achievements
     if (typeof bus !== 'undefined' && typeof bus.registerResetHandler === 'function') {
       bus.registerResetHandler(() => {
-        console.log('[Gamification] Reset handler called - resetting achievements');
         this.resetStats();
       });
     }

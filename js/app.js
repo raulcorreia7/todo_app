@@ -11,6 +11,7 @@ class TodoApp {
     this.editingTaskId = null;
     this.isDirty = false;
     this.renderTimeout = null;
+    this.autoSaveTimeout = null;
     
     // Initialize CenterBar instance
     this.centerBar = null;
@@ -53,22 +54,12 @@ class TodoApp {
     this.setupSettingsChangeListener();
 
     // Initialize statistics manager
-    if (
-      typeof statisticsManager !== "undefined" &&
-      statisticsManager.isReady()
-    ) {
-      console.log("Statistics manager initialized");
-    }
 
     // Initialize audio manager
-    if (typeof audioManager !== "undefined" && audioManager.isInitialized) {
-      console.log("Audio manager initialized");
-    }
     // Light haptic on app init completion
     this.vibrate?.("subtle");
 
     this.isInitialized = true;
-    console.log("Todo app initialized");
 
     // Signal globally that the app is fully ready for dependent systems (e.g. music delayed start)
     try {
@@ -76,11 +67,9 @@ class TodoApp {
         typeof bus !== "undefined" &&
         typeof bus.dispatchEvent === "function"
       ) {
-        console.log("Dispatching app:ready event via bus");
         bus.dispatchEvent(new CustomEvent("app:ready"));
       } else {
         // Fallback: also fire a DOM event so listeners without the bus can hook in
-        console.log("Dispatching app:ready event via DOM");
         document.dispatchEvent(new CustomEvent("app:ready"));
       }
     } catch (e) {
@@ -222,7 +211,6 @@ class TodoApp {
         }
         if (elapsed > warnAt && (elapsed - warnAt) % 1000 < 100) {
           // Periodic status log after warning threshold
-          console.debug("[deps] waiting...", st);
         }
         setTimeout(tick, 100);
       };
@@ -326,18 +314,12 @@ class TodoApp {
     document.addEventListener("change", (e) => {
       // Handle checkbox changes
       if (e.target.matches('.task-checkbox input[type="checkbox"]')) {
-        console.log(`[DEBUG] Checkbox change event detected for task ${e.target.dataset.taskId}`);
-        console.log(`[DEBUG] Checkbox checked state: ${e.target.checked}`);
-        console.log(`[DEBUG] Event target:`, e.target);
-        console.log(`[DEBUG] Event target dataset:`, e.target.dataset);
         
         e.preventDefault();
         const taskId = e.target.dataset.taskId;
         if (taskId) {
-          console.log(`[DEBUG] Calling toggleTask for task ${taskId}`);
           this.toggleTask(taskId);
         } else {
-          console.warn(`[DEBUG] No taskId found in checkbox dataset`);
         }
       }
     });
@@ -431,11 +413,6 @@ class TodoApp {
               const finalDescription = aiDescription.length > 0 ? aiDescription : originalDescription;
               
               if (aiDescription.length === 0 && originalDescription.length > 0) {
-                console.log("[AI] AI returned empty description, preserving original", {
-                  taskId: todo.id,
-                  originalLength: originalDescription.length,
-                  debugId
-                });
               }
               // Use description directly as string with fallback (variables already declared above)
               // Create modified result with fallback description
@@ -683,7 +660,12 @@ class TodoApp {
           case "Enter":
             if (this.editingTaskId) {
               e.preventDefault();
-              this.saveEdit(this.editingTaskId);
+              // Only handle Enter here if we're not in the edit field itself
+              // The edit field will handle its own Enter key via the dedicated listeners
+              if (!isEditable || (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA")) {
+                this.saveEdit(this.editingTaskId);
+              } else {
+              }
             }
             break;
           case "Escape":
@@ -708,6 +690,7 @@ class TodoApp {
    */
   loadTasks() {
     const oldTaskCount = this.tasks.length;
+    
     // Normalize any legacy/invalid shapes on load to ensure description is a string
     const raw = storageManager.getTasks();
     try {
@@ -742,20 +725,22 @@ class TodoApp {
         });
       } else {
         // Fallback: minimal coercion without helper
-        this.tasks = Array.isArray(raw) ? raw.map(r => {
+        this.tasks = Array.isArray(raw) ? raw.map((r, index) => {
           const title = typeof r.title === "string" ? r.title : (typeof r.text === "string" ? r.text : String(r.title ?? r.text ?? ""));
           let desc = r && r.description != null ? r.description : "";
           if (typeof desc !== "string") {
             try { desc = String(desc); } catch { desc = ""; }
           }
-          return {
+          const task = {
             id: r.id,
             text: String(title).trim(),
             description: String(desc).trim(),
             completed: !!r.completed,
             createdAt: r.createdAt || new Date().toISOString(),
-            updatedAt: r.updatedAt || new Date().toISOString()
+            updatedAt: r.updatedAt || new Date().toISOString(),
+            isDirty: false // Initialize tasks as not dirty when loaded
           };
+          return task;
         }) : [];
       }
     } catch (e) {
@@ -779,7 +764,6 @@ class TodoApp {
         if (taskElement) {
           const deleteBtn = taskElement.querySelector('.task-delete-btn');
           if (deleteBtn) {
-            console.log(`[DEBUG] Force-enabling delete button for loaded task ${task.id}`);
             deleteBtn.disabled = false;
             deleteBtn.removeAttribute('disabled');
             deleteBtn.classList.remove('disabled');
@@ -788,33 +772,57 @@ class TodoApp {
       });
     } else {
       // If DOM isn't ready, defer button state updates until render
-      console.log(`[DEBUG] Deferring button state updates until DOM is ready`);
     }
+    
   }
 
   /**
    * Save tasks to storage
    */
   saveTasks() {
-    console.log(`[DEBUG] saveTasks called with ${this.tasks.length} tasks`);
-    console.log(`[DEBUG] Tasks to save:`, this.tasks.map(t => ({ id: t.id, completed: t.completed, text: t.text })));
-    
-    try {
-      storageManager.setTasks(this.tasks);
-      console.log(`[DEBUG] Tasks saved to storage successfully`);
-    } catch (error) {
-      console.error(`[DEBUG] Failed to save tasks to storage:`, error);
-    }
     
     this.markDirty("save");
 
+    // Debug: Log storage manager methods
+    console.log('[DEBUG] storageManager methods:', {
+      exists: typeof storageManager !== "undefined",
+      saveTasks: typeof storageManager.saveTasks === "function",
+      setTasks: typeof storageManager.setTasks === "function"
+    });
+
+    // Actually save to storage
+    if (typeof storageManager !== "undefined" && typeof storageManager.setTasks === "function") {
+      try {
+        const result = storageManager.setTasks(this.tasks);
+        if (!result) {
+          console.error('[DEBUG] Failed to save tasks to storage');
+        } else {
+        }
+      } catch (error) {
+        console.error('[DEBUG] Error saving tasks:', error);
+      }
+    } else if (typeof storageManager !== "undefined" && typeof storageManager.saveTasks === "function") {
+      try {
+        const result = storageManager.saveTasks(this.tasks);
+        if (!result) {
+          console.error('[DEBUG] Failed to save tasks to storage (legacy method)');
+        } else {
+        }
+      } catch (error) {
+        console.error('[DEBUG] Error saving tasks (legacy method):', error);
+      }
+    } else {
+      console.error('[DEBUG] storageManager or save/setTasks method not available');
+    }
+
     // Dispatch tasksUpdated event to notify other components
     if (typeof bus !== "undefined") {
-      console.log(`[DEBUG] Dispatching tasksUpdated event via bus`);
       bus.dispatchEvent(new CustomEvent("tasksUpdated"));
     }
     
-    console.log(`[DEBUG] saveTasks completed`);
+    // Schedule auto-save for any dirty tasks
+    this.scheduleAutoSave();
+    
   }
 
   /**
@@ -823,7 +831,6 @@ class TodoApp {
    */
   markDirty(source = "unknown") {
     this.isDirty = true;
-    console.log(`Tasks marked dirty from: ${source}`);
     this.scheduleRender();
   }
 
@@ -851,6 +858,53 @@ class TodoApp {
     } else {
       console.error("forceRender: render method is not a function");
     }
+  }
+
+  /**
+   * Auto-save dirty tasks
+   */
+  autoSave() {
+    // Clear existing auto-save timeout
+    if (this.autoSaveTimeout) {
+      clearTimeout(this.autoSaveTimeout);
+    }
+
+    // Find dirty tasks
+    const dirtyTasks = this.tasks.filter(task => task.isDirty);
+    
+    if (dirtyTasks.length > 0) {
+      
+      // Actually save to storage
+      if (typeof storageManager !== "undefined" && typeof storageManager.saveTasks === "function") {
+        storageManager.saveTasks(this.tasks);
+      }
+      
+      // Reset dirty flags after save
+      dirtyTasks.forEach(task => {
+        task.isDirty = false;
+      });
+      
+      // Dispatch event to notify UI of auto-save
+      if (typeof bus !== "undefined") {
+        bus.dispatchEvent(new CustomEvent("autoSaved"));
+      }
+    } else {
+    }
+  }
+
+  /**
+   * Schedule auto-save of dirty tasks
+   */
+  scheduleAutoSave() {
+    // Clear existing timeout
+    if (this.autoSaveTimeout) {
+      clearTimeout(this.autoSaveTimeout);
+    }
+
+    // Schedule auto-save after delay
+    this.autoSaveTimeout = setTimeout(() => {
+      this.autoSave();
+    }, this.CONFIG.autoSaveDelay);
   }
 
   /**
@@ -921,6 +975,7 @@ class TodoApp {
           completed: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          isDirty: false // Initialize new tasks as not dirty
         };
       } else {
         // Fallback coercion
@@ -931,6 +986,7 @@ class TodoApp {
           completed: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          isDirty: false // Initialize new tasks as not dirty
         };
       }
     } catch {
@@ -942,6 +998,7 @@ class TodoApp {
         completed: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        isDirty: false // Initialize new tasks as not dirty
       };
     }
 
@@ -977,8 +1034,6 @@ class TodoApp {
    * Toggle task completion
    */
   toggleTask(id) {
-    console.log(`[DEBUG] toggleTask called for task ${id}`);
-    console.log(`[DEBUG] Current tasks array:`, this.tasks.map(t => ({ id: t.id, completed: t.completed })));
     
     const task = this.tasks.find((t) => t.id === id);
     if (!task) {
@@ -990,19 +1045,14 @@ class TodoApp {
     task.completed = !task.completed;
     task.updatedAt = new Date().toISOString();
 
-    console.log(`[DEBUG] Task ${id} state changed from ${wasCompleted} to ${task.completed}`);
-    console.log(`[DEBUG] Task object after toggle:`, { id: task.id, completed: task.completed, text: task.text });
 
     // Update button states immediately - but only if DOM is ready
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      console.log(`[DEBUG] Calling updateTaskButtonStates for task ${id} with completed=${task.completed}`);
       this.updateTaskButtonStates(id, task.completed);
     } else {
-      console.log(`[DEBUG] Deferring button state update until DOM is ready`);
     }
 
     this.saveTasks();
-    console.log(`[DEBUG] Tasks saved after toggle. Current state:`, this.tasks.map(t => ({ id: t.id, completed: t.completed })));
 
     // Play sound
     if (typeof audioManager !== "undefined") {
@@ -1025,73 +1075,52 @@ class TodoApp {
    * @param {boolean} isCompleted - Whether the task is completed
    */
   updateTaskButtonStates(taskId, isCompleted) {
-    console.log(`[DEBUG] updateTaskButtonStates called for task ${taskId}, isCompleted: ${isCompleted}`);
-    console.log(`[DEBUG] Call stack:`, new Error().stack);
     
     const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
     if (!taskElement) {
-      console.log(`[DEBUG] Task element not found for task ${taskId}`);
       return;
     }
     
-    console.log(`[DEBUG] Task element found:`, taskElement);
-    console.log(`[DEBUG] Task element classes before update: ${taskElement.className}`);
     
     const editBtn = taskElement.querySelector('.task-edit-btn');
     const aiBtn = taskElement.querySelector('.task-ai-refactor-btn');
     
-    console.log(`[DEBUG] Found buttons - editBtn: ${!!editBtn}, aiBtn: ${!!aiBtn}`);
     
     // Check if buttons already have the correct state to avoid unnecessary updates
     const editBtnNeedsUpdate = editBtn && (isCompleted && !editBtn.disabled) || (!isCompleted && editBtn.disabled);
     const aiBtnNeedsUpdate = aiBtn && (isCompleted && !aiBtn.disabled) || (!isCompleted && aiBtn.disabled);
     
     if (editBtnNeedsUpdate || aiBtnNeedsUpdate) {
-      console.log(`[DEBUG] Buttons need update - editBtn: ${editBtnNeedsUpdate}, aiBtn: ${aiBtnNeedsUpdate}`);
       
       if (isCompleted) {
         // Disable buttons when task is completed
-        console.log(`[DEBUG] Disabling buttons for completed task ${taskId}`);
         if (editBtn) {
-          console.log(`[DEBUG] Disabling edit button - before: disabled=${editBtn.disabled}, classes=${editBtn.className}`);
           editBtn.disabled = true;
           editBtn.classList.add('disabled');
-          console.log(`[DEBUG] After disabling - disabled=${editBtn.disabled}, classes=${editBtn.className}`);
         }
         if (aiBtn) {
-          console.log(`[DEBUG] Disabling AI button - before: disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
           aiBtn.disabled = true;
           aiBtn.classList.add('disabled');
-          console.log(`[DEBUG] After disabling - disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
         }
         taskElement.classList.add('task-completed');
-        console.log(`[DEBUG] Added task-completed class to task element`);
       } else {
         // Enable buttons when task is reopened
-        console.log(`[DEBUG] Enabling buttons for reopened task ${taskId}`);
         if (editBtn) {
-          console.log(`[DEBUG] Enabling edit button - before: disabled=${editBtn.disabled}, classes=${editBtn.className}`);
           editBtn.disabled = false;
           editBtn.classList.remove('disabled');
-          console.log(`[DEBUG] After enabling - disabled=${editBtn.disabled}, classes=${editBtn.className}`);
         }
         if (aiBtn) {
-          console.log(`[DEBUG] Enabling AI button - before: disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
           aiBtn.disabled = false;
           aiBtn.classList.remove('disabled');
-          console.log(`[DEBUG] After enabling - disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
         }
         taskElement.classList.remove('task-completed');
-        console.log(`[DEBUG] Removed task-completed class from task element`);
       }
     } else {
-      console.log(`[DEBUG] Buttons already in correct state, skipping update`);
     }
     
     // Ensure delete button is always enabled regardless of task state
     const deleteBtn = taskElement.querySelector('.task-delete-btn');
     if (deleteBtn) {
-      console.log(`[DEBUG] Ensuring delete button is enabled for task ${taskId}`);
       deleteBtn.disabled = false;
       deleteBtn.removeAttribute('disabled');
       deleteBtn.classList.remove('disabled');
@@ -1104,27 +1133,6 @@ class TodoApp {
     }
     
     // Log final state
-    setTimeout(() => {
-      console.log(`[DEBUG] Final state check for task ${taskId}:`);
-      console.log(`- Task element classes: ${taskElement.className}`);
-      if (editBtn) {
-        console.log(`- Edit button: disabled=${editBtn.disabled}, classes=${editBtn.className}`);
-      }
-      if (aiBtn) {
-        console.log(`- AI button: disabled=${aiBtn.disabled}, classes=${aiBtn.className}`);
-      }
-      
-      // Check delete button state specifically
-      if (deleteBtn) {
-        console.log(`- Delete button: disabled=${deleteBtn.disabled}, classes=${deleteBtn.className}`);
-        console.log(`- Delete button has disabled attr: ${deleteBtn.hasAttribute('disabled')}`);
-        console.log(`- Delete button computed style:`, {
-          opacity: window.getComputedStyle(deleteBtn).opacity,
-          cursor: window.getComputedStyle(deleteBtn).cursor,
-          pointerEvents: window.getComputedStyle(deleteBtn).pointerEvents
-        });
-      }
-    }, 100);
   }
 
   /**
@@ -1172,6 +1180,9 @@ class TodoApp {
         input.select();
       }, 100);
     }
+
+    // Add keydown event listener for Enter key
+    this.setupEditKeydownListeners(id);
   }
 
   /**
@@ -1179,16 +1190,23 @@ class TodoApp {
    */
   saveEdit(id) {
     const task = this.tasks.find((t) => t.id === id);
-    if (!task) return;
+    if (!task) {
+      console.error(`[DEBUG] Task ${id} not found in saveEdit`);
+      return;
+    }
 
     const input = document.querySelector(`[data-edit-input="${id}"]`);
     const descriptionInput = document.querySelector(`[data-edit-desc="${id}"]`);
-    if (!input) return;
+    if (!input) {
+      console.error(`[DEBUG] Input element not found for task ${id}`);
+      return;
+    }
 
     const newText = String(input.value || "").trim();
     const newDescription = descriptionInput
       ? String(descriptionInput.value || "").trim()
       : "";
+
 
     if (!newText) {
       this.deleteTask(id);
@@ -1222,6 +1240,10 @@ class TodoApp {
       task.description = String(newDescription || "").trim();
     }
     task.updatedAt = new Date().toISOString();
+    task.isDirty = true; // Mark task as dirty after manual edit
+
+    // Clean up keydown event listeners
+    this.cleanupEditKeydownListeners(id);
 
     // Add exit animation class to the task item
     const taskElement = document.querySelector(`[data-task-id="${id}"]`);
@@ -1266,6 +1288,11 @@ class TodoApp {
    * Cancel editing
    */
   cancelEdit() {
+    // Clean up keydown event listeners
+    if (this.editingTaskId) {
+      this.cleanupEditKeydownListeners(this.editingTaskId);
+    }
+
     // Add exit animation class to the task item
     const taskElement = document.querySelector(
       `[data-task-id="${this.editingTaskId}"]`
@@ -1282,6 +1309,63 @@ class TodoApp {
       // Haptic: subtle feedback on cancel
       this.vibrate("subtle");
     }, this.CONFIG.animationDuration);
+  }
+
+  /**
+   * Setup keydown event listeners for edit fields
+   * @param {string} taskId - The ID of the task being edited
+   */
+  setupEditKeydownListeners(taskId) {
+    const input = document.querySelector(`[data-edit-input="${taskId}"]`);
+    const textarea = document.querySelector(`[data-edit-desc="${taskId}"]`);
+
+    const handleKeydown = (e) => {
+      
+      // Prevent Enter key from creating new lines in textarea
+      if (e.target === textarea && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.saveEdit(taskId);
+      }
+      // Handle Enter key in input field
+      else if (e.target === input && e.key === 'Enter') {
+        e.preventDefault();
+        this.saveEdit(taskId);
+      }
+      // Handle Escape key to cancel editing
+      else if (e.key === 'Escape') {
+        e.preventDefault();
+        this.cancelEdit();
+      }
+    };
+
+    if (input) {
+      input.addEventListener('keydown', handleKeydown);
+    }
+    if (textarea) {
+      textarea.addEventListener('keydown', handleKeydown);
+    }
+
+    // Store the listeners for cleanup
+    this.editKeydownListeners = this.editKeydownListeners || {};
+    this.editKeydownListeners[taskId] = { input, textarea, handleKeydown };
+  }
+
+  /**
+   * Cleanup keydown event listeners for edit fields
+   * @param {string} taskId - The ID of the task being edited
+   */
+  cleanupEditKeydownListeners(taskId) {
+    if (this.editKeydownListeners && this.editKeydownListeners[taskId]) {
+      const { input, textarea, handleKeydown } = this.editKeydownListeners[taskId];
+      
+      if (input) {
+        input.removeEventListener('keydown', handleKeydown);
+      }
+      if (textarea) {
+        textarea.removeEventListener('keydown', handleKeydown);
+      }
+      delete this.editKeydownListeners[taskId];
+    }
   }
 
   /**
@@ -1373,26 +1457,21 @@ class TodoApp {
    * Render the todo list
    */
   render() {
-    console.log(`[DEBUG] render() called`);
-    console.log(`[DEBUG] Current tasks in render:`, this.tasks.map(t => ({ id: t.id, completed: t.completed, text: t.text })));
     
     const taskList = document.getElementById("taskList");
     const emptyState = document.getElementById("emptyState");
 
     if (!taskList || !emptyState) {
-      console.log(`[DEBUG] render() failed: taskList or emptyState not found`);
       return;
     }
 
     const filteredTasks = this.getFilteredTasks();
-    console.log(`[DEBUG] Filtered tasks (${this.currentFilter}):`, filteredTasks.map(t => ({ id: t.id, completed: t.completed, text: t.text })));
 
     // Legacy task count element no longer present
     // Statistics are now handled by the header-stats component
 
     // Show/hide empty state
     if (filteredTasks.length === 0) {
-      console.log(`[DEBUG] No filtered tasks, showing empty state`);
       emptyState.style.display = "block";
       taskList.innerHTML = "";
       return;
@@ -1405,7 +1484,6 @@ class TodoApp {
       .map((task) => this.renderTask(task))
       .join("");
     
-    console.log(`[DEBUG] Rendering ${filteredTasks.length} tasks with HTML length: ${renderedHTML.length}`);
     taskList.innerHTML = renderedHTML;
 
     // Setup task event listeners
@@ -1415,14 +1493,11 @@ class TodoApp {
     try {
       if (window.lucide && typeof lucide.createIcons === "function") {
         lucide.createIcons();
-        console.log(`[DEBUG] Lucide icons hydrated`);
       }
     } catch (_) {}
 
     // Update button states for all rendered tasks to ensure proper disabled/enabled state
-    console.log(`[DEBUG] render() completed, updating button states for ${filteredTasks.length} tasks`);
     filteredTasks.forEach(task => {
-      console.log(`[DEBUG] Updating button state for task ${task.id}: completed=${task.completed}`);
       this.updateTaskButtonStates(task.id, task.completed);
       
       // Ensure delete button is always enabled for all tasks
@@ -1430,7 +1505,6 @@ class TodoApp {
       if (taskElement) {
         const deleteBtn = taskElement.querySelector('.task-delete-btn');
         if (deleteBtn) {
-          console.log(`[DEBUG] Force-enabling delete button for task ${task.id} during render`);
           deleteBtn.disabled = false;
           deleteBtn.removeAttribute('disabled');
           deleteBtn.classList.remove('disabled');
@@ -1438,7 +1512,6 @@ class TodoApp {
       }
     });
     
-    console.log(`[DEBUG] render() completed successfully`);
   }
 
   /**
@@ -1448,7 +1521,7 @@ class TodoApp {
     const isEditing = this.editingTaskId === task.id;
 
     return `
-      <div class="task-item ${task.completed ? "completed" : ""} ${isEditing ? "edit-mode" : ""}" data-task-id="${task.id}">
+      <div class="task-item ${task.completed ? "completed" : ""} ${isEditing ? "edit-mode" : ""} ${task.isDirty ? "dirty" : ""}" data-task-id="${task.id}">
         <div class="task-content">
           <label class="task-checkbox luxury-checkbox" data-task-id="${task.id}">
             <input type="checkbox" ${task.completed ? "checked" : ""}
@@ -1546,12 +1619,10 @@ class TodoApp {
    * Wire global "#task-ai-refactor-btn" to refactor the currently active/selected task via generic AIProviders.
    */
   setupAIRefactorListeners() {
-    console.debug("[AI] setupAIRefactorListeners init");
 
     // DOM presence check for the header button
     try {
       const exists = !!document.getElementById('task-ai-refactor-btn');
-      console.log("Button exists:", exists);
     } catch (_) {}
 
     // Determine active/selected task: prefer currently editing, else first visible, else first in filtered list.
@@ -1581,7 +1652,6 @@ class TodoApp {
         debugPick.by = "filteredHead";
         debugPick.id = chosen.id;
       }
-      console.debug("[AI] getActiveTodo selection", debugPick);
       return chosen;
     };
 
@@ -1589,23 +1659,19 @@ class TodoApp {
     // Introspect the current onclick handler if any
     try {
       const onclickText = btn && btn.onclick ? btn.onclick.toString() : "onclick not set, using addEventListener";
-      console.log("Handler attached:", onclickText);
     } catch (_) {}
 
     if (!btn) {
       console.warn("[AI] Refactor button #task-ai-refactor-btn not found in DOM at listener setup");
       return;
     }
-    console.debug("[AI] Attaching click handler to #task-ai-refactor-btn");
     // Diagnostic: check computed pointer-events and visibility to detect overlay or CSS blocking clicks
     try {
       const cs = window.getComputedStyle(btn);
-      console.debug("[AI] Button computed style", { pointerEvents: cs.pointerEvents, display: cs.display, visibility: cs.visibility, opacity: cs.opacity });
     } catch (_) {}
     // Capture-phase diagnostic to detect if clicks reach the element at all
     btn.addEventListener("click", (ev) => {
       try {
-        console.debug("[AI] Capture reached on header button", { type: ev.type, target: ev.target && (ev.target.id || ev.target.className), time: Date.now() });
       } catch (_) {}
     }, true);
     btn.onclick = null;
@@ -1613,27 +1679,16 @@ class TodoApp {
       console.time("RefactorFlow");
       e.preventDefault();
       const debugId = Date.now();
-      console.log("[AI] Start refactor", debugId);
-      console.debug("[AI] Refactor button clicked");
-      console.timeLog("RefactorFlow", "Step 1: Button clicked");
 
       // Feature detection logs (direct provider usage)
       const hasWindow = typeof window !== "undefined";
       const hasProviders = hasWindow && !!window.AIProviders;
       const hasRefactor = hasProviders && typeof window.AIProviders.refactorTodo === "function";
-      console.debug("[AI] Feature detect (provider)", { hasWindow, hasProviders, hasRefactor });
-      console.log("[DEBUG] AIProviders instance:", window.AIProviders);
-      console.log("[DEBUG] refactorTodo type:", typeof window.AIProviders?.refactorTodo);
 
       try {
         // Wrap entire flow to capture crashes
         try {
           var todo = getActiveTodo();
-          console.debug("[AI] Active todo resolved", {
-            id: todo && todo.id,
-            titleLen: todo && (todo.text || todo.title || "").length,
-            descLen: todo && (todo.description || "").length
-          });
           if (!todo) {
             console.error("[AI] No active todo to refactor");
             console.timeEnd("RefactorFlow");
@@ -1643,8 +1698,6 @@ class TodoApp {
           // Log the outgoing payload shape/lengths
           const outTitle = (todo.text || todo.title || "");
           const outDesc = (todo.description || "");
-          console.log("[AI] Sending task:", { id: todo.id, title: outTitle.length, desc: outDesc.length }, debugId);
-          console.timeLog("RefactorFlow", "Step 2: Payload prepared");
 
           var prevLabel = btn.innerText;
           btn.disabled = true;
@@ -1652,8 +1705,6 @@ class TodoApp {
 
 
 
-          console.debug("[AI] Invoking provider via window.AIProviders.refactorTodo", { debugId });
-          console.timeLog("RefactorFlow", "Step 3: Invoking provider");
           if (!(typeof window !== "undefined" && window.AIProviders && typeof window.AIProviders.refactorTodo === "function")) {
             console.error("[AI] Provider not available - aborting refactor", {
               hasWindow: typeof window !== "undefined",
@@ -1670,15 +1721,7 @@ class TodoApp {
             description: outDesc,
             __debugId: debugId // transient debug flow id
           });
-          console.timeLog("RefactorFlow", "Step 4: Provider returned");
 
-          console.debug("[AI] Provider result received", {
-            ok: !!result,
-            hasId: !!(result && result.id),
-            titleType: result && typeof result.title,
-            descIsArray: result && Array.isArray(result.description),
-            debugId
-          });
 
           var valid =
             result &&
@@ -1699,11 +1742,6 @@ class TodoApp {
           const finalDescription = aiDescription.length > 0 ? aiDescription : originalDescription;
           
           if (aiDescription.length === 0 && originalDescription.length > 0) {
-            console.log("[AI] AI returned empty description, preserving original", {
-              taskId: todo.id,
-              originalLength: originalDescription.length,
-              debugId
-            });
           }
 
           var target = this.tasks.find((t) => String(t.id) === String(todo.id));
@@ -1733,15 +1771,12 @@ class TodoApp {
           }
 
           // Process the AI refactor response with all side effects
-          await this.processAIRefactorResponse(result, target, debugId);
-          console.timeLog("RefactorFlow", "Step 5: State updated and side effects processed");
         } catch (e) {
           console.error("[CRITICAL] Handler crash:", e);
         }
       } finally {
         btn.disabled = false;
         btn.innerText = prevLabel || "Refactor with AI";
-        try { console.timeEnd("RefactorFlow"); } catch (_) {}
       }
     });
 
@@ -2199,7 +2234,6 @@ class TodoApp {
    * @param {string} debugId - Debug ID for tracking
    */
   async processAIRefactorResponse(result, originalTask, debugId) {
-    console.log("[AI] Processing refactor response with side effects", { debugId });
     
     // Validate the result
     const valid = result &&
@@ -2219,11 +2253,6 @@ class TodoApp {
     const finalDescription = aiDescription.length > 0 ? aiDescription : originalDescription;
     
     if (aiDescription.length === 0 && originalDescription.length > 0) {
-      console.log("[AI] AI returned empty description, preserving original", {
-        taskId: originalTask.id,
-        originalLength: originalDescription.length,
-        debugId
-      });
     }
 
     // Find the target task in our tasks array
@@ -2243,8 +2272,10 @@ class TodoApp {
       ...target,
       text: String(normalized.title || "").trim(),
       description: String(normalized.description || "").trim(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      isDirty: true // Mark task as dirty after AI edit
     };
+    
     
     // Replace the task in the array
     const taskIndex = this.tasks.findIndex(t => String(t.id) === String(target.id));
@@ -2310,7 +2341,6 @@ class TodoApp {
       gamificationManager.incrementAIWordsEdited(originalWords, newWords);
     }
 
-    console.log("[AI] AI refactor response processed successfully", { debugId });
     return true;
   }
 }
@@ -2320,20 +2350,15 @@ class TodoApp {
  * Also create global app instance safely after DOM is ready to avoid early errors.
  */
 document.addEventListener("DOMContentLoaded", function () {
-  console.debug("[AI] DOMContentLoaded");
-  try { console.log("[BOOT] DOMContentLoaded fired"); } catch (_) {}
-  try { console.log("Button exists:", !!document.getElementById('task-ai-refactor-btn')); } catch (_) {}
 
   // Network layer inspection: fetch interception (install once)
   try {
     if (!window.__fetchInterceptInstalled) {
       const originalFetch = window.fetch;
       window.fetch = function(...args) {
-        try { console.log("[NETWORK] Fetch call to:", args[0]); } catch (_) {}
         return originalFetch.apply(this, args);
       };
       window.__fetchInterceptInstalled = true;
-      console.debug("[NETWORK] fetch interception installed");
     }
   } catch (e) {
     console.warn("[NETWORK] Failed to install fetch interception", e);
@@ -2345,10 +2370,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const ok = typeof window !== "undefined"
         && !!window.AIProviders
         && typeof window.AIProviders.refactorTodo === "function";
-      console[ok ? "debug" : "warn"]("[AI] Provider " + (ok ? "ready" : "not ready"), {
-        hasAIProviders: typeof window !== "undefined" && !!window.AIProviders,
-        hasMethod: typeof (window.AIProviders && window.AIProviders.refactorTodo)
-      });
       return ok;
     } catch (e) {
       console.warn("[AI] Provider check failed", e);
@@ -2358,13 +2379,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // No legacy facade creation. We call window.AIProviders.refactorTodo directly where needed.
 
-  try { console.log("[BOOT] setupAIRefactorListeners invoked? about to instantiate app"); } catch (_) {}
 
   // Create global todo app
   try {
     if (!window.todoApp) {
       window.todoApp = new TodoApp();
-      console.debug("[AI] TodoApp created; listeners and AI wiring should be set up");
     }
   } catch (e) {
     console.warn("TodoApp init failed:", e);

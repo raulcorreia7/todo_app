@@ -165,7 +165,6 @@ class ValidationManager {
       }
     ];
 
-    console.log("[Validation Tests] Running", tests.length, "test cases...");
     
     let passed = 0;
     let failed = 0;
@@ -176,7 +175,6 @@ class ValidationManager {
       
       if (passedTest) {
         passed++;
-        console.log(`[Test ${index + 1}] ✓ ${test.name}`);
       } else {
         failed++;
         console.error(`[Test ${index + 1}] ✗ ${test.name}`);
@@ -185,7 +183,6 @@ class ValidationManager {
       }
     });
 
-    console.log(`[Validation Tests] Results: ${passed} passed, ${failed} failed`);
     return { passed, failed, total: tests.length };
   }
 
@@ -216,7 +213,6 @@ class ValidationManager {
       }
     ];
 
-    console.log("[Normalization Tests] Running", tests.length, "test cases...");
     
     let passed = 0;
     let failed = 0;
@@ -227,7 +223,6 @@ class ValidationManager {
       
       if (passedTest) {
         passed++;
-        console.log(`[Test ${index + 1}] ✓ ${test.name}`);
       } else {
         failed++;
         console.error(`[Test ${index + 1}] ✗ ${test.name}`);
@@ -236,7 +231,6 @@ class ValidationManager {
       }
     });
 
-    console.log(`[Normalization Tests] Results: ${passed} passed, ${failed} failed`);
     return { passed, failed, total: tests.length };
   }
 

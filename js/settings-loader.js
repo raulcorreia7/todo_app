@@ -50,7 +50,6 @@ class SettingsLoader {
         await this.applySettingsSafely(settings);
         
         this.isLoaded = true;
-        console.log('Settings loaded successfully on attempt', attempt);
         
         // Emit event for other components
         this.emitSettingsLoaded(settings);
