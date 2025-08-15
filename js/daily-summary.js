@@ -4,25 +4,25 @@
  */
 
 class DailySummaryManager {
-    constructor() {
-        this.isInitialized = false;
-        this.init();
-    }
+  constructor() {
+    this.isInitialized = false;
+    this.init();
+  }
 
-    init() {
-        this.createDailySummaryElement();
-        this.setupAutoShow();
-        this.isInitialized = true;
-    }
+  init() {
+    this.createDailySummaryElement();
+    this.setupAutoShow();
+    this.isInitialized = true;
+  }
 
-    /**
-     * Create the daily summary element
-     */
-    createDailySummaryElement() {
-        const summary = document.createElement('div');
-        summary.id = 'dailySummary';
-        summary.className = 'daily-summary';
-        summary.style.cssText = `
+  /**
+   * Create the daily summary element
+   */
+  createDailySummaryElement() {
+    const summary = document.createElement("div");
+    summary.id = "dailySummary";
+    summary.className = "daily-summary";
+    summary.style.cssText = `
             position: fixed;
             top: 50%;
             left: 50%;
@@ -41,7 +41,7 @@ class DailySummaryManager {
             display: none;
         `;
 
-        summary.innerHTML = `
+    summary.innerHTML = `
             <div class="daily-summary-header">
                 <h2 style="font-size: 28px; margin-bottom: 8px; color: var(--color-text);">Daily Summary</h2>
                 <p style="opacity: 0.7; margin-bottom: 30px;">Your achievements for today</p>
@@ -83,160 +83,167 @@ class DailySummaryManager {
             ">Close Summary</button>
         `;
 
-        document.body.appendChild(summary);
-    }
+    document.body.appendChild(summary);
+  }
 
-    /**
-     * Setup automatic showing of daily summary
-     */
-    setupAutoShow() {
-        // Check at 11:59 PM or when user hasn't been active for 4+ hours
+  /**
+   * Setup automatic showing of daily summary
+   */
+  setupAutoShow() {
+    // Check at 11:59 PM or when user hasn't been active for 4+ hours
+    this.checkForDailySummary();
+
+    // Also check when page becomes visible after being hidden
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
         this.checkForDailySummary();
-        
-        // Also check when page becomes visible after being hidden
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                this.checkForDailySummary();
-            }
-        });
-    }
+      }
+    });
+  }
 
-    /**
-     * Check if should show daily summary
-     */
-    checkForDailySummary() {
-        const lastShown = storageManager.getLastDailySummary();
-        const today = new Date().toDateString();
-        
-        if (lastShown !== today) {
-            const tasks = storageManager.getTasks();
-            const todayTasks = tasks.filter(task => 
-                new Date(task.createdAt).toDateString() === today
-            );
-            
-            if (todayTasks.length > 0) {
-                this.showDailySummary();
-            }
-        }
-    }
+  /**
+   * Check if should show daily summary
+   */
+  checkForDailySummary() {
+    const lastShown = storageManager.getLastDailySummary();
+    const today = new Date().toDateString();
 
-    /**
-     * Show the daily summary
-     */
-    showDailySummary() {
-        const tasks = storageManager.getTasks();
-        const today = new Date().toDateString();
-        
-        const todayTasks = tasks.filter(task => 
-            new Date(task.createdAt).toDateString() === today
-        );
-        
-        const completedToday = todayTasks.filter(task => task.completed).length;
-        const addedToday = todayTasks.length;
-        const karmaToday = gamificationManager.dailyStats.completed + 
-                          (gamificationManager.dailyStats.edited * 2);
-        
-        // Calculate productivity score
-        const productivityScore = addedToday > 0 ? 
-            Math.round((completedToday / addedToday) * 100) : 0;
-        
-        // Update summary content
-        document.getElementById('summaryCompleted').textContent = completedToday;
-        document.getElementById('summaryAdded').textContent = addedToday;
-        document.getElementById('summaryKarma').textContent = karmaToday;
-        document.getElementById('summaryScore').textContent = `${productivityScore}%`;
-        
-        // Set motivational message
-        const message = this.getMotivationalMessage(productivityScore, completedToday);
-        document.getElementById('summaryMessage').textContent = message;
-        
-        // Show summary
-        const summary = document.getElementById('dailySummary');
-        summary.style.display = 'block';
-        
-        requestAnimationFrame(() => {
-            summary.style.opacity = '1';
-            summary.style.transform = 'translate(-50%, -50%) scale(1)';
-        });
-        
-        // Save that we've shown it today
-        storageManager.setLastDailySummary(today);
-        
-        // Setup close handler
-        summary.querySelector('.summary-close-btn').addEventListener('click', () => {
-            this.closeDailySummary();
-        });
-        
-        // Close on outside click
-        summary.addEventListener('click', (e) => {
-            if (e.target === summary) {
-                this.closeDailySummary();
-            }
-        });
-    }
+    if (lastShown !== today) {
+      const tasks = storageManager.getTasks();
+      const todayTasks = tasks.filter(
+        (task) => new Date(task.createdAt).toDateString() === today
+      );
 
-    /**
-     * Get motivational message based on performance
-     */
-    getMotivationalMessage(score, completed) {
-        if (completed === 0) {
-            return "Tomorrow is a new day to start fresh and make progress!";
-        } else if (score === 100) {
-            return "Perfect day! You've completed everything you set out to do. Outstanding!";
-        } else if (score >= 75) {
-            return "Excellent progress! You're building strong productivity habits.";
-        } else if (score >= 50) {
-            return "Good work! Keep building momentum for tomorrow.";
-        } else if (score >= 25) {
-            return "Every completed task counts. You're making steady progress!";
-        } else {
-            return "Small steps lead to big changes. Tomorrow is your day!";
-        }
-    }
-
-    /**
-     * Close the daily summary
-     */
-    closeDailySummary() {
-        const summary = document.getElementById('dailySummary');
-        summary.style.opacity = '0';
-        summary.style.transform = 'translate(-50%, -50%) scale(0.9)';
-        
-        setTimeout(() => {
-            summary.style.display = 'none';
-        }, 300);
-    }
-
-    /**
-     * Manually trigger daily summary (for testing)
-     */
-    showSummary() {
+      if (todayTasks.length > 0) {
         this.showDailySummary();
+      }
     }
+  }
+
+  /**
+   * Show the daily summary
+   */
+  showDailySummary() {
+    const tasks = storageManager.getTasks();
+    const today = new Date().toDateString();
+
+    const todayTasks = tasks.filter(
+      (task) => new Date(task.createdAt).toDateString() === today
+    );
+
+    const completedToday = todayTasks.filter((task) => task.completed).length;
+    const addedToday = todayTasks.length;
+    const karmaToday =
+      gamificationManager.dailyStats.completed +
+      gamificationManager.dailyStats.edited * 2;
+
+    // Calculate productivity score
+    const productivityScore =
+      addedToday > 0 ? Math.round((completedToday / addedToday) * 100) : 0;
+
+    // Update summary content
+    document.getElementById("summaryCompleted").textContent = completedToday;
+    document.getElementById("summaryAdded").textContent = addedToday;
+    document.getElementById("summaryKarma").textContent = karmaToday;
+    document.getElementById("summaryScore").textContent =
+      `${productivityScore}%`;
+
+    // Set motivational message
+    const message = this.getMotivationalMessage(
+      productivityScore,
+      completedToday
+    );
+    document.getElementById("summaryMessage").textContent = message;
+
+    // Show summary
+    const summary = document.getElementById("dailySummary");
+    summary.style.display = "block";
+
+    requestAnimationFrame(() => {
+      summary.style.opacity = "1";
+      summary.style.transform = "translate(-50%, -50%) scale(1)";
+    });
+
+    // Save that we've shown it today
+    storageManager.setLastDailySummary(today);
+
+    // Setup close handler
+    summary
+      .querySelector(".summary-close-btn")
+      .addEventListener("click", () => {
+        this.closeDailySummary();
+      });
+
+    // Close on outside click
+    summary.addEventListener("click", (e) => {
+      if (e.target === summary) {
+        this.closeDailySummary();
+      }
+    });
+  }
+
+  /**
+   * Get motivational message based on performance
+   */
+  getMotivationalMessage(score, completed) {
+    if (completed === 0) {
+      return "Tomorrow is a new day to start fresh and make progress!";
+    } else if (score === 100) {
+      return "Perfect day! You've completed everything you set out to do. Outstanding!";
+    } else if (score >= 75) {
+      return "Excellent progress! You're building strong productivity habits.";
+    } else if (score >= 50) {
+      return "Good work! Keep building momentum for tomorrow.";
+    } else if (score >= 25) {
+      return "Every completed task counts. You're making steady progress!";
+    } else {
+      return "Small steps lead to big changes. Tomorrow is your day!";
+    }
+  }
+
+  /**
+   * Close the daily summary
+   */
+  closeDailySummary() {
+    const summary = document.getElementById("dailySummary");
+    summary.style.opacity = "0";
+    summary.style.transform = "translate(-50%, -50%) scale(0.9)";
+
+    setTimeout(() => {
+      summary.style.display = "none";
+    }, 300);
+  }
+
+  /**
+   * Manually trigger daily summary (for testing)
+   */
+  showSummary() {
+    this.showDailySummary();
+  }
 }
 
 // Extend storage manager for daily summary
-StorageManager.prototype.getLastDailySummary = function() {
-    if (!this.isReady()) return null;
-    
-    try {
-        return localStorage.getItem('luxury-todo-last-summary');
-    } catch (error) {
-        console.warn('Failed to get last daily summary:', error);
-        return null;
-    }
+StorageManager.prototype.getLastDailySummary = function () {
+  if (!this.isReady()) return null;
+
+  try {
+    return localStorage.getItem("luxury-todo-last-summary");
+  } catch (error) {
+    console.warn("Failed to get last daily summary:", error);
+    return null;
+  }
 };
 
-StorageManager.prototype.setLastDailySummary = function(date) {
-    if (!this.isReady()) return false;
-    
-    try {
-        localStorage.setItem('luxury-todo-last-summary', date);
-        return true;
-    } catch (error) {
-        console.warn('Failed to save last daily summary:', error);
-        return false;
-    }
+StorageManager.prototype.setLastDailySummary = function (date) {
+  if (!this.isReady()) return false;
+
+  try {
+    localStorage.setItem("luxury-todo-last-summary", date);
+    return true;
+  } catch (error) {
+    console.warn("Failed to save last daily summary:", error);
+    return false;
+  }
 };
 
 // Create global daily summary manager
@@ -244,5 +251,5 @@ const dailySummaryManager = new DailySummaryManager();
 
 // Export for debugging
 if (window.DEV) {
-    window.dailySummaryManager = dailySummaryManager;
+  window.dailySummaryManager = dailySummaryManager;
 }

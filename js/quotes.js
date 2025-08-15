@@ -49,13 +49,13 @@ class QuoteManager {
       "It's going to be hard, but hard does not mean impossible.",
       "Don't wait for opportunity. Create it.",
       "The key to success is to focus on goals, not obstacles.",
-      "Dream it. Believe it. Build it."
+      "Dream it. Believe it. Build it.",
     ];
-    
+
     this.currentQuote = null;
     this.nextQuote = null; // Preloaded next quote
     this.lastQuoteDate = null;
-    
+
     this.init();
   }
 
@@ -87,7 +87,7 @@ class QuoteManager {
   saveQuoteData() {
     const data = {
       currentQuote: this.currentQuote,
-      lastQuoteDate: this.lastQuoteDate
+      lastQuoteDate: this.lastQuoteDate,
     };
     storageManager.setQuoteData(data);
   }
@@ -97,13 +97,13 @@ class QuoteManager {
    */
   updateDailyQuote() {
     const today = new Date().toDateString();
-    
+
     if (this.lastQuoteDate !== today) {
       this.selectNewQuote();
       this.lastQuoteDate = today;
       this.saveQuoteData();
     }
-    
+
     this.displayQuote();
   }
 
@@ -119,7 +119,7 @@ class QuoteManager {
    * Display current quote
    */
   displayQuote() {
-    const quoteElement = document.querySelector('.daily-quote');
+    const quoteElement = document.querySelector(".daily-quote");
     if (quoteElement && this.currentQuote) {
       quoteElement.textContent = `"${this.currentQuote}"`;
     }
@@ -131,7 +131,7 @@ class QuoteManager {
   startQuoteRotation() {
     // Check if it's a new day and set daily quote
     this.updateDailyQuote();
-    
+
     // Start 15-second rotation for subtle quote changes
     setInterval(() => {
       this.rotateToNewQuote();
@@ -142,12 +142,12 @@ class QuoteManager {
    * Rotate to a new quote (subtle change)
    */
   rotateToNewQuote() {
-    const quoteElement = document.querySelector('.daily-quote');
+    const quoteElement = document.querySelector(".daily-quote");
     if (!quoteElement) return;
-    
+
     // Add changing class for fade effect
-    quoteElement.classList.add('changing');
-    
+    quoteElement.classList.add("changing");
+
     // After fade out, change quote and fade back in
     setTimeout(() => {
       // Select a different quote from the array
@@ -156,13 +156,13 @@ class QuoteManager {
         const randomIndex = Math.floor(Math.random() * this.quotes.length);
         newQuote = this.quotes[randomIndex];
       } while (newQuote === this.currentQuote && this.quotes.length > 1);
-      
+
       this.currentQuote = newQuote;
       this.displayQuote();
-      
+
       // Remove changing class to fade back in
       setTimeout(() => {
-        quoteElement.classList.remove('changing');
+        quoteElement.classList.remove("changing");
       }, 50);
     }, 500); // Match the CSS transition duration
   }
@@ -193,7 +193,7 @@ class QuoteManager {
       const randomIndex = Math.floor(Math.random() * this.quotes.length);
       newQuote = this.quotes[randomIndex];
     } while (newQuote === this.currentQuote && this.quotes.length > 1);
-    
+
     this.nextQuote = newQuote;
   }
 
@@ -201,9 +201,9 @@ class QuoteManager {
    * Setup click handler for the quote element
    */
   setupQuoteClickHandler() {
-    const quoteElement = document.querySelector('.daily-quote');
+    const quoteElement = document.querySelector(".daily-quote");
     if (quoteElement) {
-      quoteElement.addEventListener('click', () => {
+      quoteElement.addEventListener("click", () => {
         this.instantQuoteChange();
       });
     }
@@ -213,9 +213,9 @@ class QuoteManager {
    * Instantly change quote when clicked
    */
   instantQuoteChange() {
-    const quoteElement = document.querySelector('.daily-quote');
+    const quoteElement = document.querySelector(".daily-quote");
     if (!quoteElement || !this.nextQuote) return;
-    
+
     // Use the preloaded quote if available
     if (this.nextQuote) {
       this.currentQuote = this.nextQuote;
@@ -227,46 +227,46 @@ class QuoteManager {
         const randomIndex = Math.floor(Math.random() * this.quotes.length);
         newQuote = this.quotes[randomIndex];
       } while (newQuote === this.currentQuote && this.quotes.length > 1);
-      
+
       this.currentQuote = newQuote;
     }
-    
+
     // Preload the next quote for future clicks
     this.preloadNextQuote();
-    
+
     // Update display with instant transition
-    quoteElement.style.opacity = '0';
-    
+    quoteElement.style.opacity = "0";
+
     // Use requestAnimationFrame for smoother transition
     requestAnimationFrame(() => {
       this.displayQuote();
-      quoteElement.style.opacity = '1';
+      quoteElement.style.opacity = "1";
     });
   }
 }
 
 // Extend storage manager for quotes
-if (typeof StorageManager !== 'undefined') {
-  StorageManager.prototype.getQuoteData = function() {
+if (typeof StorageManager !== "undefined") {
+  StorageManager.prototype.getQuoteData = function () {
     if (!this.isReady()) return null;
-    
+
     try {
-      const data = localStorage.getItem('luxury-todo-quote');
+      const data = localStorage.getItem("luxury-todo-quote");
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      console.warn('Failed to load quote data:', error);
+      console.warn("Failed to load quote data:", error);
       return null;
     }
   };
 
-  StorageManager.prototype.setQuoteData = function(data) {
+  StorageManager.prototype.setQuoteData = function (data) {
     if (!this.isReady()) return false;
-    
+
     try {
-      localStorage.setItem('luxury-todo-quote', JSON.stringify(data));
+      localStorage.setItem("luxury-todo-quote", JSON.stringify(data));
       return true;
     } catch (error) {
-      console.warn('Failed to save quote data:', error);
+      console.warn("Failed to save quote data:", error);
       return false;
     }
   };

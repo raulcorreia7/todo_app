@@ -4,690 +4,699 @@
  */
 
 class ThemeManager {
-    constructor() {
-        this.themes = {
-            midnight: {
-                name: 'Midnight',
-                primary: '#1a1a2e',
-                secondary: '#16213e',
-                accent: '#0f3460',
-                text: '#e94560',
-                glow: '#e94560',
-                glowPrimary: '#ff6b6b',
-                glowSecondary: '#ffd93d',
-                dangerGlow: '#e94560',
-                dangerShadow: 'rgba(233, 69, 96, 0.5)',
-                particleColor: '#ffffff',
-                particleCount: 60,
-                particleSize: 4,
-                shadow: 'rgba(233, 69, 96, 0.3)',
-                glass: 'rgba(26, 26, 46, 0.8)',
-                border: 'rgba(233, 69, 96, 0.2)',
-                tags: ['dark', 'cool'],
-                animationDuration: '2.5s',
-                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-            },
-            ivory: {
-                name: 'Ivory',
-                primary: '#f8f9fa',
-                secondary: '#e9ecef',
-                accent: '#dee2e6',
-                text: '#495057',
-                glow: '#6c757d',
-                glowPrimary: '#ffd700',
-                glowSecondary: '#ff8c00',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#8b4513',
-                particleCount: 35,
-                particleSize: 2,
-                shadow: 'rgba(108, 117, 125, 0.2)',
-                glass: 'rgba(248, 249, 250, 0.8)',
-                border: 'rgba(108, 117, 125, 0.1)',
-                tags: ['light'],
-                animationDuration: '2.0s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            champagne: {
-                name: 'Champagne',
-                primary: '#fff8e7',
-                secondary: '#f3e5ab',
-                accent: '#daa520',
-                text: '#8b4513',
-                glow: '#daa520',
-                glowPrimary: '#ffd700',
-                glowSecondary: '#ff8c00',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#8b4513',
-                particleCount: 40,
-                particleSize: 3,
-                shadow: 'rgba(218, 165, 32, 0.3)',
-                glass: 'rgba(255, 248, 231, 0.8)',
-                border: 'rgba(218, 165, 32, 0.2)',
-                tags: ['light', 'warm'],
-                animationDuration: '2.2s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            graphite: {
-                name: 'Graphite',
-                primary: '#2c2c2c',
-                secondary: '#404040',
-                accent: '#666666',
-                text: '#cccccc',
-                glow: '#999999',
-                glowPrimary: '#c0c0c0',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.5)',
-                particleColor: '#ffffff',
-                particleCount: 50,
-                particleSize: 3,
-                shadow: 'rgba(153, 153, 153, 0.3)',
-                glass: 'rgba(44, 44, 44, 0.8)',
-                border: 'rgba(153, 153, 153, 0.2)',
-                tags: ['dark'],
-                animationDuration: '2.3s',
-                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-            },
-            aurora: {
-                name: 'Aurora',
-                primary: '#0a0a0a',
-                secondary: '#1a1a2e',
-                accent: '#16213e',
-                text: '#00ff88',
-                glow: '#00ff88',
-                glowPrimary: '#00ff88',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#ff4757',
-                dangerShadow: 'rgba(255, 71, 87, 0.5)',
-                particleColor: '#00ff88',
-                particleCount: 70,
-                particleSize: 5,
-                shadow: 'rgba(0, 255, 136, 0.3)',
-                glass: 'rgba(10, 10, 10, 0.8)',
-                border: 'rgba(0, 255, 136, 0.2)',
-                tags: ['dark', 'cool'],
-                animationDuration: '3.0s',
-                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-            },
-            arcticSky: {
-                name: 'Arctic Sky',
-                primary: '#e6f2ff',
-                secondary: '#cce5ff',
-                accent: '#4da6ff',
-                text: '#2c5282',
-                glow: '#4da6ff',
-                glowPrimary: '#4da6ff',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#4da6ff',
-                particleCount: 45,
-                particleSize: 3,
-                shadow: 'rgba(77, 166, 255, 0.3)',
-                glass: 'rgba(230, 242, 255, 0.7)',
-                border: 'rgba(77, 166, 255, 0.2)',
-                tags: ['light', 'cool'],
-                animationDuration: '2.4s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            emerald: {
-                name: 'Emerald',
-                primary: '#0c4a3e',
-                secondary: '#134e4a',
-                accent: '#2ecc71',
-                text: '#e8f8f5',
-                glow: '#2ecc71',
-                glowPrimary: '#2ecc71',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#e74c3c',
-                dangerShadow: 'rgba(231, 76, 60, 0.5)',
-                particleColor: '#2ecc71',
-                particleCount: 55,
-                particleSize: 4,
-                shadow: 'rgba(46, 204, 113, 0.3)',
-                glass: 'rgba(12, 74, 62, 0.8)',
-                border: 'rgba(46, 204, 113, 0.2)',
-                tags: ['dark', 'cool'],
-                animationDuration: '2.6s',
-                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-            },
-            sakura: {
-                name: 'Sakura',
-                primary: '#fff5f5',
-                secondary: '#ffe0e0',
-                accent: '#ffb3ba',
-                text: '#8b2635',
-                glow: '#ff69b4',
-                glowPrimary: '#ff69b4',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#ff69b4',
-                particleCount: 40,
-                particleSize: 3,
-                shadow: 'rgba(255, 105, 180, 0.3)',
-                glass: 'rgba(255, 245, 245, 0.8)',
-                border: 'rgba(255, 105, 180, 0.2)',
-                tags: ['light', 'warm'],
-                animationDuration: '2.1s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            pearl: {
-                name: 'Pearl',
-                primary: '#f8f8ff',
-                secondary: '#e6e6fa',
-                accent: '#d4af37',
-                text: '#4b0082',
-                glow: '#d4af37',
-                glowPrimary: '#ffd700',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#4b0082',
-                particleCount: 38,
-                particleSize: 2,
-                shadow: 'rgba(212, 175, 55, 0.3)',
-                glass: 'rgba(248, 248, 255, 0.8)',
-                border: 'rgba(212, 175, 55, 0.2)',
-                tags: ['light', 'warm'],
-                animationDuration: '2.0s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            mint: {
-                name: 'Mint',
-                primary: '#f0fff0',
-                secondary: '#e0ffe0',
-                accent: '#2dd4bf',
-                text: '#006400',
-                glow: '#2dd4bf',
-                glowPrimary: '#2dd4bf',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#2dd4bf',
-                particleCount: 42,
-                particleSize: 3,
-                shadow: 'rgba(45, 212, 191, 0.3)',
-                glass: 'rgba(240, 255, 240, 0.8)',
-                border: 'rgba(45, 212, 191, 0.2)',
-                tags: ['light', 'cool'],
-                animationDuration: '2.2s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            coral: {
-                name: 'Coral',
-                primary: '#fff0f5',
-                secondary: '#ffe4e1',
-                accent: '#ff7f50',
-                text: '#8b0000',
-                glow: '#ff7f50',
-                glowPrimary: '#ff7f50',
-                glowSecondary: '#ffd700',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#ff7f50',
-                particleCount: 41,
-                particleSize: 3,
-                shadow: 'rgba(255, 127, 80, 0.3)',
-                glass: 'rgba(255, 240, 245, 0.8)',
-                border: 'rgba(255, 127, 80, 0.2)',
-                tags: ['light', 'warm'],
-                animationDuration: '2.1s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            frost: {
-                name: 'Frost',
-                primary: '#f0f8ff',
-                secondary: '#e6f2ff',
-                accent: '#22d3ee',
-                text: '#000080',
-                glow: '#22d3ee',
-                glowPrimary: '#22d3ee',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#22d3ee',
-                particleCount: 44,
-                particleSize: 3,
-                shadow: 'rgba(34, 211, 238, 0.3)',
-                glass: 'rgba(240, 248, 255, 0.8)',
-                border: 'rgba(34, 211, 238, 0.2)',
-                tags: ['light', 'cool'],
-                animationDuration: '2.3s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            lavender: {
-                name: 'Lavender',
-                primary: '#f5f3ff',
-                secondary: '#e9d5ff',
-                accent: '#a78bfa',
-                text: '#4b0082',
-                glow: '#a78bfa',
-                glowPrimary: '#a78bfa',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#dc3545',
-                dangerShadow: 'rgba(220, 53, 69, 0.4)',
-                particleColor: '#a78bfa',
-                particleCount: 43,
-                particleSize: 3,
-                shadow: 'rgba(167, 139, 250, 0.3)',
-                glass: 'rgba(245, 243, 255, 0.8)',
-                border: 'rgba(167, 139, 250, 0.2)',
-                tags: ['light', 'cool'],
-                animationDuration: '2.2s',
-                animationEasing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
-            },
-            amethyst: {
-                name: 'Amethyst',
-                primary: '#4b0082',
-                secondary: '#483d8b',
-                accent: '#9b59b6',
-                text: '#dda0dd',
-                glow: '#9b59b6',
-                glowPrimary: '#9b59b6',
-                glowSecondary: '#ffffff',
-                dangerGlow: '#e74c3c',
-                dangerShadow: 'rgba(231, 76, 60, 0.5)',
-                particleColor: '#9b59b6',
-                particleCount: 58,
-                particleSize: 4,
-                shadow: 'rgba(155, 89, 182, 0.3)',
-                glass: 'rgba(75, 0, 130, 0.8)',
-                border: 'rgba(155, 89, 182, 0.2)',
-                tags: ['dark', 'cool'],
-                animationDuration: '2.7s',
-                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-            },
-            burgundy: {
-                name: 'Burgundy',
-                primary: '#800020',
-                secondary: '#800000',
-                accent: '#dc143c',
-                text: '#f8f8ff',
-                glow: '#dc143c',
-                glowPrimary: '#dc143c',
-                glowSecondary: '#ffd700',
-                dangerGlow: '#dc143c',
-                dangerShadow: 'rgba(220, 20, 60, 0.5)',
-                particleColor: '#ffffff',
-                particleCount: 52,
-                particleSize: 4,
-                shadow: 'rgba(220, 20, 60, 0.3)',
-                glass: 'rgba(128, 0, 32, 0.8)',
-                border: 'rgba(220, 20, 60, 0.2)',
-                tags: ['dark', 'warm'],
-                animationDuration: '2.4s',
-                animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)'
-            }
-        };
+  constructor() {
+    this.themes = {
+      midnight: {
+        name: "Midnight",
+        primary: "#1a1a2e",
+        secondary: "#16213e",
+        accent: "#0f3460",
+        text: "#e94560",
+        glow: "#e94560",
+        glowPrimary: "#ff6b6b",
+        glowSecondary: "#ffd93d",
+        dangerGlow: "#e94560",
+        dangerShadow: "rgba(233, 69, 96, 0.5)",
+        particleColor: "#ffffff",
+        particleCount: 60,
+        particleSize: 4,
+        shadow: "rgba(233, 69, 96, 0.3)",
+        glass: "rgba(26, 26, 46, 0.8)",
+        border: "rgba(233, 69, 96, 0.2)",
+        tags: ["dark", "cool"],
+        animationDuration: "2.5s",
+        animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      ivory: {
+        name: "Ivory",
+        primary: "#f8f9fa",
+        secondary: "#e9ecef",
+        accent: "#dee2e6",
+        text: "#495057",
+        glow: "#6c757d",
+        glowPrimary: "#ffd700",
+        glowSecondary: "#ff8c00",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#8b4513",
+        particleCount: 35,
+        particleSize: 2,
+        shadow: "rgba(108, 117, 125, 0.2)",
+        glass: "rgba(248, 249, 250, 0.8)",
+        border: "rgba(108, 117, 125, 0.1)",
+        tags: ["light"],
+        animationDuration: "2.0s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      champagne: {
+        name: "Champagne",
+        primary: "#fff8e7",
+        secondary: "#f3e5ab",
+        accent: "#daa520",
+        text: "#8b4513",
+        glow: "#daa520",
+        glowPrimary: "#ffd700",
+        glowSecondary: "#ff8c00",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#8b4513",
+        particleCount: 40,
+        particleSize: 3,
+        shadow: "rgba(218, 165, 32, 0.3)",
+        glass: "rgba(255, 248, 231, 0.8)",
+        border: "rgba(218, 165, 32, 0.2)",
+        tags: ["light", "warm"],
+        animationDuration: "2.2s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      graphite: {
+        name: "Graphite",
+        primary: "#2c2c2c",
+        secondary: "#404040",
+        accent: "#666666",
+        text: "#cccccc",
+        glow: "#999999",
+        glowPrimary: "#c0c0c0",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.5)",
+        particleColor: "#ffffff",
+        particleCount: 50,
+        particleSize: 3,
+        shadow: "rgba(153, 153, 153, 0.3)",
+        glass: "rgba(44, 44, 44, 0.8)",
+        border: "rgba(153, 153, 153, 0.2)",
+        tags: ["dark"],
+        animationDuration: "2.3s",
+        animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      aurora: {
+        name: "Aurora",
+        primary: "#0a0a0a",
+        secondary: "#1a1a2e",
+        accent: "#16213e",
+        text: "#00ff88",
+        glow: "#00ff88",
+        glowPrimary: "#00ff88",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#ff4757",
+        dangerShadow: "rgba(255, 71, 87, 0.5)",
+        particleColor: "#00ff88",
+        particleCount: 70,
+        particleSize: 5,
+        shadow: "rgba(0, 255, 136, 0.3)",
+        glass: "rgba(10, 10, 10, 0.8)",
+        border: "rgba(0, 255, 136, 0.2)",
+        tags: ["dark", "cool"],
+        animationDuration: "3.0s",
+        animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      arcticSky: {
+        name: "Arctic Sky",
+        primary: "#e6f2ff",
+        secondary: "#cce5ff",
+        accent: "#4da6ff",
+        text: "#2c5282",
+        glow: "#4da6ff",
+        glowPrimary: "#4da6ff",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#4da6ff",
+        particleCount: 45,
+        particleSize: 3,
+        shadow: "rgba(77, 166, 255, 0.3)",
+        glass: "rgba(230, 242, 255, 0.7)",
+        border: "rgba(77, 166, 255, 0.2)",
+        tags: ["light", "cool"],
+        animationDuration: "2.4s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      emerald: {
+        name: "Emerald",
+        primary: "#0c4a3e",
+        secondary: "#134e4a",
+        accent: "#2ecc71",
+        text: "#e8f8f5",
+        glow: "#2ecc71",
+        glowPrimary: "#2ecc71",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#e74c3c",
+        dangerShadow: "rgba(231, 76, 60, 0.5)",
+        particleColor: "#2ecc71",
+        particleCount: 55,
+        particleSize: 4,
+        shadow: "rgba(46, 204, 113, 0.3)",
+        glass: "rgba(12, 74, 62, 0.8)",
+        border: "rgba(46, 204, 113, 0.2)",
+        tags: ["dark", "cool"],
+        animationDuration: "2.6s",
+        animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      sakura: {
+        name: "Sakura",
+        primary: "#fff5f5",
+        secondary: "#ffe0e0",
+        accent: "#ffb3ba",
+        text: "#8b2635",
+        glow: "#ff69b4",
+        glowPrimary: "#ff69b4",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#ff69b4",
+        particleCount: 40,
+        particleSize: 3,
+        shadow: "rgba(255, 105, 180, 0.3)",
+        glass: "rgba(255, 245, 245, 0.8)",
+        border: "rgba(255, 105, 180, 0.2)",
+        tags: ["light", "warm"],
+        animationDuration: "2.1s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      pearl: {
+        name: "Pearl",
+        primary: "#f8f8ff",
+        secondary: "#e6e6fa",
+        accent: "#d4af37",
+        text: "#4b0082",
+        glow: "#d4af37",
+        glowPrimary: "#ffd700",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#4b0082",
+        particleCount: 38,
+        particleSize: 2,
+        shadow: "rgba(212, 175, 55, 0.3)",
+        glass: "rgba(248, 248, 255, 0.8)",
+        border: "rgba(212, 175, 55, 0.2)",
+        tags: ["light", "warm"],
+        animationDuration: "2.0s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      mint: {
+        name: "Mint",
+        primary: "#f0fff0",
+        secondary: "#e0ffe0",
+        accent: "#2dd4bf",
+        text: "#006400",
+        glow: "#2dd4bf",
+        glowPrimary: "#2dd4bf",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#2dd4bf",
+        particleCount: 42,
+        particleSize: 3,
+        shadow: "rgba(45, 212, 191, 0.3)",
+        glass: "rgba(240, 255, 240, 0.8)",
+        border: "rgba(45, 212, 191, 0.2)",
+        tags: ["light", "cool"],
+        animationDuration: "2.2s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      coral: {
+        name: "Coral",
+        primary: "#fff0f5",
+        secondary: "#ffe4e1",
+        accent: "#ff7f50",
+        text: "#8b0000",
+        glow: "#ff7f50",
+        glowPrimary: "#ff7f50",
+        glowSecondary: "#ffd700",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#ff7f50",
+        particleCount: 41,
+        particleSize: 3,
+        shadow: "rgba(255, 127, 80, 0.3)",
+        glass: "rgba(255, 240, 245, 0.8)",
+        border: "rgba(255, 127, 80, 0.2)",
+        tags: ["light", "warm"],
+        animationDuration: "2.1s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      frost: {
+        name: "Frost",
+        primary: "#f0f8ff",
+        secondary: "#e6f2ff",
+        accent: "#22d3ee",
+        text: "#000080",
+        glow: "#22d3ee",
+        glowPrimary: "#22d3ee",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#22d3ee",
+        particleCount: 44,
+        particleSize: 3,
+        shadow: "rgba(34, 211, 238, 0.3)",
+        glass: "rgba(240, 248, 255, 0.8)",
+        border: "rgba(34, 211, 238, 0.2)",
+        tags: ["light", "cool"],
+        animationDuration: "2.3s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      lavender: {
+        name: "Lavender",
+        primary: "#f5f3ff",
+        secondary: "#e9d5ff",
+        accent: "#a78bfa",
+        text: "#4b0082",
+        glow: "#a78bfa",
+        glowPrimary: "#a78bfa",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#dc3545",
+        dangerShadow: "rgba(220, 53, 69, 0.4)",
+        particleColor: "#a78bfa",
+        particleCount: 43,
+        particleSize: 3,
+        shadow: "rgba(167, 139, 250, 0.3)",
+        glass: "rgba(245, 243, 255, 0.8)",
+        border: "rgba(167, 139, 250, 0.2)",
+        tags: ["light", "cool"],
+        animationDuration: "2.2s",
+        animationEasing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
+      amethyst: {
+        name: "Amethyst",
+        primary: "#4b0082",
+        secondary: "#483d8b",
+        accent: "#9b59b6",
+        text: "#dda0dd",
+        glow: "#9b59b6",
+        glowPrimary: "#9b59b6",
+        glowSecondary: "#ffffff",
+        dangerGlow: "#e74c3c",
+        dangerShadow: "rgba(231, 76, 60, 0.5)",
+        particleColor: "#9b59b6",
+        particleCount: 58,
+        particleSize: 4,
+        shadow: "rgba(155, 89, 182, 0.3)",
+        glass: "rgba(75, 0, 130, 0.8)",
+        border: "rgba(155, 89, 182, 0.2)",
+        tags: ["dark", "cool"],
+        animationDuration: "2.7s",
+        animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      burgundy: {
+        name: "Burgundy",
+        primary: "#800020",
+        secondary: "#800000",
+        accent: "#dc143c",
+        text: "#f8f8ff",
+        glow: "#dc143c",
+        glowPrimary: "#dc143c",
+        glowSecondary: "#ffd700",
+        dangerGlow: "#dc143c",
+        dangerShadow: "rgba(220, 20, 60, 0.5)",
+        particleColor: "#ffffff",
+        particleCount: 52,
+        particleSize: 4,
+        shadow: "rgba(220, 20, 60, 0.3)",
+        glass: "rgba(128, 0, 32, 0.8)",
+        border: "rgba(220, 20, 60, 0.2)",
+        tags: ["dark", "warm"],
+        animationDuration: "2.4s",
+        animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+    };
 
-        this.signatureThemes = Object.keys(this.themes);
+    this.signatureThemes = Object.keys(this.themes);
 
-        this.currentTheme = 'emerald';
-        this.isInitialized = false;
-        this.init();
+    this.currentTheme = "emerald";
+    this.isInitialized = false;
+    this.init();
+  }
+
+  /**
+   * Initialize theme system
+   */
+  init() {
+    // Load theme from settings first (this will be called before DOM is ready)
+    this.loadTheme();
+
+    // Setup CSS variables with the loaded theme
+    this.setupCSSVariables();
+
+    // Setup event listeners for runtime changes
+    this.setupEventListeners();
+
+    this.isInitialized = true;
+
+    // Mark as ready
+    if (typeof bus !== "undefined") {
+      bus.markReady("theme");
     }
 
-    /**
-     * Initialize theme system
-     */
-    init() {
-        
-        // Load theme from settings first (this will be called before DOM is ready)
-        this.loadTheme();
-        
-        // Setup CSS variables with the loaded theme
-        this.setupCSSVariables();
-        
-        // Setup event listeners for runtime changes
-        this.setupEventListeners();
-        
-        this.isInitialized = true;
+    // Listen for settings loaded event to ensure proper initialization
+    document.addEventListener("settingsLoaded", (event) => {
+      if (
+        event.detail &&
+        event.detail.theme &&
+        event.detail.theme !== this.currentTheme
+      ) {
+        this.changeTheme(event.detail.theme);
+      }
+    });
+  }
 
-        // Mark as ready
-        if (typeof bus !== 'undefined') {
-            bus.markReady('theme');
+  /**
+   * Check if theme manager is ready
+   * @returns {boolean} Ready state
+   */
+  isReady() {
+    return this.isInitialized;
+  }
+
+  /**
+   * Load theme from settings
+   */
+  loadTheme() {
+    // Try to get theme from settings manager if available
+    if (typeof settingsManager !== "undefined" && settingsManager.isReady()) {
+      const settings = settingsManager.getSettings();
+      this.currentTheme = settings.theme || "emerald";
+    } else {
+      // Fallback to default theme if settings manager not ready
+      this.currentTheme = "emerald";
+    }
+
+    // Ensure we have a valid theme
+    if (!this.themes[this.currentTheme]) {
+      this.currentTheme = "emerald";
+    }
+  }
+
+  /**
+   * Setup CSS custom properties for dynamic theming
+   */
+  setupCSSVariables() {
+    const root = document.documentElement;
+    const theme = this.themes[this.currentTheme];
+
+    if (!theme) {
+      return;
+    }
+
+    // Set CSS variables on :root for global access
+    root.style.setProperty("--primary-color", theme.primary);
+    root.style.setProperty("--secondary-color", theme.secondary);
+    root.style.setProperty("--accent-color", theme.accent);
+    root.style.setProperty("--color-text", theme.text);
+    root.style.setProperty("--glow-color", theme.glow);
+    root.style.setProperty("--glow-primary", theme.glowPrimary);
+    root.style.setProperty("--glow-secondary", theme.glowSecondary);
+    root.style.setProperty("--danger-glow-color", theme.dangerGlow);
+    root.style.setProperty("--danger-glow-shadow", theme.dangerShadow);
+    root.style.setProperty("--particle-color", theme.particleColor);
+    root.style.setProperty("--particle-count", theme.particleCount);
+    root.style.setProperty("--particle-size", theme.particleSize);
+    root.style.setProperty("--shadow-color", theme.shadow);
+    root.style.setProperty("--color-glass", theme.glass);
+    root.style.setProperty("--color-border", theme.border);
+    root.style.setProperty("--animation-duration", theme.animationDuration);
+    root.style.setProperty("--animation-easing", theme.animationEasing);
+
+    // Remove old theme classes to avoid conflicts
+    document.body.className = document.body.className.replace(/theme-\w+/g, "");
+
+    // Add data-theme attribute for CSS selectors that need it
+    document.documentElement.setAttribute("data-theme", this.currentTheme);
+  }
+
+  /**
+   * Setup event listeners
+   */
+  setupEventListeners() {
+    // Listen for settings changes
+    if (typeof bus !== "undefined") {
+      bus.addEventListener("settingsChanged", (event) => {
+        // Harden against null/undefined detail payloads
+        // Prefer event.detail; fallback to settingsManager snapshot; default to current theme
+        let nextTheme = this.currentTheme;
+        try {
+          const detail =
+            event && event.detail
+              ? event.detail
+              : typeof settingsManager !== "undefined" &&
+                  settingsManager.getSettings
+                ? settingsManager.getSettings()
+                : null;
+          if (detail && typeof detail.theme === "string") {
+            nextTheme = detail.theme;
+          }
+        } catch (_) {
+          // keep current theme
         }
-        
-        // Listen for settings loaded event to ensure proper initialization
-        document.addEventListener('settingsLoaded', (event) => {
-            if (event.detail && event.detail.theme && event.detail.theme !== this.currentTheme) {
-                this.changeTheme(event.detail.theme);
-            }
-        });
-    }
-
-    /**
-     * Check if theme manager is ready
-     * @returns {boolean} Ready state
-     */
-    isReady() {
-        return this.isInitialized;
-    }
-
-    /**
-     * Load theme from settings
-     */
-    loadTheme() {
-        
-        // Try to get theme from settings manager if available
-        if (typeof settingsManager !== 'undefined' && settingsManager.isReady()) {
-            const settings = settingsManager.getSettings();
-            this.currentTheme = settings.theme || 'emerald';
-        } else {
-            // Fallback to default theme if settings manager not ready
-            this.currentTheme = 'emerald';
+        if (nextTheme && nextTheme !== this.currentTheme) {
+          this.changeTheme(nextTheme);
         }
-        
-        // Ensure we have a valid theme
-        if (!this.themes[this.currentTheme]) {
-            this.currentTheme = 'emerald';
+      });
+    }
+
+    // Listen for system theme changes
+    if (window.matchMedia) {
+      const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      darkModeQuery.addEventListener("change", (e) => {
+        if (typeof settingsManager !== "undefined") {
+          const settings = settingsManager.getSettings();
+          if (settings.darkMode === undefined) {
+            this.applySystemTheme(e.matches);
+          }
         }
-        
+      });
+    }
+  }
+
+  /**
+   * Change theme
+   * @param {string} themeName - Name of the theme to apply
+   */
+  changeTheme(themeName) {
+    if (!this.themes[themeName]) {
+      return;
     }
 
-    /**
-     * Setup CSS custom properties for dynamic theming
-     */
-    setupCSSVariables() {
-        const root = document.documentElement;
-        const theme = this.themes[this.currentTheme];
+    this.currentTheme = themeName;
+    this.setupCSSVariables();
 
-        if (!theme) {
-            return;
-        }
+    // Update glass effects
+    this.updateGlassEffects();
 
-
-        // Set CSS variables on :root for global access
-        root.style.setProperty('--primary-color', theme.primary);
-        root.style.setProperty('--secondary-color', theme.secondary);
-        root.style.setProperty('--accent-color', theme.accent);
-        root.style.setProperty('--color-text', theme.text);
-        root.style.setProperty('--glow-color', theme.glow);
-        root.style.setProperty('--glow-primary', theme.glowPrimary);
-        root.style.setProperty('--glow-secondary', theme.glowSecondary);
-        root.style.setProperty('--danger-glow-color', theme.dangerGlow);
-        root.style.setProperty('--danger-glow-shadow', theme.dangerShadow);
-        root.style.setProperty('--particle-color', theme.particleColor);
-        root.style.setProperty('--particle-count', theme.particleCount);
-        root.style.setProperty('--particle-size', theme.particleSize);
-        root.style.setProperty('--shadow-color', theme.shadow);
-        root.style.setProperty('--color-glass', theme.glass);
-        root.style.setProperty('--color-border', theme.border);
-        root.style.setProperty('--animation-duration', theme.animationDuration);
-        root.style.setProperty('--animation-easing', theme.animationEasing);
-
-        // Remove old theme classes to avoid conflicts
-        document.body.className = document.body.className.replace(/theme-\w+/g, '');
-        
-        // Add data-theme attribute for CSS selectors that need it
-        document.documentElement.setAttribute('data-theme', this.currentTheme);
-
+    // Notify other components
+    if (typeof bus !== "undefined") {
+      bus.dispatchEvent(
+        new CustomEvent("themeChanged", {
+          detail: { theme: themeName, colors: this.themes[themeName] },
+        })
+      );
     }
 
-    /**
-     * Setup event listeners
-     */
-    setupEventListeners() {
-        // Listen for settings changes
-        if (typeof bus !== 'undefined') {
-            bus.addEventListener('settingsChanged', (event) => {
-                // Harden against null/undefined detail payloads
-                // Prefer event.detail; fallback to settingsManager snapshot; default to current theme
-                let nextTheme = this.currentTheme;
-                try {
-                    const detail = event && event.detail ? event.detail : (typeof settingsManager !== 'undefined' && settingsManager.getSettings ? settingsManager.getSettings() : null);
-                    if (detail && typeof detail.theme === 'string') {
-                        nextTheme = detail.theme;
-                    }
-                } catch (_) {
-                    // keep current theme
-                }
-                if (nextTheme && nextTheme !== this.currentTheme) {
-                    this.changeTheme(nextTheme);
-                }
-            });
-        }
-
-        // Listen for system theme changes
-        if (window.matchMedia) {
-            const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            darkModeQuery.addEventListener('change', (e) => {
-                if (typeof settingsManager !== 'undefined') {
-                    const settings = settingsManager.getSettings();
-                    if (settings.darkMode === undefined) {
-                        this.applySystemTheme(e.matches);
-                    }
-                }
-            });
-        }
+    // Play theme change sound
+    if (typeof audioManager !== "undefined" && audioManager.isReady()) {
+      audioManager.play("settings");
     }
+  }
 
-    /**
-     * Change theme
-     * @param {string} themeName - Name of the theme to apply
-     */
-    changeTheme(themeName) {
-        if (!this.themes[themeName]) {
-            return;
-        }
+  /**
+   * Apply system theme
+   * @param {boolean} isDark - Whether system is in dark mode
+   */
+  applySystemTheme(isDark) {
+    const root = document.documentElement;
+    root.style.setProperty("--system-dark", isDark ? "1" : "0");
+  }
 
-        this.currentTheme = themeName;
-        this.setupCSSVariables();
+  /**
+   * Update glass effects based on current theme
+   */
+  updateGlassEffects() {
+    const theme = this.themes[this.currentTheme];
+    if (!theme) return;
 
-        // Update glass effects
-        this.updateGlassEffects();
+    // Update glass panels
+    const glassElements = document.querySelectorAll(
+      ".glass-panel, .glass-card, .glass-button"
+    );
+    glassElements.forEach((element) => {
+      // Update backdrop filter based on theme
+      const intensity = this.getGlassIntensity(theme);
+      element.style.setProperty("--glass-blur", `${intensity}px`);
 
-        // Notify other components
-        if (typeof bus !== 'undefined') {
-            bus.dispatchEvent(new CustomEvent('themeChanged', {
-                detail: { theme: themeName, colors: this.themes[themeName] }
-            }));
-        }
+      // Update glow effect
+      this.updateGlowEffect(element, theme);
+    });
+  }
 
-        // Play theme change sound
-        if (typeof audioManager !== 'undefined' && audioManager.isReady()) {
-            audioManager.play('settings');
-        }
-    }
+  /**
+   * Get glass blur intensity based on theme
+   * @param {Object} theme - Theme object
+   * @returns {number} Blur intensity in pixels
+   */
+  getGlassIntensity(theme) {
+    // Adjust blur based on theme brightness
+    const isDark = this.isDarkColor(theme.primary);
+    return isDark ? 20 : 15;
+  }
 
-    /**
-     * Apply system theme
-     * @param {boolean} isDark - Whether system is in dark mode
-     */
-    applySystemTheme(isDark) {
-        const root = document.documentElement;
-        root.style.setProperty('--system-dark', isDark ? '1' : '0');
-    }
+  /**
+   * Update glow effect for an element
+   * @param {Element} element - DOM element
+   * @param {Object} theme - Theme object
+   */
+  updateGlowEffect(element, theme) {
+    const glowIntensity = this.getGlowIntensity(theme);
+    const glowColor = theme.glow;
 
-    /**
-     * Update glass effects based on current theme
-     */
-    updateGlassEffects() {
-        const theme = this.themes[this.currentTheme];
-        if (!theme) return;
+    element.style.setProperty("--glow-intensity", glowIntensity);
+    element.style.setProperty("--glow-color", glowColor);
 
-        // Update glass panels
-        const glassElements = document.querySelectorAll('.glass-panel, .glass-card, .glass-button');
-        glassElements.forEach(element => {
-            // Update backdrop filter based on theme
-            const intensity = this.getGlassIntensity(theme);
-            element.style.setProperty('--glass-blur', `${intensity}px`);
+    // Add hover glow effect
+    element.addEventListener("mouseenter", () => {
+      element.style.setProperty("--glow-opacity", "0.6");
+    });
 
-            // Update glow effect
-            this.updateGlowEffect(element, theme);
-        });
-    }
+    element.addEventListener("mouseleave", () => {
+      element.style.setProperty("--glow-opacity", "0.3");
+    });
+  }
 
-    /**
-     * Get glass blur intensity based on theme
-     * @param {Object} theme - Theme object
-     * @returns {number} Blur intensity in pixels
-     */
-    getGlassIntensity(theme) {
-        // Adjust blur based on theme brightness
-        const isDark = this.isDarkColor(theme.primary);
-        return isDark ? 20 : 15;
-    }
+  /**
+   * Get glow intensity based on theme
+   * @param {Object} theme - Theme object
+   * @returns {number} Glow intensity
+   */
+  getGlowIntensity(theme) {
+    // Adjust glow based on accent color brightness
+    const brightness = this.getColorBrightness(theme.glow);
+    return Math.max(0.3, Math.min(1.0, brightness / 255));
+  }
 
-    /**
-     * Update glow effect for an element
-     * @param {Element} element - DOM element
-     * @param {Object} theme - Theme object
-     */
-    updateGlowEffect(element, theme) {
-        const glowIntensity = this.getGlowIntensity(theme);
-        const glowColor = theme.glow;
+  /**
+   * Check if a color is dark
+   * @param {string} hexColor - Hex color string
+   * @returns {boolean} True if color is dark
+   */
+  isDarkColor(hexColor) {
+    const brightness = this.getColorBrightness(hexColor);
+    return brightness < 128;
+  }
 
-        element.style.setProperty('--glow-intensity', glowIntensity);
-        element.style.setProperty('--glow-color', glowColor);
+  /**
+   * Get color brightness (0-255)
+   * @param {string} hexColor - Hex color string
+   * @returns {number} Brightness value
+   */
+  getColorBrightness(hexColor) {
+    // Remove # if present
+    hexColor = hexColor.replace("#", "");
 
-        // Add hover glow effect
-        element.addEventListener('mouseenter', () => {
-            element.style.setProperty('--glow-opacity', '0.6');
-        });
+    // Convert to RGB
+    const r = parseInt(hexColor.substr(0, 2), 16);
+    const g = parseInt(hexColor.substr(2, 2), 16);
+    const b = parseInt(hexColor.substr(4, 2), 16);
 
-        element.addEventListener('mouseleave', () => {
-            element.style.setProperty('--glow-opacity', '0.3');
-        });
-    }
+    // Calculate brightness using luminance formula
+    return (r * 299 + g * 587 + b * 114) / 1000;
+  }
 
-    /**
-     * Get glow intensity based on theme
-     * @param {Object} theme - Theme object
-     * @returns {number} Glow intensity
-     */
-    getGlowIntensity(theme) {
-        // Adjust glow based on accent color brightness
-        const brightness = this.getColorBrightness(theme.glow);
-        return Math.max(0.3, Math.min(1.0, brightness / 255));
-    }
+  /**
+   * Get current theme
+   * @returns {Object} Current theme object
+   */
+  getCurrentTheme() {
+    return this.themes[this.currentTheme];
+  }
 
-    /**
-     * Check if a color is dark
-     * @param {string} hexColor - Hex color string
-     * @returns {boolean} True if color is dark
-     */
-    isDarkColor(hexColor) {
-        const brightness = this.getColorBrightness(hexColor);
-        return brightness < 128;
-    }
+  /**
+   * Get all available themes
+   * @returns {Object} All themes
+   */
+  getAllThemes() {
+    return this.themes;
+  }
 
-    /**
-     * Get color brightness (0-255)
-     * @param {string} hexColor - Hex color string
-     * @returns {number} Brightness value
-     */
-    getColorBrightness(hexColor) {
-        // Remove # if present
-        hexColor = hexColor.replace('#', '');
+  /**
+   * Get theme by name
+   * @param {string} themeName - Theme name
+   * @returns {Object} Theme object or null
+   */
+  getTheme(themeName) {
+    return this.themes[themeName] || null;
+  }
 
-        // Convert to RGB
-        const r = parseInt(hexColor.substr(0, 2), 16);
-        const g = parseInt(hexColor.substr(2, 2), 16);
-        const b = parseInt(hexColor.substr(4, 2), 16);
+  /**
+   * Check if a theme is light or dark
+   * @param {string} themeName - Theme name
+   * @returns {boolean} True if theme is light
+   */
+  isLightTheme(themeName) {
+    const theme = this.themes[themeName];
+    if (!theme) return false;
 
-        // Calculate brightness using luminance formula
-        return (r * 299 + g * 587 + b * 114) / 1000;
-    }
+    return this.getColorBrightness(theme.primary) > 128;
+  }
 
-    /**
-     * Get current theme
-     * @returns {Object} Current theme object
-     */
-    getCurrentTheme() {
-        return this.themes[this.currentTheme];
-    }
+  /**
+   * Get color temperature (warm vs cool) based on RGB values
+   * @param {string} hexColor - Hex color string
+   * @returns {string} 'warm' or 'cool'
+   */
+  getColorTemperature(hexColor) {
+    // Remove # if present
+    hexColor = hexColor.replace("#", "");
 
-    /**
-     * Get all available themes
-     * @returns {Object} All themes
-     */
-    getAllThemes() {
-        return this.themes;
-    }
+    // Convert to RGB
+    const r = parseInt(hexColor.substr(0, 2), 16);
+    const g = parseInt(hexColor.substr(2, 2), 16);
+    const b = parseInt(hexColor.substr(4, 2), 16);
 
-    /**
-     * Get theme by name
-     * @param {string} themeName - Theme name
-     * @returns {Object} Theme object or null
-     */
-    getTheme(themeName) {
-        return this.themes[themeName] || null;
-    }
+    // Calculate color temperature using RGB ratios
+    // Higher red values = warmer, higher blue values = cooler
+    const warmth = r * 0.7 - b * 0.3;
 
-    /**
-     * Check if a theme is light or dark
-     * @param {string} themeName - Theme name
-     * @returns {boolean} True if theme is light
-     */
-    isLightTheme(themeName) {
-        const theme = this.themes[themeName];
-        if (!theme) return false;
+    return warmth > 0 ? "warm" : "cool";
+  }
 
-        return this.getColorBrightness(theme.primary) > 128;
-    }
+  /**
+   * Sort themes intelligently by type and color temperature
+   * @returns {Array} Array of sorted theme names
+   */
+  getSortedThemes() {
+    const themeNames = Object.keys(this.themes);
 
-    /**
-     * Get color temperature (warm vs cool) based on RGB values
-     * @param {string} hexColor - Hex color string
-     * @returns {string} 'warm' or 'cool'
-     */
-    getColorTemperature(hexColor) {
-        // Remove # if present
-        hexColor = hexColor.replace('#', '');
-        
-        // Convert to RGB
-        const r = parseInt(hexColor.substr(0, 2), 16);
-        const g = parseInt(hexColor.substr(2, 2), 16);
-        const b = parseInt(hexColor.substr(4, 2), 16);
-        
-        // Calculate color temperature using RGB ratios
-        // Higher red values = warmer, higher blue values = cooler
-        const warmth = (r * 0.7) - (b * 0.3);
-        
-        return warmth > 0 ? 'warm' : 'cool';
-    }
+    // Sort themes by:
+    // 1. Dark themes first, then light themes
+    // 2. Within each group, warm themes first, then cool themes
+    // 3. Alphabetically as a final tiebreaker
+    return themeNames.sort((a, b) => {
+      const themeA = this.themes[a];
+      const themeB = this.themes[b];
 
-    /**
-     * Sort themes intelligently by type and color temperature
-     * @returns {Array} Array of sorted theme names
-     */
-    getSortedThemes() {
-        const themeNames = Object.keys(this.themes);
-        
-        // Sort themes by:
-        // 1. Dark themes first, then light themes
-        // 2. Within each group, warm themes first, then cool themes
-        // 3. Alphabetically as a final tiebreaker
-        return themeNames.sort((a, b) => {
-            const themeA = this.themes[a];
-            const themeB = this.themes[b];
-            
-            // Determine if themes are dark or light
-            const isADark = this.getColorBrightness(themeA.primary) <= 128;
-            const isBDark = this.getColorBrightness(themeB.primary) <= 128;
-            
-            // Sort by darkness (dark first)
-            if (isADark !== isBDark) {
-                return isADark ? -1 : 1;
-            }
-            
-            // If both are dark or both are light, sort by color temperature
-            const tempA = this.getColorTemperature(themeA.accent);
-            const tempB = this.getColorTemperature(themeB.accent);
-            
-            if (tempA !== tempB) {
-                // Warm themes first
-                return tempA === 'warm' ? -1 : 1;
-            }
-            
-            // If darkness and temperature are the same, sort alphabetically
-            return themeA.name.localeCompare(themeB.name);
-        });
-    }
+      // Determine if themes are dark or light
+      const isADark = this.getColorBrightness(themeA.primary) <= 128;
+      const isBDark = this.getColorBrightness(themeB.primary) <= 128;
+
+      // Sort by darkness (dark first)
+      if (isADark !== isBDark) {
+        return isADark ? -1 : 1;
+      }
+
+      // If both are dark or both are light, sort by color temperature
+      const tempA = this.getColorTemperature(themeA.accent);
+      const tempB = this.getColorTemperature(themeB.accent);
+
+      if (tempA !== tempB) {
+        // Warm themes first
+        return tempA === "warm" ? -1 : 1;
+      }
+
+      // If darkness and temperature are the same, sort alphabetically
+      return themeA.name.localeCompare(themeB.name);
+    });
+  }
 }
 
 // Initialize theme manager

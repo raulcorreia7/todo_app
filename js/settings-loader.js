@@ -16,10 +16,10 @@ class SettingsLoader {
   init() {
     // Ensure we only load settings once, even on rapid refreshes
     if (this.loadPromise) return;
-    
+
     // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.loadSettings());
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => this.loadSettings());
     } else {
       this.loadSettings();
     }
@@ -27,46 +27,45 @@ class SettingsLoader {
 
   async loadSettings() {
     if (this.loadPromise) return this.loadPromise;
-    
+
     this.loadPromise = this.loadSettingsWithRetry();
     return this.loadPromise;
   }
 
   async loadSettingsWithRetry() {
     let lastError;
-    
+
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
         // Ensure storage is ready
         await this.waitForStorage();
-        
+
         // Load settings from storage
         const settings = await this.getSettingsWithTimeout();
-        
+
         // Cache settings for reliability
         this.settingsCache = settings;
-        
+
         // Apply settings to all components
         await this.applySettingsSafely(settings);
-        
+
         this.isLoaded = true;
-        
+
         // Emit event for other components
         this.emitSettingsLoaded(settings);
-        
+
         return settings;
-        
       } catch (error) {
         lastError = error;
         console.warn(`Settings load attempt ${attempt} failed:`, error);
-        
+
         if (attempt < this.maxRetries) {
           await this.delay(this.retryDelay * attempt);
         }
       }
     }
-    
-    console.error('Failed to load settings after all retries:', lastError);
+
+    console.error("Failed to load settings after all retries:", lastError);
     // Don't apply default settings on failure - use cached or empty settings
     const fallbackSettings = this.settingsCache || this.getMinimalSettings();
     await this.applySettingsSafely(fallbackSettings);
@@ -78,17 +77,17 @@ class SettingsLoader {
     return new Promise((resolve, reject) => {
       const maxWait = 5000; // 5 seconds max
       const startTime = Date.now();
-      
+
       const checkStorage = () => {
         if (storageManager && storageManager.isReady()) {
           resolve();
         } else if (Date.now() - startTime > maxWait) {
-          reject(new Error('Storage timeout'));
+          reject(new Error("Storage timeout"));
         } else {
           setTimeout(checkStorage, 50);
         }
       };
-      
+
       checkStorage();
     });
   }
@@ -96,9 +95,9 @@ class SettingsLoader {
   async getSettingsWithTimeout() {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error('Settings load timeout'));
+        reject(new Error("Settings load timeout"));
       }, 3000);
-      
+
       try {
         const settings = storageManager.getSettings();
         clearTimeout(timeout);
@@ -113,31 +112,31 @@ class SettingsLoader {
   async applySettingsSafely(settings) {
     // Ensure all components are ready before applying settings
     await this.waitForComponents();
-    
+
     // Apply settings with error handling for each component
     const promises = [];
-    
+
     // Apply theme first (this is critical for preventing flash)
     if (settings.theme) {
       promises.push(this.applyTheme(settings.theme));
     }
-    
+
     // Apply font
     if (settings.font) {
       promises.push(this.applyFont(settings.font));
     }
-    
+
     // Apply sound settings
     promises.push(this.applySoundSettings(settings));
-    
+
     // Update settings manager
     promises.push(this.updateSettingsManager(settings));
-    
+
     await Promise.allSettled(promises);
-    
+
     // Mark that settings have been applied by loader
     window.settingsAppliedByLoader = true;
-    
+
     // Signal that theme is ready
     this.markThemeReady();
   }
@@ -145,19 +144,23 @@ class SettingsLoader {
   async waitForComponents() {
     const checkComponents = () => {
       return (
-        typeof themeManager !== 'undefined' && 
-        (typeof themeManager.isReady === 'function' ? themeManager.isReady() : true) &&
-        typeof settingsManager !== 'undefined' && 
-        (typeof settingsManager.isInitialized === 'boolean' ? settingsManager.isInitialized : true) &&
-        typeof audioManager !== 'undefined'
+        typeof themeManager !== "undefined" &&
+        (typeof themeManager.isReady === "function"
+          ? themeManager.isReady()
+          : true) &&
+        typeof settingsManager !== "undefined" &&
+        (typeof settingsManager.isInitialized === "boolean"
+          ? settingsManager.isInitialized
+          : true) &&
+        typeof audioManager !== "undefined"
       );
     };
-    
+
     // If components are already ready, resolve immediately
     if (checkComponents()) {
       return Promise.resolve();
     }
-    
+
     return new Promise((resolve) => {
       const check = () => {
         if (checkComponents()) {
@@ -173,38 +176,50 @@ class SettingsLoader {
   async applyTheme(theme) {
     try {
       // Apply theme immediately to prevent flash
-      if (typeof themeManager !== 'undefined' && typeof themeManager.changeTheme === 'function') {
+      if (
+        typeof themeManager !== "undefined" &&
+        typeof themeManager.changeTheme === "function"
+      ) {
         themeManager.changeTheme(theme);
       } else {
         // Fallback for direct application
-        document.body.className = document.body.className.replace(/theme-\w+/g, '');
+        document.body.className = document.body.className.replace(
+          /theme-\w+/g,
+          ""
+        );
         document.body.classList.add(`theme-${theme}`);
       }
     } catch (error) {
-      console.warn('Failed to apply theme:', error);
+      console.warn("Failed to apply theme:", error);
     }
   }
 
   async applyFont(font) {
     try {
-      if (typeof settingsManager !== 'undefined' && settingsManager.setFont) {
+      if (typeof settingsManager !== "undefined" && settingsManager.setFont) {
         settingsManager.setFont(font);
       }
     } catch (error) {
-      console.warn('Failed to apply font:', error);
+      console.warn("Failed to apply font:", error);
     }
   }
 
   async applySoundSettings(settings) {
     try {
-      if (typeof audioManager !== 'undefined') {
+      if (typeof audioManager !== "undefined") {
         // Prefer explicit globalMute if present in persisted settings; fall back to soundEnabled
-        const persistedGlobalMute = typeof settings.globalMute === 'boolean' ? settings.globalMute : undefined;
+        const persistedGlobalMute =
+          typeof settings.globalMute === "boolean"
+            ? settings.globalMute
+            : undefined;
         const soundEnabled = settings.soundEnabled !== false;
-        const globalMute = persistedGlobalMute !== undefined ? persistedGlobalMute : !soundEnabled;
+        const globalMute =
+          persistedGlobalMute !== undefined
+            ? persistedGlobalMute
+            : !soundEnabled;
 
         // Apply centralized global mute and keep legacy enabled mirrored for compatibility
-        if (typeof audioManager.setGlobalMute === 'function') {
+        if (typeof audioManager.setGlobalMute === "function") {
           audioManager.setGlobalMute(globalMute);
         }
         audioManager.setEnabled?.(!globalMute);
@@ -213,38 +228,43 @@ class SettingsLoader {
 
         // Save back normalized settings to ensure consistency across app
         try {
-          if (typeof bus !== 'undefined') {
-            bus.dispatchEvent(new CustomEvent('settingsChanged', {
-              detail: {
-                globalMute: globalMute,
-                soundEnabled: !globalMute,
-                volume: settings.volume || 50
-              }
-            }));
+          if (typeof bus !== "undefined") {
+            bus.dispatchEvent(
+              new CustomEvent("settingsChanged", {
+                detail: {
+                  globalMute: globalMute,
+                  soundEnabled: !globalMute,
+                  volume: settings.volume || 50,
+                },
+              })
+            );
           }
         } catch (e) {
-          console.warn('Failed to dispatch settingsChanged after applying sound settings:', e);
+          console.warn(
+            "Failed to dispatch settingsChanged after applying sound settings:",
+            e
+          );
         }
       }
     } catch (error) {
-      console.warn('Failed to apply sound settings:', error);
+      console.warn("Failed to apply sound settings:", error);
     }
   }
 
   async updateSettingsManager(settings) {
     try {
-      if (typeof settingsManager !== 'undefined') {
-        settingsManager.currentTheme = settings.theme || 'midnight';
-        settingsManager.currentFont = settings.font || 'inter';
+      if (typeof settingsManager !== "undefined") {
+        settingsManager.currentTheme = settings.theme || "midnight";
+        settingsManager.currentFont = settings.font || "inter";
         settingsManager.soundEnabled = settings.soundEnabled !== false;
         settingsManager.volume = settings.volume || 50;
-        
+
         if (settingsManager.updateUI) {
           settingsManager.updateUI();
         }
       }
     } catch (error) {
-      console.warn('Failed to update settings manager:', error);
+      console.warn("Failed to update settings manager:", error);
     }
   }
 
@@ -256,36 +276,36 @@ class SettingsLoader {
 
   getDefaultSettings() {
     return {
-      theme: 'midnight',
-      font: 'inter',
+      theme: "midnight",
+      font: "inter",
       soundEnabled: true,
       volume: 50,
-      animations: true
+      animations: true,
     };
   }
 
   emitSettingsLoaded(settings) {
     // Emit custom event for other components
-    const event = new CustomEvent('settingsLoaded', { detail: settings });
+    const event = new CustomEvent("settingsLoaded", { detail: settings });
     document.dispatchEvent(event);
   }
 
   delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   markThemeReady() {
     // Remove loading state from body
-    document.body.classList.remove('loading-theme');
-    
+    document.body.classList.remove("loading-theme");
+
     // Add ready class to app container
-    const appContainer = document.querySelector('.app-container');
+    const appContainer = document.querySelector(".app-container");
     if (appContainer) {
-      appContainer.classList.add('theme-ready');
+      appContainer.classList.add("theme-ready");
     }
-    
+
     // Emit custom event for other components
-    const event = new CustomEvent('themeReady', { detail: {} });
+    const event = new CustomEvent("themeReady", { detail: {} });
     document.dispatchEvent(event);
   }
 
@@ -308,30 +328,42 @@ const settingsLoader = new SettingsLoader();
 
 // Emergency backup - ensure settings are loaded even if everything fails
 setTimeout(() => {
-  if (!window.settingsAppliedByLoader && typeof storageManager !== 'undefined') {
-    console.warn('Emergency settings load triggered');
+  if (
+    !window.settingsAppliedByLoader &&
+    typeof storageManager !== "undefined"
+  ) {
+    console.warn("Emergency settings load triggered");
     try {
       const settings = storageManager.getSettings();
-      
+
       // Apply basic settings directly
       if (settings.theme) {
         // Try to use theme manager first, fallback to direct application
-        if (typeof themeManager !== 'undefined' && typeof themeManager.changeTheme === 'function') {
+        if (
+          typeof themeManager !== "undefined" &&
+          typeof themeManager.changeTheme === "function"
+        ) {
           themeManager.changeTheme(settings.theme);
         } else {
-          document.body.className = document.body.className.replace(/theme-\w+/g, '');
+          document.body.className = document.body.className.replace(
+            /theme-\w+/g,
+            ""
+          );
           document.body.classList.add(`theme-${settings.theme}`);
         }
       }
-      
+
       if (settings.font) {
-        document.body.className = document.body.className.replace(/font-\w+/g, '');
+        document.body.className = document.body.className.replace(
+          /font-\w+/g,
+          ""
+        );
         document.body.classList.add(`font-${settings.font}`);
       }
-      
+
       window.settingsAppliedByLoader = true;
     } catch (error) {
-      console.error('Emergency settings load failed:', error);
+      console.error("Emergency settings load failed:", error);
     }
   }
 }, 2000);

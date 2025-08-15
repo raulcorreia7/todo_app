@@ -18,10 +18,10 @@ class Achievements {
    */
   checkForNewAchievements() {
     if (!this.isInitialized) return;
-    
+
     // The gamification manager already handles achievement checking
     // This method is provided for compatibility with the ai-providers.js call
-    if (typeof gamificationManager !== 'undefined' && gamificationManager) {
+    if (typeof gamificationManager !== "undefined" && gamificationManager) {
       gamificationManager.checkAchievements();
     }
   }
@@ -30,7 +30,7 @@ class Achievements {
    * Check if an achievement is unlocked
    */
   hasAchievement(id) {
-    if (typeof gamificationManager !== 'undefined' && gamificationManager) {
+    if (typeof gamificationManager !== "undefined" && gamificationManager) {
       return gamificationManager.hasAchievement(id);
     }
     return false;
@@ -40,7 +40,10 @@ class Achievements {
    * Get all achievements
    */
   getAllAchievements() {
-    if (typeof AchievementDefinitions !== 'undefined' && AchievementDefinitions) {
+    if (
+      typeof AchievementDefinitions !== "undefined" &&
+      AchievementDefinitions
+    ) {
       return AchievementDefinitions.getAllAchievements();
     }
     return [];
@@ -50,7 +53,10 @@ class Achievements {
    * Get achievement by ID
    */
   getAchievementById(id) {
-    if (typeof AchievementDefinitions !== 'undefined' && AchievementDefinitions) {
+    if (
+      typeof AchievementDefinitions !== "undefined" &&
+      AchievementDefinitions
+    ) {
       return AchievementDefinitions.getAchievementById(id);
     }
     return null;

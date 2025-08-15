@@ -7,14 +7,14 @@ class AIEnvironment {
   constructor() {
     this.config = {
       enabled: false,
-      preferredProvider: 'openai',
-      defaultStyle: 'simple',
+      preferredProvider: "openai",
+      defaultStyle: "simple",
       maxTokens: 500,
       temperature: 0.7,
-      openaiModel: 'gpt-3.5-turbo',
-      anthropicModel: 'claude-3-haiku-20240307'
+      openaiModel: "gpt-3.5-turbo",
+      anthropicModel: "claude-3-haiku-20240307",
     };
-    
+
     this.initialize();
   }
 
@@ -23,19 +23,21 @@ class AIEnvironment {
    */
   initialize() {
     // Check if we're in a development environment
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
+    const isDev =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+
     // Set default configuration based on environment
     if (isDev) {
       this.config.enabled = true; // Enable AI in development by default
     }
-    
+
     // Load configuration from localStorage if available
     this.loadConfig();
-    
+
     // Set up API keys from environment variables or localStorage
     this.setupApiKeys();
-    
+
     // Initialize AI providers if enabled
     if (this.config.enabled) {
       this.initializeAIProviders();
@@ -47,13 +49,13 @@ class AIEnvironment {
    */
   loadConfig() {
     try {
-      const savedConfig = localStorage.getItem('ai_config');
+      const savedConfig = localStorage.getItem("ai_config");
       if (savedConfig) {
         const parsed = JSON.parse(savedConfig);
         this.config = { ...this.config, ...parsed };
       }
     } catch (error) {
-      console.error('Error loading AI configuration:', error);
+      console.error("Error loading AI configuration:", error);
     }
   }
 
@@ -62,9 +64,9 @@ class AIEnvironment {
    */
   saveConfig() {
     try {
-      localStorage.setItem('ai_config', JSON.stringify(this.config));
+      localStorage.setItem("ai_config", JSON.stringify(this.config));
     } catch (error) {
-      console.error('Error saving AI configuration:', error);
+      console.error("Error saving AI configuration:", error);
     }
   }
 
@@ -73,39 +75,39 @@ class AIEnvironment {
    */
   setupApiKeys() {
     // Check for environment variables (in development)
-    if (typeof process !== 'undefined' && process.env) {
+    if (typeof process !== "undefined" && process.env) {
       this.config.openaiApiKey = process.env.OPENAI_API_KEY;
       this.config.anthropicApiKey = process.env.ANTHROPIC_API_KEY;
     }
-    
+
     // Check for global variables (set in development)
     if (window.OPENAI_API_KEY) {
       this.config.openaiApiKey = window.OPENAI_API_KEY;
     }
-    
+
     if (window.ANTHROPIC_API_KEY) {
       this.config.anthropicApiKey = window.ANTHROPIC_API_KEY;
     }
-    
+
     // Check localStorage for API keys
     try {
-      const savedOpenAIKey = localStorage.getItem('openai_api_key');
+      const savedOpenAIKey = localStorage.getItem("openai_api_key");
       if (savedOpenAIKey) {
         this.config.openaiApiKey = savedOpenAIKey;
       }
-      
-      const savedAnthropicKey = localStorage.getItem('anthropic_api_key');
+
+      const savedAnthropicKey = localStorage.getItem("anthropic_api_key");
       if (savedAnthropicKey) {
         this.config.anthropicApiKey = savedAnthropicKey;
       }
     } catch (error) {
-      console.error('Error loading API keys from localStorage:', error);
+      console.error("Error loading API keys from localStorage:", error);
     }
-    
+
     // Set global variables for the AI providers
     window.OPENAI_API_KEY = this.config.openaiApiKey;
     window.ANTHROPIC_API_KEY = this.config.anthropicApiKey;
-    
+
     // Set global AI configuration
     window.AI_CONFIG = this.config;
   }
@@ -115,7 +117,7 @@ class AIEnvironment {
    */
   initializeAIProviders() {
     // Check if AI providers module is loaded
-    if (typeof AIProviders !== 'undefined') {
+    if (typeof AIProviders !== "undefined") {
       AIProviders.initialize();
     }
   }
@@ -136,7 +138,7 @@ class AIEnvironment {
   disable() {
     this.config.enabled = false;
     this.saveConfig();
-    
+
     // Clear global API keys
     window.OPENAI_API_KEY = null;
     window.ANTHROPIC_API_KEY = null;
@@ -149,14 +151,14 @@ class AIEnvironment {
    * @param {string} key - The API key
    */
   setApiKey(provider, key) {
-    if (provider === 'openai') {
+    if (provider === "openai") {
       this.config.openaiApiKey = key;
       window.OPENAI_API_KEY = key;
-    } else if (provider === 'anthropic') {
+    } else if (provider === "anthropic") {
       this.config.anthropicApiKey = key;
       window.ANTHROPIC_API_KEY = key;
     }
-    
+
     this.saveConfig();
   }
 
@@ -166,9 +168,9 @@ class AIEnvironment {
    * @returns {string|null} - The API key
    */
   getApiKey(provider) {
-    if (provider === 'openai') {
+    if (provider === "openai") {
       return this.config.openaiApiKey;
-    } else if (provider === 'anthropic') {
+    } else if (provider === "anthropic") {
       return this.config.anthropicApiKey;
     }
     return null;
@@ -189,9 +191,9 @@ class AIEnvironment {
    */
   isProviderAvailable(provider) {
     if (!this.config.enabled) return false;
-    
+
     const apiKey = this.getApiKey(provider);
-    return apiKey && apiKey.trim() !== '';
+    return apiKey && apiKey.trim() !== "";
   }
 
   /**
@@ -200,15 +202,15 @@ class AIEnvironment {
    */
   getAvailableProviders() {
     const providers = [];
-    
-    if (this.isProviderAvailable('openai')) {
-      providers.push('openai');
+
+    if (this.isProviderAvailable("openai")) {
+      providers.push("openai");
     }
-    
-    if (this.isProviderAvailable('anthropic')) {
-      providers.push('anthropic');
+
+    if (this.isProviderAvailable("anthropic")) {
+      providers.push("anthropic");
     }
-    
+
     return providers;
   }
 
@@ -228,7 +230,7 @@ class AIEnvironment {
    * @param {string} style - The refactoring style
    */
   setDefaultStyle(style) {
-    const validStyles = ['simple', 'professional', 'casual'];
+    const validStyles = ["simple", "professional", "casual"];
     if (validStyles.includes(style)) {
       this.config.defaultStyle = style;
       this.saveConfig();
@@ -240,7 +242,7 @@ class AIEnvironment {
    * @param {number} tokens - The maximum number of tokens
    */
   setMaxTokens(tokens) {
-    if (typeof tokens === 'number' && tokens > 0) {
+    if (typeof tokens === "number" && tokens > 0) {
       this.config.maxTokens = tokens;
       this.saveConfig();
     }
@@ -251,7 +253,11 @@ class AIEnvironment {
    * @param {number} temperature - The temperature value (0-1)
    */
   setTemperature(temperature) {
-    if (typeof temperature === 'number' && temperature >= 0 && temperature <= 1) {
+    if (
+      typeof temperature === "number" &&
+      temperature >= 0 &&
+      temperature <= 1
+    ) {
       this.config.temperature = temperature;
       this.saveConfig();
     }
@@ -289,14 +295,14 @@ class AIEnvironment {
   reset() {
     this.config = {
       enabled: false,
-      preferredProvider: 'openai',
-      defaultStyle: 'simple',
+      preferredProvider: "openai",
+      defaultStyle: "simple",
       maxTokens: 500,
       temperature: 0.7,
-      openaiModel: 'gpt-3.5-turbo',
-      anthropicModel: 'claude-3-haiku-20240307'
+      openaiModel: "gpt-3.5-turbo",
+      anthropicModel: "claude-3-haiku-20240307",
     };
-    
+
     this.saveConfig();
     this.setupApiKeys();
   }
@@ -311,6 +317,6 @@ if (window.DEV) {
 }
 
 // Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = { AIEnvironment };
 }

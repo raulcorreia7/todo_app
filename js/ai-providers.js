@@ -10,7 +10,8 @@
 const AI_CFG = Object.freeze({
   MODEL: "gpt-4o-mini-2024-07-18",
   BASE_URL: "https://api.llm7.io/v1",
-  API_KEY: "+7WA+v1Gdie9whBlV2tUOjCE8SyF7Klaawfp0Obh4P5r07vx9hYHGSwzvr1Qpxvnnqvo5cBrQ9OXnAVOjb46CsejOp97rxqob722N87LgJrgdzg8kI3GPmEwpLat" // LLM7 is keyless; kept for interface compatibility
+  API_KEY:
+    "+7WA+v1Gdie9whBlV2tUOjCE8SyF7Klaawfp0Obh4P5r07vx9hYHGSwzvr1Qpxvnnqvo5cBrQ9OXnAVOjb46CsejOp97rxqob722N87LgJrgdzg8kI3GPmEwpLat", // LLM7 is keyless; kept for interface compatibility
 });
 const AI_LOG = true;
 
@@ -53,7 +54,6 @@ function polishTitle(raw) {
   return s;
 }
 
-
 class LLM7Provider {
   constructor() {
     this.apiKey = AI_CFG.API_KEY;
@@ -64,8 +64,10 @@ class LLM7Provider {
   buildTodoRefactorMessages(todo) {
     try {
       const idVal = todo && todo.id != null ? todo.id : null;
-      const rawTitle = (todo && (todo.text != null ? todo.text : todo.title)) || "";
-      const rawDescription = (todo && todo.description != null ? todo.description : "");
+      const rawTitle =
+        (todo && (todo.text != null ? todo.text : todo.title)) || "";
+      const rawDescription =
+        todo && todo.description != null ? todo.description : "";
 
       const systemMsg = {
         role: "system",
@@ -92,12 +94,12 @@ class LLM7Provider {
       const inputTodo = {
         id: idVal,
         title: toStringSafe(rawTitle),
-        description: toStringSafe(rawDescription)
+        description: toStringSafe(rawDescription),
       };
 
       const userMsg = {
         role: "user",
-        content: JSON.stringify({ todo: inputTodo })
+        content: JSON.stringify({ todo: inputTodo }),
       };
 
       return [systemMsg, userMsg];
@@ -129,12 +131,18 @@ class LLM7Provider {
       // 1) Direct: { id, title, description }
       // 2) Wrapper: { result: { id, title, description } } or { data: { ... } }
       let obj = parsed;
-      if (obj && typeof obj === "object" && !("id" in obj) && ("todo" in obj || "result" in obj || "data" in obj)) {
+      if (
+        obj &&
+        typeof obj === "object" &&
+        !("id" in obj) &&
+        ("todo" in obj || "result" in obj || "data" in obj)
+      ) {
         obj = obj.result || obj.data || obj.todo;
       }
 
       if (!obj || typeof obj !== "object") return null;
-      if (!("id" in obj) || !("title" in obj) || !("description" in obj)) return null;
+      if (!("id" in obj) || !("title" in obj) || !("description" in obj))
+        return null;
 
       // Escape output only; do not rewrite meaning
       const id = obj.id;
@@ -157,7 +165,6 @@ class LLM7Provider {
       const debugId = todo && todo.__debugId;
       const messages = this.buildTodoRefactorMessages(todo);
       const payload = { model: this.model, messages, stream: false };
-
 
       const res = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
@@ -252,7 +259,7 @@ class AIProviders {
     const safe = {
       id: todo && todo.id != null ? todo.id : null,
       title: toStringSafe(todo && (todo.text != null ? todo.text : todo.title)),
-      description: toStringSafe(todo && todo.description)
+      description: toStringSafe(todo && todo.description),
     };
 
     const result = await this.provider.refactorTodo(safe);

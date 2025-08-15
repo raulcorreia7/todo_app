@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -64,11 +64,11 @@
               maxlength="500"
               autocomplete="off"
             />
-          <button
-            type="submit"
-            class="btn btn--primary add-task-btn"
-            aria-label="Add task"
-          >
+            <button
+              type="submit"
+              class="btn btn--primary add-task-btn"
+              aria-label="Add task"
+            >
               <i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
             </button>
           </div>
@@ -96,17 +96,21 @@
             <div class="stat-value" id="headerTotalTasks">0</div>
           </div>
         </div>
-        
+
         <div class="stat-card stat-completed">
           <div class="stat-icon">
-            <i data-lucide="check-circle" class="lucide-icon" aria-hidden="true"></i>
+            <i
+              data-lucide="check-circle"
+              class="lucide-icon"
+              aria-hidden="true"
+            ></i>
           </div>
           <div class="stat-content">
             <div class="stat-label">Done</div>
             <div class="stat-value" id="headerCompletedTasks">0</div>
           </div>
         </div>
-        
+
         <div class="stat-card stat-karma">
           <div class="stat-icon">
             <i data-lucide="star" class="lucide-icon" aria-hidden="true"></i>
@@ -116,16 +120,15 @@
             <div class="stat-value" id="headerKarmaScore">0</div>
           </div>
         </div>
-        
       </div>
 
       <!-- Filters -->
       <nav class="filter-group">
         <button class="btn btn--ghost active" data-filter="all">All</button>
         <button class="btn btn--ghost" data-filter="active">Active</button>
-          <button class="btn btn--ghost" data-filter="completed">
+        <button class="btn btn--ghost" data-filter="completed">
           Completed
-          </button>
+        </button>
       </nav>
 
       <!-- Task List -->
@@ -244,41 +247,113 @@
     >
       <div class="cab-group action-group">
         <div class="action-subgroup">
-          <button id="cabSettings" class="btn btn--floating-action" aria-label="Settings" title="Settings" data-action="settings">
-            <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
+          <button
+            id="cabSettings"
+            class="btn btn--floating-action"
+            aria-label="Settings"
+            title="Settings"
+            data-action="settings"
+          >
+            <i
+              data-lucide="settings"
+              class="lucide-icon"
+              aria-hidden="true"
+            ></i>
           </button>
 
-          <button id="cabMusic" class="btn btn--floating-action" aria-label="Music" title="Music" data-action="music">
+          <button
+            id="cabMusic"
+            class="btn btn--floating-action"
+            aria-label="Music"
+            title="Music"
+            data-action="music"
+          >
             <i data-lucide="music" class="lucide-icon" aria-hidden="true"></i>
           </button>
 
-          <button id="cabSound" class="btn btn--floating-action" aria-label="Toggle Sound" title="Toggle Sound" data-action="sound" data-icon-on="volume-2" data-icon-off="volume-x">
-            <i data-lucide="volume-2" class="lucide-icon" aria-hidden="true"></i>
+          <button
+            id="cabSound"
+            class="btn btn--floating-action"
+            aria-label="Toggle Sound"
+            title="Toggle Sound"
+            data-action="sound"
+            data-icon-on="volume-2"
+            data-icon-off="volume-x"
+          >
+            <i
+              data-lucide="volume-2"
+              class="lucide-icon"
+              aria-hidden="true"
+            ></i>
           </button>
         </div>
 
         <div class="vertical-separator" aria-hidden="true"></div>
 
         <div class="action-subgroup">
-          <button id="cabTest" class="btn btn--floating-action btn--test" aria-label="Run Tests" title="Run Tests" data-action="test">
-            <i data-lucide="flask-conical" class="lucide-icon" aria-hidden="true"></i>
+          <button
+            id="cabTest"
+            class="btn btn--floating-action btn--test"
+            aria-label="Run Tests"
+            title="Run Tests"
+            data-action="test"
+          >
+            <i
+              data-lucide="flask-conical"
+              class="lucide-icon"
+              aria-hidden="true"
+            ></i>
             <span class="particle-field" aria-hidden="true"></span>
           </button>
 
-          <button id="cabClear" class="btn btn--floating-action btn--clear" aria-label="Clear Completed" title="Clear Completed" data-action="clear">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-broom-icon lucide-broom"><path d="m13 11 9-9"/><path d="M14.6 12.6c.8.8.9 2.1.2 3L10 22l-8-8 6.4-4.8c.9-.7 2.2-.6 3 .2Z"/><path d="m6.8 10.4 6.8 6.8"/><path d="m5 17 1.4-1.4"/></svg>
+          <button
+            id="cabClear"
+            class="btn btn--floating-action btn--clear"
+            aria-label="Clear Completed"
+            title="Clear Completed"
+            data-action="clear"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-broom-icon lucide-broom"
+            >
+              <path d="m13 11 9-9" />
+              <path
+                d="M14.6 12.6c.8.8.9 2.1.2 3L10 22l-8-8 6.4-4.8c.9-.7 2.2-.6 3 .2Z"
+              />
+              <path d="m6.8 10.4 6.8 6.8" />
+              <path d="m5 17 1.4-1.4" />
+            </svg>
           </button>
 
-          <button id="cabDelete" class="btn btn--floating-action btn--delete" aria-label="Delete All" title="Delete All" data-action="delete">
+          <button
+            id="cabDelete"
+            class="btn btn--floating-action btn--delete"
+            aria-label="Delete All"
+            title="Delete All"
+            data-action="delete"
+          >
             <i data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></i>
           </button>
         </div>
       </div>
     </div>
 
-
     <!-- Modal Overlay -->
-    <div id="modalOverlay" class="modal-overlay" aria-hidden="true" style="z-index: 10050;"></div>
+    <div
+      id="modalOverlay"
+      class="modal-overlay"
+      aria-hidden="true"
+      style="z-index: 10050"
+    ></div>
 
     <!-- Modal Container -->
     <div
@@ -288,7 +363,7 @@
       aria-modal="true"
       aria-labelledby="modalTitle"
       aria-describedby="modalDescription"
-      style="z-index: 10100;"
+      style="z-index: 10100"
     >
       <div class="modal-content">
         <div class="modal-header">
@@ -304,11 +379,19 @@
         </div>
         <div class="modal-footer">
           <button id="modalCancelButton" class="btn btn--ghost">
-            <i data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></i>
+            <i
+              data-lucide="arrow-left"
+              class="lucide-icon"
+              aria-hidden="true"
+            ></i>
             Cancel
           </button>
           <button id="modalConfirmButton" class="btn btn--primary">
-            <i data-lucide="check-circle" class="lucide-icon" aria-hidden="true"></i>
+            <i
+              data-lucide="check-circle"
+              class="lucide-icon"
+              aria-hidden="true"
+            ></i>
             Confirm
           </button>
         </div>
@@ -388,19 +471,25 @@
     <script>
       // Ensure Lucide icons are hydrated for static markup (center action bar, modal, etc.)
       try {
-        if (window.lucide && typeof lucide.createIcons === 'function') {
+        if (window.lucide && typeof lucide.createIcons === "function") {
           lucide.createIcons();
         }
       } catch (_) {}
 
       // Rehydrate icons when the app signals readiness or when tasks re-render
-      document.addEventListener('app:ready', () => {
-        try { if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons(); } catch (_) {}
+      document.addEventListener("app:ready", () => {
+        try {
+          if (window.lucide && typeof lucide.createIcons === "function")
+            lucide.createIcons();
+        } catch (_) {}
       });
 
       // Fallback: re-run on DOMContentLoaded
-      document.addEventListener('DOMContentLoaded', () => {
-        try { if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons(); } catch (_) {}
+      document.addEventListener("DOMContentLoaded", () => {
+        try {
+          if (window.lucide && typeof lucide.createIcons === "function")
+            lucide.createIcons();
+        } catch (_) {}
       });
     </script>
   </body>

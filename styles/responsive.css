@@ -9,6 +9,47 @@
   --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Theme Card Responsive Adjustments */
+@media (max-width: 768px) {
+  .theme-cards-container {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .theme-card {
+    height: 90px;
+  }
+  
+  .theme-preview {
+    height: 50px;
+  }
+  
+  .theme-name {
+    font-size: clamp(0.5rem, 2vw, 0.7rem);
+    padding: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-cards-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .theme-card {
+    height: 80px;
+  }
+  
+  .theme-preview {
+    height: 45px;
+  }
+  
+  .theme-name {
+    font-size: clamp(0.45rem, 1.8vw, 0.65rem);
+    padding: 0.2rem;
+  }
+}
+
 /* Mobile First Approach */
 @media (max-width: 768px) {
   .app-container {
@@ -435,7 +476,7 @@
   /* Add extra top space so the header ('Luxury Todo') sits below the center bar */
   .app-container {
     /* push content down by the bar height + breathing room */
-    padding-top: calc(72px + env(safe-area-inset-top, 0px));
+    padding-top: calc(40px + env(safe-area-inset-top, 0px));
   }
 
   /* If header has its own margins, ensure they don't collapse upwards */
@@ -464,11 +505,14 @@
 
 /* Ensure all scrollable areas can scroll properly */
 @media (max-width: 768px) {
-  .settings-panel,
-
   /* Hide legacy right-side floating-controls on mobile (we will use a unified mobile cluster) */
   .floating-controls {
     display: none;
+  }
+  
+  /* Ensure settings panel is visible on mobile */
+  .settings-panel {
+    display: block !important;
   }
 }
 
@@ -489,13 +533,13 @@
   .task-list-container {
     touch-action: pan-y;
   }
+  
+  /* Ensure settings panel is visible on touch devices */
+  .settings-panel {
+    display: block !important;
+  }
 }
 
-  /* Add extra top space so the header ('Luxury Todo') sits below the center bar */
-  .app-container {
-    /* push content down by the bar height + breathing room */
-    padding-top: calc(72px + env(safe-area-inset-top, 0px));
-  }
 
   /* If header has its own margins, ensure they don't collapse upwards */
   .app-header {
@@ -523,11 +567,14 @@
 
 /* Ensure all scrollable areas can scroll properly */
 @media (max-width: 768px) {
-  .settings-panel,
-
   /* Hide legacy right-side floating-controls on mobile (we will use a unified mobile cluster) */
   .floating-controls {
     display: none;
+  }
+  
+  /* Ensure settings panel is visible on mobile */
+  .settings-panel {
+    display: block !important;
   }
 }
 
@@ -547,5 +594,10 @@
   /* Allow vertical scrolling without interference */
   .task-list-container {
     touch-action: pan-y;
+  }
+  
+  /* Ensure settings panel is visible on touch devices */
+  .settings-panel {
+    display: block !important;
   }
 }

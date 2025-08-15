@@ -8,16 +8,19 @@ class StatisticsManager {
     this.isInitialized = false;
     this.aiEditCount = 0;
     this.aiWordsEdited = 0;
-    
+
     this.init();
   }
 
   init() {
     this.setupEventListeners();
     this.isInitialized = true;
-    
+
     // Register reset handler for resetting statistics
-    if (typeof bus !== 'undefined' && typeof bus.registerResetHandler === 'function') {
+    if (
+      typeof bus !== "undefined" &&
+      typeof bus.registerResetHandler === "function"
+    ) {
       bus.registerResetHandler(() => {
         this.resetAllStats();
       });
@@ -26,8 +29,8 @@ class StatisticsManager {
 
   setupEventListeners() {
     // Update on task changes
-    if (typeof bus !== 'undefined') {
-      bus.addEventListener('tasksUpdated', () => {
+    if (typeof bus !== "undefined") {
+      bus.addEventListener("tasksUpdated", () => {
         this.updateStatistics();
       });
     }
@@ -36,18 +39,18 @@ class StatisticsManager {
   updateStatistics() {
     const tasks = storageManager.getTasks();
     const total = tasks.length;
-    const completed = tasks.filter(t => t.completed).length;
+    const completed = tasks.filter((t) => t.completed).length;
 
     // Update header statistics
-    const totalEl = document.getElementById('headerTotalTasks');
-    const completedEl = document.getElementById('headerCompletedTasks');
-    
+    const totalEl = document.getElementById("headerTotalTasks");
+    const completedEl = document.getElementById("headerCompletedTasks");
+
     if (totalEl) totalEl.textContent = total;
     if (completedEl) completedEl.textContent = completed;
 
     // Update karma if available
-    if (typeof gamificationManager !== 'undefined') {
-      const karmaEl = document.getElementById('headerKarmaScore');
+    if (typeof gamificationManager !== "undefined") {
+      const karmaEl = document.getElementById("headerKarmaScore");
       if (karmaEl && gamificationManager.karmaPoints !== undefined) {
         karmaEl.textContent = gamificationManager.karmaPoints;
       }
@@ -58,22 +61,22 @@ class StatisticsManager {
     this.aiEditCount++;
     this.save();
   }
-  
+
   incrementAIWordsEdited(wordCount) {
     this.aiWordsEdited += wordCount;
     this.save();
   }
-  
+
   save() {
     // Save AI statistics to storage
     const existingData = storageManager.getStatistics() || {};
     storageManager.setStatistics({
       ...existingData,
       aiEditCount: this.aiEditCount,
-      aiWordsEdited: this.aiWordsEdited
+      aiWordsEdited: this.aiWordsEdited,
     });
   }
-  
+
   load() {
     // Load AI statistics from storage
     const data = storageManager.getStatistics() || {};
@@ -90,16 +93,16 @@ class StatisticsManager {
       // Reset AI statistics
       this.aiEditCount = 0;
       this.aiWordsEdited = 0;
-      
+
       // Reset storage statistics
       storageManager.saveStats(storageManager.getDefaultStats());
-      
+
       // Update UI
       this.updateStatistics();
-      
+
       return true;
     } catch (error) {
-      console.warn('Failed to reset statistics:', error);
+      console.warn("Failed to reset statistics:", error);
       return false;
     }
   }

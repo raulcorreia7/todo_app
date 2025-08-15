@@ -5,19 +5,25 @@
 // Lightweight runtime task validator/normalizer used across the app.
 // Enforces strict schema: { id, title, description } and coerces description to string.
 function validateTask(task) {
-  const id = task && task.id != null ? task.id : (task && task._id != null ? task._id : null);
+  const id =
+    task && task.id != null
+      ? task.id
+      : task && task._id != null
+        ? task._id
+        : null;
 
   // Normalize title: app historically uses "text" as the visible title field
   const rawTitle = task && (task.title != null ? task.title : task.text);
-  const title = typeof rawTitle === 'string' ? rawTitle : String(rawTitle ?? '');
+  const title =
+    typeof rawTitle === "string" ? rawTitle : String(rawTitle ?? "");
 
   // Coerce description to a plain string and trim
-  let desc = task && task.description != null ? task.description : '';
-  if (typeof desc !== 'string') {
+  let desc = task && task.description != null ? task.description : "";
+  if (typeof desc !== "string") {
     try {
       desc = String(desc);
     } catch (_) {
-      desc = '';
+      desc = "";
     }
   }
   desc = desc.trim();
@@ -33,7 +39,7 @@ function validateTasks(tasks) {
 }
 
 // Expose globally for use in app/storage without import system
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.validateTask = validateTask;
   window.validateTasks = validateTasks;
 }
@@ -54,50 +60,56 @@ class ValidationManager {
    */
   setupCharacterCounters() {
     // Add event listeners for character counting
-    document.addEventListener('input', (e) => {
-      if (e.target.matches('[maxlength]')) {
+    document.addEventListener("input", (e) => {
+      if (e.target.matches("[maxlength]")) {
         this.updateCharCounter(e.target);
       }
     });
 
     // Add event listeners for edit mode
-    document.addEventListener('focus', (e) => {
-      if (e.target.matches('.task-edit-input, .task-edit-description')) {
-        this.updateCharCounter(e.target);
-      }
-    }, true);
+    document.addEventListener(
+      "focus",
+      (e) => {
+        if (e.target.matches(".task-edit-input, .task-edit-description")) {
+          this.updateCharCounter(e.target);
+        }
+      },
+      true
+    );
   }
 
   /**
    * Update character counter for an input
    */
   updateCharCounter(input) {
-    const maxLength = parseInt(input.getAttribute('maxlength'));
+    const maxLength = parseInt(input.getAttribute("maxlength"));
     const currentLength = input.value.length;
     const remaining = maxLength - currentLength;
 
     // Find the associated counter
     let counter;
-    if (input.classList.contains('task-edit-input')) {
-      counter = input.parentElement.querySelector('.char-count');
-    } else if (input.classList.contains('task-edit-description')) {
-      counter = input.parentElement.querySelector('.desc-count');
+    if (input.classList.contains("task-edit-input")) {
+      counter = input.parentElement.querySelector(".char-count");
+    } else if (input.classList.contains("task-edit-description")) {
+      counter = input.parentElement.querySelector(".desc-count");
     }
 
     if (counter) {
-      const type = input.classList.contains('task-edit-input') ? 'title' : 'description';
-      const max = type === 'title' ? 500 : 500;
-      
+      const type = input.classList.contains("task-edit-input")
+        ? "title"
+        : "description";
+      const max = type === "title" ? 500 : 500;
+
       counter.textContent = `${currentLength}/${max}`;
-      
+
       // Update counter styling based on remaining characters
       const counterElement = counter.parentElement;
-      counterElement.classList.remove('warning', 'error');
-      
+      counterElement.classList.remove("warning", "error");
+
       if (remaining <= 10) {
-        counterElement.classList.add('error');
+        counterElement.classList.add("error");
       } else if (remaining <= 50) {
-        counterElement.classList.add('warning');
+        counterElement.classList.add("warning");
       }
     }
   }
@@ -107,19 +119,19 @@ class ValidationManager {
    */
   validateTaskInput(text, description) {
     const errors = [];
-    
+
     if (!text || String(text).trim().length === 0) {
-      errors.push('Task title is required');
+      errors.push("Task title is required");
     }
-    
+
     if (text && String(text).length > 500) {
-      errors.push('Task title must be 500 characters or less');
+      errors.push("Task title must be 500 characters or less");
     }
-    
+
     if (description && String(description).length > 500) {
-      errors.push('Task description must be 500 characters or less');
+      errors.push("Task description must be 500 characters or less");
     }
-    
+
     return errors;
   }
 
@@ -131,48 +143,51 @@ class ValidationManager {
       {
         name: "Title-only task validation",
         input: { text: "Test task", description: "" },
-        expected: []
+        expected: [],
       },
       {
         name: "Task with description validation",
         input: { text: "Test task", description: "This is a description" },
-        expected: []
+        expected: [],
       },
       {
         name: "Empty title validation",
         input: { text: "", description: "Description" },
-        expected: ['Task title is required']
+        expected: ["Task title is required"],
       },
       {
         name: "Missing title validation",
         input: { text: null, description: "Description" },
-        expected: ['Task title is required']
+        expected: ["Task title is required"],
       },
       {
         name: "Long title validation",
         input: { text: "x".repeat(501), description: "" },
-        expected: ['Task title must be 500 characters or less']
+        expected: ["Task title must be 500 characters or less"],
       },
       {
         name: "Long description validation",
         input: { text: "Valid title", description: "x".repeat(501) },
-        expected: ['Task description must be 500 characters or less']
+        expected: ["Task description must be 500 characters or less"],
       },
       {
         name: "Title-only task with whitespace",
         input: { text: "  Task with spaces  ", description: "" },
-        expected: []
-      }
+        expected: [],
+      },
     ];
 
-    
     let passed = 0;
     let failed = 0;
 
     tests.forEach((test, index) => {
-      const result = this.validateTaskInput(test.input.text, test.input.description);
-      const passedTest = JSON.stringify(result) === JSON.stringify(test.expected);
-      
+      const result = this.validateTaskInput(
+        test.input.text,
+        test.input.description
+      );
+      const passedTest =
+        JSON.stringify(result) === JSON.stringify(test.expected);
+
       if (passedTest) {
         passed++;
       } else {
@@ -194,33 +209,33 @@ class ValidationManager {
       {
         name: "Title-only task normalization",
         input: { id: "123", title: "Test task", description: undefined },
-        expected: { id: "123", title: "Test task", description: "" }
+        expected: { id: "123", title: "Test task", description: "" },
       },
       {
         name: "Task with null description",
         input: { id: "456", title: "Another task", description: null },
-        expected: { id: "456", title: "Another task", description: "" }
+        expected: { id: "456", title: "Another task", description: "" },
       },
       {
         name: "Task with empty string description",
         input: { id: "789", title: "Task with empty desc", description: "" },
-        expected: { id: "789", title: "Task with empty desc", description: "" }
+        expected: { id: "789", title: "Task with empty desc", description: "" },
       },
       {
         name: "Task with non-string description",
         input: { id: "101", title: "Task", description: 123 },
-        expected: { id: "101", title: "Task", description: "" }
-      }
+        expected: { id: "101", title: "Task", description: "" },
+      },
     ];
 
-    
     let passed = 0;
     let failed = 0;
 
     tests.forEach((test, index) => {
       const result = validateTask(test.input);
-      const passedTest = JSON.stringify(result) === JSON.stringify(test.expected);
-      
+      const passedTest =
+        JSON.stringify(result) === JSON.stringify(test.expected);
+
       if (passedTest) {
         passed++;
       } else {
@@ -239,8 +254,8 @@ class ValidationManager {
    */
   showValidationError(message) {
     // Create temporary error notification
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'validation-error';
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "validation-error";
     errorDiv.style.cssText = `
       position: fixed;
       top: 20px;
@@ -254,9 +269,9 @@ class ValidationManager {
       animation: slideIn 0.3s ease;
     `;
     errorDiv.textContent = message;
-    
+
     document.body.appendChild(errorDiv);
-    
+
     setTimeout(() => {
       errorDiv.remove();
     }, 3000);

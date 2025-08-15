@@ -19,9 +19,9 @@ class MusicManager {
     this.globalMute = false;
     // Config
     this.TRACKS = [
-      'sounds/song_house_0.mp3',
-      'sounds/song_chill_0.mp3',
-      'sounds/song_capybara.mp3'
+      "sounds/song_house_0.mp3",
+      "sounds/song_chill_0.mp3",
+      "sounds/song_capybara.mp3",
     ];
     this.DEFAULT_VOLUME = 0.45;
     this.DEFAULT_MUTED = false;
@@ -84,23 +84,26 @@ class MusicManager {
 
     // App ready only ensures initialization and UI enablement; no auto-play
     const attachAppReadyListener = () => {
-      if (typeof bus !== 'undefined' && typeof bus.addEventListener === 'function') {
+      if (
+        typeof bus !== "undefined" &&
+        typeof bus.addEventListener === "function"
+      ) {
         const onAppReady = () => {
           // Do nothing but keep initialized; allow UI to be enabled.
-          if (typeof bus.removeEventListener === 'function') {
-            bus.removeEventListener('app:ready', onAppReady);
+          if (typeof bus.removeEventListener === "function") {
+            bus.removeEventListener("app:ready", onAppReady);
           }
         };
-        bus.addEventListener('app:ready', onAppReady);
-        
+        bus.addEventListener("app:ready", onAppReady);
+
         // Listen for centerbar:ready event before setting up other listeners
-        bus.addEventListener('centerbar:ready', (e) => {
+        bus.addEventListener("centerbar:ready", (e) => {
           // Now that center bar is ready, set up the actual event listeners
           this.setupCenterBarEventListeners();
         });
 
         // Listen to global settings changes to apply global mute gate without pausing playback
-        bus.addEventListener('settingsChanged', (evt) => {
+        bus.addEventListener("settingsChanged", (evt) => {
           try {
             const detail = evt && evt.detail ? evt.detail : {};
             if (detail.globalMute !== undefined) {
@@ -109,8 +112,7 @@ class MusicManager {
               // Backward compatibility: soundEnabled false == global mute on
               this.applyGlobalMute(!detail.soundEnabled);
             }
-          } catch (err) {
-          }
+          } catch (err) {}
         });
       } else {
         setTimeout(attachAppReadyListener, 100);
@@ -122,19 +124,37 @@ class MusicManager {
   // === Persistence ===
   readSettings() {
     try {
-      if (typeof storageManager !== 'undefined' && storageManager.getSettings) {
+      if (typeof storageManager !== "undefined" && storageManager.getSettings) {
         // Music settings may live within general settings or via dedicated keys; use localStorage fallbacks
-        const vol = parseFloat(localStorage.getItem('music.volume'));
-        const muted = localStorage.getItem('music.muted');
-        const gapEnabled = localStorage.getItem('music.gapEnabled');
-        const gapMin = parseInt(localStorage.getItem('music.gapMinSeconds'), 10);
-        const gapMax = parseInt(localStorage.getItem('music.gapMaxSeconds'), 10);
+        const vol = parseFloat(localStorage.getItem("music.volume"));
+        const muted = localStorage.getItem("music.muted");
+        const gapEnabled = localStorage.getItem("music.gapEnabled");
+        const gapMin = parseInt(
+          localStorage.getItem("music.gapMinSeconds"),
+          10
+        );
+        const gapMax = parseInt(
+          localStorage.getItem("music.gapMaxSeconds"),
+          10
+        );
 
-        this.targetVolume = isFinite(vol) ? Math.max(0, Math.min(1, vol)) : this.DEFAULT_VOLUME;
-        this.isMuted = muted === 'true' ? true : (muted === 'false' ? false : this.DEFAULT_MUTED);
-        this.gapEnabled = gapEnabled === 'false' ? false : this.GAP_ENABLED_DEFAULT;
-        this.gapMinSeconds = isFinite(gapMin) ? Math.max(0, gapMin) : this.GAP_MIN_DEFAULT;
-        this.gapMaxSeconds = isFinite(gapMax) ? Math.max(this.gapMinSeconds, gapMax) : this.GAP_MAX_DEFAULT;
+        this.targetVolume = isFinite(vol)
+          ? Math.max(0, Math.min(1, vol))
+          : this.DEFAULT_VOLUME;
+        this.isMuted =
+          muted === "true"
+            ? true
+            : muted === "false"
+              ? false
+              : this.DEFAULT_MUTED;
+        this.gapEnabled =
+          gapEnabled === "false" ? false : this.GAP_ENABLED_DEFAULT;
+        this.gapMinSeconds = isFinite(gapMin)
+          ? Math.max(0, gapMin)
+          : this.GAP_MIN_DEFAULT;
+        this.gapMaxSeconds = isFinite(gapMax)
+          ? Math.max(this.gapMinSeconds, gapMax)
+          : this.GAP_MAX_DEFAULT;
       } else {
         this.targetVolume = this.DEFAULT_VOLUME;
         this.isMuted = this.DEFAULT_MUTED;
@@ -153,43 +173,42 @@ class MusicManager {
 
   persistSettings() {
     try {
-      localStorage.setItem('music.volume', String(this.targetVolume));
-      localStorage.setItem('music.muted', String(this.isMuted));
-      localStorage.setItem('music.gapEnabled', String(this.gapEnabled));
-      localStorage.setItem('music.gapMinSeconds', String(this.gapMinSeconds));
-      localStorage.setItem('music.gapMaxSeconds', String(this.gapMaxSeconds));
-    } catch (e) {
-    }
+      localStorage.setItem("music.volume", String(this.targetVolume));
+      localStorage.setItem("music.muted", String(this.isMuted));
+      localStorage.setItem("music.gapEnabled", String(this.gapEnabled));
+      localStorage.setItem("music.gapMinSeconds", String(this.gapMinSeconds));
+      localStorage.setItem("music.gapMaxSeconds", String(this.gapMaxSeconds));
+    } catch (e) {}
   }
 
   // === Initialization & Autoplay Probe ===
   createAudio(index) {
     const el = new Audio();
-    el.preload = 'none'; // progressive streaming intent; will set src then play
+    el.preload = "none"; // progressive streaming intent; will set src then play
     el.src = this.TRACKS[index];
     el.loop = false;
-    el.crossOrigin = 'anonymous';
+    el.crossOrigin = "anonymous";
     el.volume = 0; // effective volume controlled by fades
     // Events for buffering and readiness
-    el.addEventListener('canplay', () => {
+    el.addEventListener("canplay", () => {
       this.isReady = true;
       this.isLoading = false;
       this.updateBuffering(false);
-      this.dispatch('music:ready', { index });
+      this.dispatch("music:ready", { index });
       // If pending play, start now (respect mute state and fades)
       if (this.pendingPlay) {
         this.pendingPlay = false;
         this._playWithFadeIn(el, this.FADE_IN_START);
       }
     });
-    el.addEventListener('playing', () => {
+    el.addEventListener("playing", () => {
       this.updateBuffering(false);
-      this.dispatch('music:playing', { index });
+      this.dispatch("music:playing", { index });
     });
-    el.addEventListener('waiting', () => {
+    el.addEventListener("waiting", () => {
       this.updateBuffering(true);
     });
-    el.addEventListener('ended', () => {
+    el.addEventListener("ended", () => {
       // Natural end -> silence gap or switch immediately depending on settings
       this.onTrackEnded();
     });
@@ -208,8 +227,15 @@ class MusicManager {
 
     // Restore last track index if available and valid for any length
     try {
-      const savedIdx = parseInt(localStorage.getItem('music.lastTrackIndex'), 10);
-      if (isFinite(savedIdx) && savedIdx >= 0 && savedIdx < this.TRACKS.length) {
+      const savedIdx = parseInt(
+        localStorage.getItem("music.lastTrackIndex"),
+        10
+      );
+      if (
+        isFinite(savedIdx) &&
+        savedIdx >= 0 &&
+        savedIdx < this.TRACKS.length
+      ) {
         this.currentIndex = savedIdx;
       }
     } catch (e) {
@@ -220,7 +246,7 @@ class MusicManager {
     this.getOrCreateAudio(this.currentIndex);
 
     this.isInitialized = true;
-    this.dispatch('music:initialized', {});
+    this.dispatch("music:initialized", {});
   }
 
   // Removed immediate autoplayProbe in favor of app:ready delayed start
@@ -242,39 +268,47 @@ class MusicManager {
    * Setup event listeners for center bar actions
    */
   setupCenterBarEventListeners() {
-    
-    if (typeof bus === 'undefined' || typeof bus.addEventListener !== 'function') {
+    if (
+      typeof bus === "undefined" ||
+      typeof bus.addEventListener !== "function"
+    ) {
       return;
     }
 
     // Open/close the music UI popover (no playback here)
-    bus.addEventListener('centerbar:music', (e) => {
+    bus.addEventListener("centerbar:music", (e) => {
       try {
-        if (typeof window.musicPlayer !== 'undefined' && typeof window.musicPlayer.toggleUI === 'function') {
-          const anchor = e.detail?.anchor || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
+        if (
+          typeof window.musicPlayer !== "undefined" &&
+          typeof window.musicPlayer.toggleUI === "function"
+        ) {
+          const anchor =
+            e.detail?.anchor ||
+            document.getElementById("cabMusic") ||
+            document.getElementById("musicBtn") ||
+            null;
           window.musicPlayer.toggleUI(anchor);
           return;
         }
-      } catch (err) {
-      }
+      } catch (err) {}
       // No UI controller available: ignore to avoid unintended playback
     });
 
     // Wire transport controls dispatched by MusicPlayer UI
-    bus.addEventListener('music:prev', () => {
+    bus.addEventListener("music:prev", () => {
       this.prev();
     });
-    bus.addEventListener('music:next', () => {
+    bus.addEventListener("music:next", () => {
       this.next();
     });
-    bus.addEventListener('music:toggle', () => {
+    bus.addEventListener("music:toggle", () => {
       this.togglePlay();
     });
 
     // Optional volume control from MusicPlayer slider
-    bus.addEventListener('music:setVolume', (e) => {
+    bus.addEventListener("music:setVolume", (e) => {
       const vol = e?.detail?.volume;
-      if (typeof vol === 'number' && isFinite(vol)) {
+      if (typeof vol === "number" && isFinite(vol)) {
         this.setVolume(Math.max(0, Math.min(1, vol)), { smooth: true });
       }
     });
@@ -292,7 +326,7 @@ class MusicManager {
     try {
       // Always start playback request (policy friendly), but keep volume at 0 if muted globally
       const p = el.play();
-      if (p && typeof p.then === 'function') await p;
+      if (p && typeof p.then === "function") await p;
 
       // If first start hasn't completed yet, use a 3s fade once
       if (!this.firstStartDone) {
@@ -305,7 +339,7 @@ class MusicManager {
             this.isLoading = false;
             this.updateBuffering(false);
             this.firstStartDone = true;
-            this.dispatch('music:playing', { index: this.currentIndex });
+            this.dispatch("music:playing", { index: this.currentIndex });
           } else {
             // First manual start path: 3s first-start fade
             await this._fadeTo(el, this.effectiveTargetVolume(), 3000);
@@ -314,13 +348,16 @@ class MusicManager {
             this.updateBuffering(false);
             this.firstStartDone = true;
             // Fire explicit "started" event for transport/analytics
-            this.dispatch('music:started', { index: this.currentIndex, firstStart: true });
-            this.dispatch('music:playing', { index: this.currentIndex });
+            this.dispatch("music:started", {
+              index: this.currentIndex,
+              firstStart: true,
+            });
+            this.dispatch("music:playing", { index: this.currentIndex });
           }
         } else {
           // Wait for canplay, then do the 3s fade once (respect global mute)
           const once = async () => {
-            el.removeEventListener('canplay', once);
+            el.removeEventListener("canplay", once);
             if (this.isMuted || this.globalMute) {
               el.volume = 0;
               this.currentVolume = 0;
@@ -328,7 +365,7 @@ class MusicManager {
               this.isLoading = false;
               this.updateBuffering(false);
               this.firstStartDone = true;
-              this.dispatch('music:playing', { index: this.currentIndex });
+              this.dispatch("music:playing", { index: this.currentIndex });
             } else {
               // First-start signature 3s fade after canplay
               await this._fadeTo(el, this.effectiveTargetVolume(), 3000);
@@ -337,14 +374,17 @@ class MusicManager {
               this.updateBuffering(false);
               this.firstStartDone = true;
               // Fire explicit "started" event for transport/analytics
-              this.dispatch('music:started', { index: this.currentIndex, firstStart: true });
-              this.dispatch('music:playing', { index: this.currentIndex });
+              this.dispatch("music:started", {
+                index: this.currentIndex,
+                firstStart: true,
+              });
+              this.dispatch("music:playing", { index: this.currentIndex });
             }
           };
-          el.addEventListener('canplay', once);
+          el.addEventListener("canplay", once);
           this.pendingPlay = true;
           this.isLoading = true;
-          this.dispatch('music:loading', {});
+          this.dispatch("music:loading", {});
         }
         return;
       }
@@ -353,11 +393,14 @@ class MusicManager {
       if (el.readyState >= 3) {
         this._playWithFadeIn(el, this.FADE_IN_START);
         // Emit "started" for subsequent resumes as well
-        this.dispatch('music:started', { index: this.currentIndex, firstStart: false });
+        this.dispatch("music:started", {
+          index: this.currentIndex,
+          firstStart: false,
+        });
       } else {
         this.pendingPlay = true;
         this.isLoading = true;
-        this.dispatch('music:loading', {});
+        this.dispatch("music:loading", {});
         // When canplay resolves via _playWithFadeIn, music:playing will be sent; started will be emitted on actual start.
       }
     } catch (e) {
@@ -371,7 +414,7 @@ class MusicManager {
     await this._fadeTo(el, 0, this.FADE_OUT_PAUSE);
     el.pause();
     this.isPlaying = false;
-    this.dispatch('music:paused', {});
+    this.dispatch("music:paused", {});
   }
 
   async togglePlay() {
@@ -392,7 +435,7 @@ class MusicManager {
 
     // Persist last track index (optional continuity)
     try {
-      localStorage.setItem('music.lastTrackIndex', String(toIndex));
+      localStorage.setItem("music.lastTrackIndex", String(toIndex));
     } catch (e) {
       // no-op
     }
@@ -408,13 +451,13 @@ class MusicManager {
 
     try {
       const p = nextEl.play();
-      if (p && typeof p.then === 'function') await p;
+      if (p && typeof p.then === "function") await p;
       if (nextEl.readyState >= 3) {
         this._playWithFadeIn(nextEl, this.FADE_IN_SWITCH);
       } else {
         this.pendingPlay = true;
         this.isLoading = true;
-        this.dispatch('music:loading', {});
+        this.dispatch("music:loading", {});
       }
     } catch (e) {
       this.hintStartNeeded();
@@ -434,7 +477,7 @@ class MusicManager {
 
     // Persist last track index (optional continuity)
     try {
-      localStorage.setItem('music.lastTrackIndex', String(toIndex));
+      localStorage.setItem("music.lastTrackIndex", String(toIndex));
     } catch (e) {
       // no-op
     }
@@ -450,13 +493,13 @@ class MusicManager {
 
     try {
       const p = prevEl.play();
-      if (p && typeof p.then === 'function') await p;
+      if (p && typeof p.then === "function") await p;
       if (prevEl.readyState >= 3) {
         this._playWithFadeIn(prevEl, this.FADE_IN_SWITCH);
       } else {
         this.pendingPlay = true;
         this.isLoading = true;
-        this.dispatch('music:loading', {});
+        this.dispatch("music:loading", {});
       }
     } catch (e) {
       this.hintStartNeeded();
@@ -474,14 +517,22 @@ class MusicManager {
         return;
       }
       // If playing, fade back in
-      await this._fadeTo(this.audioEls[this.currentIndex], this.targetVolume, this.FADE_IN_UNMUTE);
+      await this._fadeTo(
+        this.audioEls[this.currentIndex],
+        this.targetVolume,
+        this.FADE_IN_UNMUTE
+      );
     } else {
       this.isMuted = true;
       this.persistSettings();
       // Fade out but keep playing (inaudible) to preserve stream, or pause? We'll keep playing muted.
-      await this._fadeTo(this.audioEls[this.currentIndex], 0, this.FADE_OUT_MUTE);
+      await this._fadeTo(
+        this.audioEls[this.currentIndex],
+        0,
+        this.FADE_OUT_MUTE
+      );
     }
-    this.dispatch('music:muted', { muted: this.isMuted });
+    this.dispatch("music:muted", { muted: this.isMuted });
   }
 
   setVolume(vol, opts = { smooth: true }) {
@@ -494,10 +545,10 @@ class MusicManager {
 
     // Respect global mute: do not ramp up if globally muted
     const target = this.effectiveTargetVolume();
-    const duration = (opts && opts.smooth) ? this.SLIDER_SMOOTH : 0;
+    const duration = opts && opts.smooth ? this.SLIDER_SMOOTH : 0;
     this._fadeTo(el, target, duration);
 
-    this.dispatch('music:volumeChanged', { volume: this.targetVolume });
+    this.dispatch("music:volumeChanged", { volume: this.targetVolume });
   }
 
   setGapEnabled(enabled) {
@@ -506,7 +557,11 @@ class MusicManager {
   }
 
   setGapRange(minSec, maxSec) {
-    if (typeof minSec === 'number' && typeof maxSec === 'number' && maxSec >= minSec) {
+    if (
+      typeof minSec === "number" &&
+      typeof maxSec === "number" &&
+      maxSec >= minSec
+    ) {
       this.gapMinSeconds = Math.max(0, Math.floor(minSec));
       this.gapMaxSeconds = Math.max(this.gapMinSeconds, Math.floor(maxSec));
       this.persistSettings();
@@ -526,13 +581,15 @@ class MusicManager {
     // If either music mute or global mute is active, remain at 0 but mark playing
     if (this.isMuted || this.globalMute) {
       // Ensure the element is actually playing but inaudible
-      try { el.play?.(); } catch {}
+      try {
+        el.play?.();
+      } catch {}
       el.volume = 0;
       this.currentVolume = 0;
       this.isPlaying = true;
       this.isLoading = false;
       this.updateBuffering(false);
-      this.dispatch('music:playing', { index: this.currentIndex });
+      this.dispatch("music:playing", { index: this.currentIndex });
       return;
     }
     // Not muted: ramp to effective target
@@ -540,7 +597,7 @@ class MusicManager {
     this.isPlaying = true;
     this.isLoading = false;
     this.updateBuffering(false);
-    this.dispatch('music:playing', { index: this.currentIndex });
+    this.dispatch("music:playing", { index: this.currentIndex });
   }
 
   async onTrackEnded() {
@@ -557,7 +614,7 @@ class MusicManager {
 
     this.isPlaying = false;
     this.isInSilence = true;
-    this.dispatch('music:silenceStart', {});
+    this.dispatch("music:silenceStart", {});
 
     // Random delay
     const delay = this.randomInt(this.gapMinSeconds, this.gapMaxSeconds) * 1000;
@@ -575,24 +632,27 @@ class MusicManager {
     }
     if (this.isInSilence) {
       this.isInSilence = false;
-      this.dispatch('music:silenceEnd', {});
+      this.dispatch("music:silenceEnd", {});
     }
   }
 
   updateBuffering(isBuffering) {
     if (this.isBuffering === isBuffering) return;
     this.isBuffering = isBuffering;
-    this.dispatch('music:buffering', { buffering: isBuffering });
+    this.dispatch("music:buffering", { buffering: isBuffering });
   }
 
   hintStartNeeded() {
     // Fire event for UI to show a subtle glow on the music button
-    this.dispatch('music:hintStart', {});
+    this.dispatch("music:hintStart", {});
   }
 
   dispatch(type, detail) {
     try {
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
+      if (
+        typeof bus !== "undefined" &&
+        typeof bus.dispatchEvent === "function"
+      ) {
         bus.dispatchEvent(new CustomEvent(type, { detail }));
       }
     } catch (e) {
@@ -602,7 +662,7 @@ class MusicManager {
 
   // Effective target volume considering global mute and local music mute
   effectiveTargetVolume() {
-    return (this.globalMute || this.isMuted) ? 0 : this.targetVolume;
+    return this.globalMute || this.isMuted ? 0 : this.targetVolume;
   }
 
   // Apply global mute gate without changing local music mute setting
@@ -626,11 +686,18 @@ class MusicManager {
       }
       this.fadeStart = performance.now();
       this.fadeDuration = Math.max(0, durationMs || 0);
-      this.fadeFrom = isFinite(this.currentVolume) ? this.currentVolume : (el ? el.volume : 0);
+      this.fadeFrom = isFinite(this.currentVolume)
+        ? this.currentVolume
+        : el
+          ? el.volume
+          : 0;
       this.fadeTo = Math.max(0, Math.min(1, to));
 
       const step = (now) => {
-        const t = Math.min(1, (now - this.fadeStart) / (this.fadeDuration || 1));
+        const t = Math.min(
+          1,
+          (now - this.fadeStart) / (this.fadeDuration || 1)
+        );
         const eased = this.easeInOut(t);
         const val = this.fadeFrom + (this.fadeTo - this.fadeFrom) * eased;
         if (el) el.volume = val;

@@ -2702,6 +2702,13 @@ l/* Luxury Components - Premium Design System */
   margin-top: 1rem;
 }
 
+/* Generic font size reduction for all themes to ensure consistency */
+.theme-card .theme-name {
+  font-size: clamp(0.55rem, 2.2vw, 0.75rem);
+  line-height: 1.2;
+  padding: 0.3rem 0.2rem;
+}
+
 /* Font preview sample block (used for hover/active previews) */
 .font-preview-sample {
   margin-top: 0.75rem;
@@ -2800,14 +2807,14 @@ l/* Luxury Components - Premium Design System */
   box-shadow: 0 4px 15px var(--shadow-color);
   display: flex;
   flex-direction: column;
-  height: 108px; /* slightly taller to fix cramped layout */
+  height: 100px; /* fixed height for consistency */
   position: relative; /* allow overlay badges */
 }
 
 /* Mobile theme card adjustments */
 @media (max-width: 768px) {
   .theme-card {
-    height: 96px; /* allow label + badge breathing room */
+    height: 90px; /* fixed height for consistency */
   }
 }
 
@@ -2837,7 +2844,7 @@ l/* Luxury Components - Premium Design System */
 }
 
 .theme-preview {
-  height: 64px;
+  height: 60px;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -2846,14 +2853,14 @@ l/* Luxury Components - Premium Design System */
 /* Mobile theme preview adjustments */
 @media (max-width: 768px) {
   .theme-preview {
-    height: 56px;
+    height: 50px;
   }
 }
 
 .theme-name {
   padding: 0.375rem;
   text-align: center;
-  font-size: var(--font-size-xs);
+  font-size: clamp(0.6rem, 2.5vw, 0.8rem);
   font-weight: 600;
   color: var(--color-text);
   background: color-mix(in oklab, var(--color-glass) 65%, transparent);
@@ -2862,6 +2869,10 @@ l/* Luxury Components - Premium Design System */
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Ensure text doesn't overflow */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Mobile theme name adjustments */
@@ -2869,6 +2880,10 @@ l/* Luxury Components - Premium Design System */
   .theme-cards-container {
     grid-template-columns: repeat(3, minmax(0, 1fr)); /* stable 3-up on phones */
     gap: 0.5rem;
+  }
+  
+  .theme-name {
+    font-size: clamp(0.5rem, 2vw, 0.7rem);
   }
 }
 

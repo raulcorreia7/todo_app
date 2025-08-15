@@ -47,7 +47,6 @@ class MusicPlayer {
     this.init();
   }
 
-
   isReady() {
     return this.isInitialized;
   }
@@ -55,12 +54,15 @@ class MusicPlayer {
   // Safe bus dispatch helper
   busDispatch(name, detail) {
     try {
-      if (typeof bus !== 'undefined' && typeof bus.dispatchEvent === 'function') {
+      if (
+        typeof bus !== "undefined" &&
+        typeof bus.dispatchEvent === "function"
+      ) {
         bus.dispatchEvent(new CustomEvent(name, { detail }));
         return true;
       }
     } catch (e) {
-      this.warn('busDispatch failed', name, e);
+      this.warn("busDispatch failed", name, e);
     }
     return false;
   }
@@ -75,16 +77,18 @@ class MusicPlayer {
 
         // Mark ready on bus (optional)
         try {
-          if (typeof bus !== 'undefined' && typeof bus.markReady === 'function') {
-            bus.markReady('musicplayer');
+          if (
+            typeof bus !== "undefined" &&
+            typeof bus.markReady === "function"
+          ) {
+            bus.markReady("musicplayer");
           }
         } catch (_) {}
-      } catch (e) {
-      }
+      } catch (e) {}
     };
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', onReady);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", onReady);
     } else {
       onReady();
     }
@@ -92,24 +96,24 @@ class MusicPlayer {
 
   ensurePopover() {
     // Create if missing
-    let pop = document.getElementById('musicPopover');
+    let pop = document.getElementById("musicPopover");
     if (!pop) {
-      pop = document.createElement('div');
-      pop.id = 'musicPopover';
-      pop.className = 'music-popover';
+      pop = document.createElement("div");
+      pop.id = "musicPopover";
+      pop.className = "music-popover";
       document.body.appendChild(pop);
     }
     this.pop = pop;
 
     // structure
-    this.pop.innerHTML = '';
-    this.pop.style.opacity = '0';
-    this.pop.style.transform = 'scale(0.98)';
-    this.pop.classList.remove('open');
+    this.pop.innerHTML = "";
+    this.pop.style.opacity = "0";
+    this.pop.style.transform = "scale(0.98)";
+    this.pop.classList.remove("open");
 
     // Header (optional, includes a pin)
-    const header = document.createElement('div');
-    header.className = 'music-popover-header';
+    const header = document.createElement("div");
+    header.className = "music-popover-header";
     header.innerHTML = `
       <button class="btn music-pin small" aria-label="Pin">📌</button>
       <div class="music-label">Music</div>
@@ -118,8 +122,8 @@ class MusicPlayer {
     this.header = header;
 
     // Transport row
-    const transport = document.createElement('div');
-    transport.className = 'music-transport';
+    const transport = document.createElement("div");
+    transport.className = "music-transport";
     transport.innerHTML = `
       <button class="btn btn--action" id="musicPrev" aria-label="Previous">⏮</button>
       <button class="btn btn--action" id="musicPlayPause" aria-label="Play/Pause">
@@ -131,8 +135,8 @@ class MusicPlayer {
     this.transport = transport;
 
     // Volume row (optional, non-invasive)
-    const volume = document.createElement('div');
-    volume.className = 'music-volume';
+    const volume = document.createElement("div");
+    volume.className = "music-volume";
     volume.innerHTML = `
       <span class="music-label">Vol</span>
       <div class="music-slider-container">
@@ -145,12 +149,12 @@ class MusicPlayer {
     this.volume = volume;
 
     // Minimal visualizer container (no audio context; CSS-animated baseline)
-    const viz = document.createElement('div');
-    viz.id = 'musicFrequencyBars';
-    viz.className = 'music-visualizer';
+    const viz = document.createElement("div");
+    viz.id = "musicFrequencyBars";
+    viz.className = "music-visualizer";
     for (let i = 0; i < 8; i++) {
-      const bar = document.createElement('div');
-      bar.className = 'bar';
+      const bar = document.createElement("div");
+      bar.className = "bar";
       viz.appendChild(bar);
     }
     this.vizContainer = viz;
@@ -163,54 +167,63 @@ class MusicPlayer {
   }
 
   wireControls() {
-    this.btnPrev = this.pop.querySelector('#musicPrev');
-    this.btnPlayPause = this.pop.querySelector('#musicPlayPause');
-    this.btnNext = this.pop.querySelector('#musicNext');
+    this.btnPrev = this.pop.querySelector("#musicPrev");
+    this.btnPlayPause = this.pop.querySelector("#musicPlayPause");
+    this.btnNext = this.pop.querySelector("#musicNext");
 
-    const btnClose = this.pop.querySelector('.music-close');
-    const btnPin = this.pop.querySelector('.music-pin.small');
+    const btnClose = this.pop.querySelector(".music-close");
+    const btnPin = this.pop.querySelector(".music-pin.small");
 
     // Track last anchor to exempt it from outside-click close
     this.lastAnchorEl = null;
 
     // volume bits
-    this.slider = this.pop.querySelector('#musicSlider');
-    this.fill = this.pop.querySelector('#musicFill');
-    this.handle = this.pop.querySelector('#musicHandle');
+    this.slider = this.pop.querySelector("#musicSlider");
+    this.fill = this.pop.querySelector("#musicFill");
+    this.handle = this.pop.querySelector("#musicHandle");
 
     // Transport events (bus-first, with safe fallbacks)
-    this.btnPrev?.addEventListener('click', (e) => {
+    this.btnPrev?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.busDispatch('music:prev');
+      this.busDispatch("music:prev");
       // optional direct fallback
-      try { if (typeof window.musicManager?.prev === 'function') window.musicManager.prev(); } catch (_) {}
+      try {
+        if (typeof window.musicManager?.prev === "function")
+          window.musicManager.prev();
+      } catch (_) {}
     });
 
-    this.btnPlayPause?.addEventListener('click', (e) => {
+    this.btnPlayPause?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.busDispatch('music:toggle');
+      this.busDispatch("music:toggle");
       // optional direct fallback
-      try { if (typeof window.musicManager?.togglePlay === 'function') window.musicManager.togglePlay(); } catch (_) {}
+      try {
+        if (typeof window.musicManager?.togglePlay === "function")
+          window.musicManager.togglePlay();
+      } catch (_) {}
     });
 
-    this.btnNext?.addEventListener('click', (e) => {
+    this.btnNext?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.busDispatch('music:next');
+      this.busDispatch("music:next");
       // optional direct fallback
-      try { if (typeof window.musicManager?.next === 'function') window.musicManager.next(); } catch (_) {}
+      try {
+        if (typeof window.musicManager?.next === "function")
+          window.musicManager.next();
+      } catch (_) {}
     });
 
-    btnClose?.addEventListener('click', (e) => {
+    btnClose?.addEventListener("click", (e) => {
       e.preventDefault();
       this.close();
     });
 
-    btnPin?.addEventListener('click', (e) => {
+    btnPin?.addEventListener("click", (e) => {
       e.preventDefault();
       this.pinned = !this.pinned;
-      btnPin.classList.toggle('pinned', this.pinned);
-      if (this.pinned) this.pop.classList.add('sticky');
-      else this.pop.classList.remove('sticky');
+      btnPin.classList.toggle("pinned", this.pinned);
+      if (this.pinned) this.pop.classList.add("sticky");
+      else this.pop.classList.remove("sticky");
     });
 
     // volume drag (simple)
@@ -219,10 +232,10 @@ class MusicPlayer {
         const rect = this.slider.getBoundingClientRect();
         const t = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         const pct = Math.round(t * 100);
-        this.fill.style.width = pct + '%';
-        this.handle.style.left = pct + '%';
+        this.fill.style.width = pct + "%";
+        this.handle.style.left = pct + "%";
         // inform music system
-        this.busDispatch('music:setVolume', { volume: t });
+        this.busDispatch("music:setVolume", { volume: t });
       };
 
       const start = (e) => {
@@ -232,87 +245,95 @@ class MusicPlayer {
           onAt(x);
         };
         const up = () => {
-          window.removeEventListener('mousemove', move);
-          window.removeEventListener('mouseup', up);
-          window.removeEventListener('touchmove', move);
-          window.removeEventListener('touchend', up);
+          window.removeEventListener("mousemove", move);
+          window.removeEventListener("mouseup", up);
+          window.removeEventListener("touchmove", move);
+          window.removeEventListener("touchend", up);
         };
-        window.addEventListener('mousemove', move);
-        window.addEventListener('mouseup', up);
-        window.addEventListener('touchmove', move, { passive: true });
-        window.addEventListener('touchend', up);
+        window.addEventListener("mousemove", move);
+        window.addEventListener("mouseup", up);
+        window.addEventListener("touchmove", move, { passive: true });
+        window.addEventListener("touchend", up);
       };
 
-      this.slider.addEventListener('mousedown', start);
-      this.slider.addEventListener('touchstart', start, { passive: true });
+      this.slider.addEventListener("mousedown", start);
+      this.slider.addEventListener("touchstart", start, { passive: true });
     }
   }
 
   subscribeBus() {
-    if (typeof bus === 'undefined' || typeof bus.addEventListener !== 'function') {
-      this.warn('bus not available; UI will still open/close');
+    if (
+      typeof bus === "undefined" ||
+      typeof bus.addEventListener !== "function"
+    ) {
+      this.warn("bus not available; UI will still open/close");
       return;
     }
 
-    bus.addEventListener('music:playing', (e) => {
+    bus.addEventListener("music:playing", (e) => {
       const isBuf = !!(e.detail && e.detail.buffering);
       this.buffering = isBuf;
       this.setPlaying(true);
-      this.pop.classList.toggle('is-buffering', isBuf);
+      this.pop.classList.toggle("is-buffering", isBuf);
     });
 
-    bus.addEventListener('music:paused', () => {
+    bus.addEventListener("music:paused", () => {
       this.setPlaying(false);
     });
 
-    bus.addEventListener('music:buffering', (e) => {
+    bus.addEventListener("music:buffering", (e) => {
       const isBuf = !!(e.detail && e.detail.buffering);
       this.buffering = isBuf;
-      this.pop.classList.toggle('is-buffering', isBuf);
+      this.pop.classList.toggle("is-buffering", isBuf);
     });
 
-    bus.addEventListener('music:silenceStart', () => {
-      this.pop.classList.add('is-silent');
+    bus.addEventListener("music:silenceStart", () => {
+      this.pop.classList.add("is-silent");
     });
 
-    bus.addEventListener('music:silenceEnd', () => {
-      this.pop.classList.remove('is-silent');
+    bus.addEventListener("music:silenceEnd", () => {
+      this.pop.classList.remove("is-silent");
     });
 
-    bus.addEventListener('music:hintStart', () => {
-    });
+    bus.addEventListener("music:hintStart", () => {});
 
     // Open/close from center bar action
-    bus.addEventListener('centerbar:music', (e) => {
-      const anchor = e.detail?.anchor || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
+    bus.addEventListener("centerbar:music", (e) => {
+      const anchor =
+        e.detail?.anchor ||
+        document.getElementById("cabMusic") ||
+        document.getElementById("musicBtn") ||
+        null;
       this.lastAnchorEl = anchor;
       this.toggleUI(anchor);
     });
 
     // Reflect explicit started
-    bus.addEventListener('music:started', () => {
+    bus.addEventListener("music:started", () => {
       this.setPlaying(true);
     });
   }
 
   setPlaying(playing) {
     this.playing = !!playing;
-    const playIcon = this.pop.querySelector('#musicPlayIcon');
-    const pauseIcon = this.pop.querySelector('#musicPauseIcon');
+    const playIcon = this.pop.querySelector("#musicPlayIcon");
+    const pauseIcon = this.pop.querySelector("#musicPauseIcon");
     if (playIcon && pauseIcon) {
-      playIcon.style.display = this.playing ? 'none' : '';
-      pauseIcon.style.display = this.playing ? '' : 'none';
+      playIcon.style.display = this.playing ? "none" : "";
+      pauseIcon.style.display = this.playing ? "" : "none";
     }
     // reflect on CAB button
-    const btn = document.getElementById('cabMusic') || document.getElementById('musicBtn');
+    const btn =
+      document.getElementById("cabMusic") ||
+      document.getElementById("musicBtn");
     if (btn) {
-      btn.classList.toggle('is-playing', this.playing);
-      btn.classList.toggle('is-paused', !this.playing);
-      btn.classList.toggle('buffering', !!this.buffering);
+      btn.classList.toggle("is-playing", this.playing);
+      btn.classList.toggle("is-paused", !this.playing);
+      btn.classList.toggle("buffering", !!this.buffering);
     }
     // reflect on viz container
     if (this.vizContainer) {
-      this.vizContainer.classList.toggle('is-playing', this.playing);
+      this.vizContainer.classList.toggle("is-playing", this.playing);
     }
   }
 
@@ -322,45 +343,67 @@ class MusicPlayer {
 
   open(anchorEl) {
     // Remember anchor for outside-click closing logic
-    this.lastAnchorEl = anchorEl || this.lastAnchorEl || document.getElementById('cabMusic') || document.getElementById('musicBtn') || null;
+    this.lastAnchorEl =
+      anchorEl ||
+      this.lastAnchorEl ||
+      document.getElementById("cabMusic") ||
+      document.getElementById("musicBtn") ||
+      null;
 
     // position near anchor with desktop/mobile specific rules
     try {
-      const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      const isMobile =
+        window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
       const popRect = this.pop.getBoundingClientRect();
 
       if (!isMobile) {
         if (anchorEl) {
           const btnRect = anchorEl.getBoundingClientRect();
           const centerX = btnRect.left + btnRect.width / 2;
-          const left = Math.max(8, Math.min(window.innerWidth - popRect.width - 8, centerX - popRect.width / 2));
+          const left = Math.max(
+            8,
+            Math.min(
+              window.innerWidth - popRect.width - 8,
+              centerX - popRect.width / 2
+            )
+          );
           const bottom = Math.max(8, window.innerHeight - btnRect.top + 10);
-          this.pop.style.left = left + popRect.width / 2 + 'px'; // translateX(-50%) correction
-          this.pop.style.bottom = bottom + 'px';
+          this.pop.style.left = left + popRect.width / 2 + "px"; // translateX(-50%) correction
+          this.pop.style.bottom = bottom + "px";
         }
       } else {
-        const cab = document.getElementById('centerActionBar');
+        const cab = document.getElementById("centerActionBar");
         const cabRect = cab ? cab.getBoundingClientRect() : null;
-        const anchorCenterX = cabRect ? (cabRect.left + cabRect.width / 2) : (window.innerWidth / 2);
-        const left = Math.max(8, Math.min(window.innerWidth - popRect.width - 8, Math.round(anchorCenterX - popRect.width / 2)));
-        const belowCabTop = cabRect ? Math.ceil(cabRect.bottom + 8) : Math.round(window.innerHeight * 0.3);
+        const anchorCenterX = cabRect
+          ? cabRect.left + cabRect.width / 2
+          : window.innerWidth / 2;
+        const left = Math.max(
+          8,
+          Math.min(
+            window.innerWidth - popRect.width - 8,
+            Math.round(anchorCenterX - popRect.width / 2)
+          )
+        );
+        const belowCabTop = cabRect
+          ? Math.ceil(cabRect.bottom + 8)
+          : Math.round(window.innerHeight * 0.3);
         const safeTop = Math.max(8, belowCabTop);
 
-        this.pop.style.bottom = 'auto';
+        this.pop.style.bottom = "auto";
         this.pop.style.top = `${safeTop}px`;
         this.pop.style.left = `${left}px`;
       }
     } catch (_) {}
 
-    this.pop.classList.add('open');
-    this.pop.style.opacity = '1';
-    this.pop.style.transform = 'scale(1)';
+    this.pop.classList.add("open");
+    this.pop.style.opacity = "1";
+    this.pop.style.transform = "scale(1)";
     // Accessibility + hit-testing: make interactive when open
     try {
-      this.pop.removeAttribute('inert');
-      this.pop.setAttribute('aria-hidden', 'false');
-      this.pop.style.pointerEvents = 'auto';
-      this.pop.style.visibility = 'visible';
+      this.pop.removeAttribute("inert");
+      this.pop.setAttribute("aria-hidden", "false");
+      this.pop.style.pointerEvents = "auto";
+      this.pop.style.visibility = "visible";
     } catch (_) {}
     this.isOpenState = true;
 
@@ -369,17 +412,20 @@ class MusicPlayer {
       this._onDocPointerDown = (ev) => {
         if (this.pinned) return;
         const target = ev.target;
-        const isInsidePopover = this.pop && (this.pop === target || this.pop.contains(target));
-        const isOnAnchor = this.lastAnchorEl && (this.lastAnchorEl === target || this.lastAnchorEl.contains?.(target));
+        const isInsidePopover =
+          this.pop && (this.pop === target || this.pop.contains(target));
+        const isOnAnchor =
+          this.lastAnchorEl &&
+          (this.lastAnchorEl === target ||
+            this.lastAnchorEl.contains?.(target));
         if (!isInsidePopover && !isOnAnchor) this.close();
       };
       this._onKeyDown = (ev) => {
-        if (ev.key === 'Escape') this.close();
+        if (ev.key === "Escape") this.close();
       };
-      document.addEventListener('pointerdown', this._onDocPointerDown, true);
-      document.addEventListener('keydown', this._onKeyDown, true);
+      document.addEventListener("pointerdown", this._onDocPointerDown, true);
+      document.addEventListener("keydown", this._onKeyDown, true);
     } catch (_) {}
-
   }
 
   close() {
@@ -387,29 +433,32 @@ class MusicPlayer {
     if (this.pinned) {
       return;
     }
-    this.pop.classList.remove('open');
-    this.pop.style.opacity = '0';
-    this.pop.style.transform = 'scale(0.98)';
+    this.pop.classList.remove("open");
+    this.pop.style.opacity = "0";
+    this.pop.style.transform = "scale(0.98)";
     // Accessibility + hit-testing: ensure completely non-interactive when closed
     try {
-      this.pop.setAttribute('inert', '');
-      this.pop.setAttribute('aria-hidden', 'true');
-      this.pop.style.pointerEvents = 'none';
-      this.pop.style.visibility = 'hidden';
+      this.pop.setAttribute("inert", "");
+      this.pop.setAttribute("aria-hidden", "true");
+      this.pop.style.pointerEvents = "none";
+      this.pop.style.visibility = "hidden";
     } catch (_) {}
     this.isOpenState = false;
 
     try {
       if (this._onDocPointerDown) {
-        document.removeEventListener('pointerdown', this._onDocPointerDown, true);
+        document.removeEventListener(
+          "pointerdown",
+          this._onDocPointerDown,
+          true
+        );
         this._onDocPointerDown = null;
       }
       if (this._onKeyDown) {
-        document.removeEventListener('keydown', this._onKeyDown, true);
+        document.removeEventListener("keydown", this._onKeyDown, true);
         this._onKeyDown = null;
       }
     } catch (_) {}
-
   }
 
   toggleUI(anchorEl) {
