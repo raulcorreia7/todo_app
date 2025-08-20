@@ -46,15 +46,49 @@
 
 ## Theming & Visual Language
 - Tokens: Color, spacing, typography via CSS variables.
-- Themes: Curated set (e.g., Midnight, Emerald, Graphite, Aurora, Amethyst, Burgundy, Ivory, Champagne, Sakura, Pearl, Mint, Coral, Frost, Lavender, Arctic Sky).
+- Themes: Curated set of 10–15 elegant themes (e.g., Midnight, Emerald, Graphite, Aurora, Amethyst, Burgundy, Ivory, Champagne, Sakura, Pearl, Mint, Coral, Frost, Lavender, Arctic Sky). Names and exact palettes are flexible as long as contrast and mood align with “premium, calm, inspiring”.
 - Effects: Soft glow accents, subtle shadows, glass translucency, optional nebula parallax; grain overlay for texture.
-- Typography: Inter (clean), Playfair (elegant serif), SF Pro (modern); switchable.
+- Typography: Provide at least one refined sans‑serif and one refined serif option (e.g., Inter, SF Pro; Playfair). The concrete font list is open‑ended; favor legible, premium faces.
 
 ## Interaction Patterns
 - Micro‑interactions: gentle hover shimmer, subtle press scale, checkbox bounce, celebratory bursts on notable events.
 - Keyboard: Cmd/Ctrl+N focuses new task; Cmd/Ctrl+A sets “All” filter; Enter/Escape confirm/cancel editing in appropriate contexts.
 - Touch: 48px targets; passive listeners for scrolling/gestures; mobile‑friendly popovers.
 - Motion: Prefer transform/opacity; honor prefers‑reduced‑motion.
+
+## Design & Behavior Directives (consolidated)
+- Visual language
+  - Glass‑morphism surfaces (translucent backgrounds, backdrop‑blur, soft borders).
+  - Glowing accents tied to the active theme; restrained, tasteful intensity.
+  - Subtle, diffused shadows; generous negative space; harmonious palettes.
+- Typography
+  - Clear hierarchy (size/weight/spacing); smooth font transitions where used.
+- Iconography
+  - Consistent set (e.g., Lucide); simple, meaningful metaphors.
+- Micro‑interactions (typical ranges; adapt per component)
+  - Hover: scale(1.02–1.05), glow lift, or gentle color shift.
+  - Active: press scale(0.95–0.98) with quick rebound.
+  - Focus: visible outline/glow on keyboard navigation.
+  - Selection: subtle pulse to confirm state change.
+- Animation principles
+  - Easing: natural curves (e.g., cubic‑bezier(0.4, 0, 0.2, 1)).
+  - Performance: animate transform/opacity; avoid expensive paints.
+  - Purposeful: motion guides attention; avoid decorative noise.
+- Audio design
+  - Subtle, “dopamine‑positive” feedback; never blocks interaction.
+  - Examples: theme change chime; font change whoosh; soft button blip; task complete “golden” chime; delete “velvet swipe”; gentle volume tick.
+  - Technical: Web Audio or tiny assets; single global mute; respects reduced motion preference.
+- Component notes
+  - Settings Panel: glass window with sticky header, clear close affordance; immediate apply; scrollable content.
+  - Task List: premium checkbox feedback, inline edit with Save/Cancel, character counters, hover affordances.
+  - General UI: consistent glass buttons, subtle hover shimmer, accessible focus.
+  - Modals: theme‑adaptive glow; danger states use theme‑appropriate “danger” accents (no hardcoded red); ARIA complete.
+- Responsiveness & a11y
+  - Mobile‑first, fluid layout; touch targets ≥48px; adaptive spacing.
+  - Keyboard navigation everywhere; ARIA labels/roles; WCAG AA contrast.
+  - Respect prefers‑reduced‑motion.
+- Performance & quality
+  - Fast load, responsive interactions (<100ms perceived), 60fps animations on modern devices; cross‑browser.
 
 ## Behavior & Persistence
 - Persist across reloads: tasks, settings (theme, font, sound enabled, volume), simple stats/karma, achievements state, last music track/volume where applicable.
@@ -89,3 +123,7 @@
 - Add ambient music controls with gentle fades and occasional short silence gaps; global sound toggle mutes all audio.
 - Include daily quote, stats, achievements, and subtle celebratory effects; keep them optional and non‑intrusive.
 - Ensure accessibility, mobile ergonomics, and performance budgets are respected.
+
+## Open‑Ended Parameters
+- Fonts: Provide a small, high‑quality set of at least two families (one serif, one sans‑serif). Exact families are flexible as long as they feel premium and legible.
+- Themes: Provide a curated set of 10–15 themes. Exact names and palettes are flexible; ensure strong contrast, harmonious accents, and a calm/luxury mood.
