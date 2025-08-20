@@ -10,6 +10,16 @@
 - Offline‑friendly via local persistence; no server required.
 - Settings panel is the single place to adjust theme, font, and audio.
 
+## Sensible Defaults & Additions
+- Task ordering: natural (newest on top or last added) with simple, predictable behavior; manual reorder is optional and can remain out of scope.
+- Quick search: lightweight filter-as-you-type for task titles/descriptions (optional but recommended).
+- Import/Export: simple JSON export/import for tasks and preferences to allow manual backup/restore.
+- Privacy: local‑only by default — no tracking, no data leaves the device; any future integrations must be explicit and opt‑in.
+- PWA (optional): installable experience with offline cache for core assets; respects the same local‑only data policy.
+- Haptics (optional): subtle, device‑appropriate haptic taps for key confirmations where supported and enabled.
+- Onboarding hints: gentle first‑run affordances (e.g., highlight settings/music availability) that disappear quickly.
+- Extensibility: event‑bus friendly; future features can hook into well‑named events without reshaping core flows.
+
 ## Functional Requirements
 - Tasks
   - Create task with title (required) and optional description.
@@ -43,6 +53,12 @@
   - Utilities: Test (dev helper), Clear Completed, Delete All
 - Modal: Overlay + dialog container with title, description, Cancel/Confirm.
 - Footer: Credits line with heart emoji and dynamic version string.
+
+## Data & Privacy
+- Persistence via on‑device storage; no background sync by default.
+- Export/import as human‑readable JSON; user‑initiated only.
+- Clear “Reset to defaults” path that wipes local data and restores sensible defaults.
+- Any external content (e.g., streaming tracks) should be declarative/configurable and not store personal data.
 
 ## Theming & Visual Language
 - Tokens: Color, spacing, typography via CSS variables.
@@ -138,6 +154,11 @@
 - Clear focus indicators and keyboard reachability for all interactive elements.
 - ARIA‑labeled modal dialog with focus trap; ESC closes (unless unsafe).
 - Color contrast meets AA; theme palettes chosen for legibility.
+
+## Resilience & Error Handling
+- UI remains responsive under poor network conditions; streaming and quote fetches fail gracefully with neutral states.
+- Recoverable actions (e.g., delete all) always confirm through the app modal.
+- Missing metadata (e.g., track duration) degrades gracefully.
 
 ## Performance
 - Interactions should feel instant and smooth, with no jank or stalls.
