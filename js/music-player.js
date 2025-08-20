@@ -14,6 +14,8 @@
 
 class MusicPlayer {
   constructor() {
+    // Safe access to constants
+    this.__E = (window.App && window.App.EVENTS) || null;
     this.isInitialized = false;
 
     // DOM refs
@@ -53,12 +55,16 @@ class MusicPlayer {
 
   // Safe bus dispatch helper
   busDispatch(name, detail) {
+    const evName =
+      this.__E && this.__E.MUSIC && name in this.__E.MUSIC
+        ? this.__E.MUSIC[name]
+        : name;
     try {
       if (
         typeof bus !== "undefined" &&
         typeof bus.dispatchEvent === "function"
       ) {
-        bus.dispatchEvent(new CustomEvent(name, { detail }));
+        bus.dispatchEvent(new CustomEvent(evName, { detail }));
         return true;
       }
     } catch (e) {
@@ -185,7 +191,7 @@ class MusicPlayer {
     // Transport events (bus-first, with safe fallbacks)
     this.btnPrev?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.busDispatch("music:prev");
+      this.busDispatch(this.__E ? this.__E.MUSIC.PREV : "music:prev");
       // optional direct fallback
       try {
         if (typeof window.musicManager?.prev === "function")
@@ -195,7 +201,7 @@ class MusicPlayer {
 
     this.btnPlayPause?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.busDispatch("music:toggle");
+      this.busDispatch(this.__E ? this.__E.MUSIC.TOGGLE : "music:toggle");
       // optional direct fallback
       try {
         if (typeof window.musicManager?.togglePlay === "function")
@@ -205,7 +211,7 @@ class MusicPlayer {
 
     this.btnNext?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.busDispatch("music:next");
+      this.busDispatch(this.__E ? this.__E.MUSIC.NEXT : "music:next");
       // optional direct fallback
       try {
         if (typeof window.musicManager?.next === "function")
@@ -235,7 +241,8 @@ class MusicPlayer {
         this.fill.style.width = pct + "%";
         this.handle.style.left = pct + "%";
         // inform music system
-        this.busDispatch("music:setVolume", { volume: t });
+        const ev = this.__E ? this.__E.MUSIC.SET_VOLUME : "music:setVolume";
+        this.busDispatch(ev, { volume: t });
       };
 
       const start = (e) => {
@@ -270,35 +277,52 @@ class MusicPlayer {
       return;
     }
 
-    bus.addEventListener("music:playing", (e) => {
+    bus.addEventListener(
+      this.__E ? this.__E.MUSIC.PLAYING : "music:playing",
+      (e) => {
       const isBuf = !!(e.detail && e.detail.buffering);
       this.buffering = isBuf;
       this.setPlaying(true);
       this.pop.classList.toggle("is-buffering", isBuf);
-    });
+    }
+    );
 
-    bus.addEventListener("music:paused", () => {
+    bus.addEventListener(this.__E ? this.__E.MUSIC.PAUSED : "music:paused", () => {
       this.setPlaying(false);
     });
 
-    bus.addEventListener("music:buffering", (e) => {
+    bus.addEventListener(
+      this.__E ? this.__E.MUSIC.BUFFERING : "music:buffering",
+      (e) => {
       const isBuf = !!(e.detail && e.detail.buffering);
       this.buffering = isBuf;
       this.pop.classList.toggle("is-buffering", isBuf);
-    });
+    }
+    );
 
-    bus.addEventListener("music:silenceStart", () => {
+    bus.addEventListener(
+      this.__E ? this.__E.MUSIC.SILENCE_START : "music:silenceStart",
+      () => {
       this.pop.classList.add("is-silent");
-    });
+    }
+    );
 
-    bus.addEventListener("music:silenceEnd", () => {
+    bus.addEventListener(
+      this.__E ? this.__E.MUSIC.SILENCE_END : "music:silenceEnd",
+      () => {
       this.pop.classList.remove("is-silent");
-    });
+    }
+    );
 
-    bus.addEventListener("music:hintStart", () => {});
+    bus.addEventListener(
+      this.__E ? this.__E.MUSIC.HINT_START : "music:hintStart",
+      () => {}
+    );
 
     // Open/close from center bar action
-    bus.addEventListener("centerbar:music", (e) => {
+    bus.addEventListener(
+      this.__E ? this.__E.CENTERBAR.MUSIC : "centerbar:music",
+      (e) => {
       const anchor =
         e.detail?.anchor ||
         document.getElementById("cabMusic") ||
@@ -306,12 +330,16 @@ class MusicPlayer {
         null;
       this.lastAnchorEl = anchor;
       this.toggleUI(anchor);
-    });
+    }
+    );
 
     // Reflect explicit started
-    bus.addEventListener("music:started", () => {
+    bus.addEventListener(
+      this.__E ? this.__E.MUSIC.STARTED : "music:started",
+      () => {
       this.setPlaying(true);
-    });
+    }
+    );
   }
 
   setPlaying(playing) {

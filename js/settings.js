@@ -3,6 +3,10 @@
  * Handles settings panel, theme switching, and preferences
  */
 
+// Safe access to constants
+const __E = (window.App && window.App.EVENTS) || null;
+const __K = (window.App && window.App.KEYS) || null;
+
 class SettingsManager {
   constructor() {
     this.isOpen = false;
@@ -110,10 +114,13 @@ class SettingsManager {
       typeof bus !== "undefined" &&
       typeof bus.addEventListener === "function"
     ) {
-      bus.addEventListener("centerbar:ready", (event) => {
+      bus.addEventListener(
+        __E ? __E.CENTERBAR.READY : "centerbar:ready",
+        (event) => {
         // Now that center bar is ready, set up the actual event listeners
         this.setupCenterBarEventListeners();
-      });
+      }
+      );
     } else {
       console.warn(
         "[SettingsManager] Bus not available for centerbar:ready event"
@@ -127,7 +134,9 @@ class SettingsManager {
       typeof bus !== "undefined" &&
       typeof bus.addEventListener === "function"
     ) {
-      bus.addEventListener("settingsChanged", (event) => {
+      bus.addEventListener(
+        __E ? __E.SETTINGS_CHANGED : "settingsChanged",
+        (event) => {
         if (event.detail && event.detail.soundEnabled !== undefined) {
           this.soundEnabled = event.detail.soundEnabled;
           this.updateUI();
@@ -136,7 +145,8 @@ class SettingsManager {
           this.volume = event.detail.volume;
           this.updateUI();
         }
-      });
+      }
+      );
     } else {
       console.warn(
         "[SettingsManager] Bus not available for settingsChanged event"
@@ -157,9 +167,12 @@ class SettingsManager {
       typeof bus !== "undefined" &&
       typeof bus.addEventListener === "function"
     ) {
-      bus.addEventListener("centerbar:sound", (event) => {
+      bus.addEventListener(
+        __E ? __E.CENTERBAR.SOUND : "centerbar:sound",
+        (event) => {
         this.toggleSoundEnabled();
-      });
+      }
+      );
     } else {
       console.warn(
         "[SettingsManager] Bus not available for centerbar:sound event"
@@ -286,7 +299,9 @@ class SettingsManager {
   resetToDefaults() {
     // Dispatch resetToDefaults event to allow all subsystems to reset themselves
     if (typeof bus !== "undefined") {
-      bus.dispatchEvent(new CustomEvent("resetToDefaults"));
+      bus.dispatchEvent(
+        new CustomEvent(__E ? __E.RESET_TO_DEFAULTS : "resetToDefaults")
+      );
     }
 
     // Pull defaults from storage manager
@@ -322,18 +337,26 @@ class SettingsManager {
     // Notify other components
     if (typeof bus !== "undefined") {
       bus.dispatchEvent(
-        new CustomEvent("settingsChanged", {
-          detail: this.getSettings(),
-        })
+        new CustomEvent(
+          __E ? __E.SETTINGS_CHANGED : "settingsChanged",
+          {
+            detail: this.getSettings(),
+          }
+        )
       );
 
       // Dispatch tasksUpdated event to ensure UI components reload/update
-      bus.dispatchEvent(new CustomEvent("tasksUpdated"));
+      bus.dispatchEvent(
+        new CustomEvent(__E ? __E.TASKS_UPDATED : "tasksUpdated")
+      );
 
       // Trigger reset handlers when resetToDefaults event is dispatched
-      bus.addEventListener("resetToDefaults", () => {
-        bus.triggerReset();
-      });
+      bus.addEventListener(
+        __E ? __E.RESET_TO_DEFAULTS : "resetToDefaults",
+        () => {
+          bus.triggerReset();
+        }
+      );
     }
 
     if (typeof audioManager !== "undefined") {
@@ -363,7 +386,8 @@ class SettingsManager {
 
     // Check if we have actual saved settings (not just defaults)
     const hasSavedSettings =
-      localStorage.getItem("luxury-todo-settings") !== null;
+      localStorage.getItem(__K ? __K.SETTINGS : "luxury-todo-settings") !==
+      null;
 
     if (hasSavedSettings) {
       // Use the actual saved settings
@@ -546,7 +570,7 @@ class SettingsManager {
     // Dispatch settingsChanged with both fields so all listeners stay in sync
     if (typeof bus !== "undefined") {
       bus.dispatchEvent(
-        new CustomEvent("settingsChanged", {
+        new CustomEvent(__E ? __E.SETTINGS_CHANGED : "settingsChanged", {
           detail: {
             soundEnabled: enabled,
             globalMute: !enabled,
@@ -590,7 +614,10 @@ class SettingsManager {
     // Dispatch settingsChanged event to notify other components (always send payload)
     if (typeof bus !== "undefined") {
       bus.dispatchEvent(
-        new CustomEvent("settingsChanged", { detail: this.getSettings() })
+        new CustomEvent(
+          __E ? __E.SETTINGS_CHANGED : "settingsChanged",
+          { detail: this.getSettings() }
+        )
       );
     } else {
     }
@@ -1052,7 +1079,7 @@ class SettingsManager {
       // Notify others
       if (typeof bus !== "undefined") {
         bus.dispatchEvent(
-          new CustomEvent("settingsChanged", {
+          new CustomEvent(__E ? __E.SETTINGS_CHANGED : "settingsChanged", {
             detail: { achievementsChime: this.achievementsChime },
           })
         );
