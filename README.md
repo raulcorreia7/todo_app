@@ -22,3 +22,8 @@ npm run dev
 *Starts server on port 8080*
 
 After setup, run the development server and open http://localhost:8080
+
+## Documentation
+- Architecture & Migration: see `docs/architecture-modernization.md` for current architecture, proposed React+TS stack, CSS strategy, and phased plan.
+- Events Catalog: see `docs/events.md` for bus/DOM events and payloads.
+- Contributor Guide: see `AGENTS.md` for project structure, commands, and conventions.
