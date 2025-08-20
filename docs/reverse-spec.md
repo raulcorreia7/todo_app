@@ -31,7 +31,7 @@
 - Insights & Motivation
   - Header shows “Luxury Todo” and a daily quote that can change on click.
   - Stats cards near top: Total, Done, Karma (simple score reflecting activity).
-  - Lightweight achievements and daily summary; unobtrusive, celebratory effects on key milestones.
+  - Achievements and daily summary; unobtrusive, celebratory effects on key milestones.
 - Audio & Music
   - UI sound effects (subtle, premium, optional) governed by a global sound toggle.
   - Ambient music player: play/pause, prev/next, volume slider; buffering indicator; gentle fades; occasional short “silence gaps” between tracks for breathing.
@@ -60,6 +60,14 @@
 - Export/import as human‑readable JSON; user‑initiated only.
 - Clear “Reset to defaults” path that wipes local data and restores sensible defaults.
 - Any external content (e.g., streaming tracks) should be declarative/configurable and not store personal data.
+
+## Achievements & Gamification (Behavioral Spec)
+- Spirit: celebrate mindful progress with subtle, zen‑toned rewards; avoid distraction.
+- Signals tracked (illustrative): karma points; daily completed and edited counts; “all created today completed”; first task created/edited/deleted; AI edit count; AI words refined.
+- Examples (non‑exhaustive): Mindful Beginning (1 karma), Gentle Progress (5/day), Mindful Refinement (3/day), Peaceful Presence (25 karma), Daily Harmony (all created today complete), First Creation/Refinement/Release, AI Editor Bronze/Silver/Gold (1/5/20), Luminous Expression (≥50 words refined).
+- Display: achievements appear in Settings as cards with progress bars and subtle unlocked/complete badges; desktop hover shows condition and last‑unlocked.
+- Feedback: unlocking provides a brief visual cue and a premium, gentle audio hint; progress updates animate subtly.
+- Integration: updates respond to task actions and accepted AI edits; daily summary reflects completions.
 
 ## Theming & Visual Language
 - Tokens: Color, spacing, typography via CSS variables.
@@ -94,6 +102,7 @@
   - Settings Panel: premium, focused, easy to dismiss; changes apply immediately.
   - Task List: luxurious checkbox feel, inline edits with clear Save/Cancel, visible character guidance.
   - Modals: theme‑aware glow for destructive actions; accessible structure and behavior.
+  - Achievements: Settings > Achievements displays elegant cards with title, description, progress %, and unlocked/complete state; desktop hover shows a minimal popover with condition and last‑unlocked time.
 - Responsiveness & a11y
   - Mobile‑first fluidity, generous touch targets, and adaptable spacing.
   - Keyboard navigation throughout; semantic roles/labels; sufficient contrast.
