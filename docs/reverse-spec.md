@@ -27,6 +27,7 @@
   - Toggle complete, delete task, clear completed, delete all (with confirmation modal).
   - Filters: All, Active, Completed.
   - Empty state with friendly message when no tasks.
+  - Edit with AI: optional refinement of title/description with preview; preserves meaning, removes noise, and lets the user accept/cancel changes.
 - Insights & Motivation
   - Header shows “Luxury Todo” and a daily quote that can change on click.
   - Stats cards near top: Total, Done, Karma (simple score reflecting activity).
@@ -82,6 +83,7 @@
   - Consistent, minimal, and meaningful.
 - Micro‑interactions
   - Interactions should feel rewarding and “dopamine‑positive” yet understated — a brief moment of delight, then out of the way.
+  - Task actions (add, edit, complete, delete) are first‑class and receive a higher‑grade feedback package (visual + audio + optional haptic) compared to secondary actions.
   - Focus states are unmistakable but elegant; selection confirms subtly.
 - Animation
   - Calming, supportive motion only. The goal is clarity and polish, not spectacle.
@@ -108,7 +110,7 @@
   - One global sound toggle governs all SFX and music output; muting does not pause music playback.
   - Volume changes feel smooth and subtle across the whole app.
 - Sound categories (illustrative; exact palette open‑ended)
-  - Task cues: add, complete, edit, delete (brief, premium notifications).
+  - Task cues: add, complete, edit, delete — brief but premium; primary actions are layered slightly richer than secondary cues.
   - UX cues: settings tap/open, theme change, progress open, font change, volume adjust, sound toggle.
   - Celebrations: soft victory/reward moments on meaningful milestones.
 - Anti‑fatigue tonal design
@@ -146,7 +148,7 @@
 - Persistence
   - Remembers last track index and volume across sessions.
   - Does not auto‑start without a user gesture where required; may hint gently that music is available.
-- Accessibility & performance
+  - Accessibility & performance
   - Keyboard reachable; clear labels; no reliance on color alone for state.
   - Lightweight visuals and animations; remains fluid on common mobile hardware.
 
@@ -205,3 +207,15 @@
 - Music Player: Minimal, premium UI with Play/Pause, Prev/Next, Volume, optional Pin. Streams external track URLs; handles buffering/errors gracefully. Displays current track name, index/total, and duration/current time when available. Gentle fades on start/stop/switch; occasional brief silence gaps. Subtle, non‑distracting visualizer. Remembers last track and volume. No auto‑start; may hint gently after user gesture.
 
 - Accessibility & Performance: Keyboard reachable, clear labels, AA contrast, honors reduced motion. Interactions feel instant and smooth; visuals stay tasteful and light.
+## Task Action Rewards (Godly‑Feeling, High‑Priority Feedback)
+- Philosophy
+  - All task actions are main actions and should feel special: premium, luxurious, subtle — a brief sense of “godly” satisfaction without breaking the zen tone.
+- Add Task
+  - Elevated feedback bundle combining a refined visual accent (e.g., soft aura/shine), a premium cue sound, and optional light haptic where available.
+  - Immediate list update with a smooth entrance for the new task; stats and achievements reflect the change promptly.
+- Edit (including “Edit with AI”)
+  - AI refinement presents a clear preview; acceptance provides a slightly richer feedback moment than a standard edit to honor the successful assist.
+  - Changes integrate seamlessly into the list; counters and karma update as appropriate.
+- Complete/Delete
+  - Completion delivers a satisfying, composed confirmation; delete conveys closure without harshness.
+  - Bulk actions (clear completed, delete all) are confirmed via modal and retain a calm, respectful tone.
