@@ -51,44 +51,36 @@
 - Typography: Provide at least one refined sans‑serif and one refined serif option (e.g., Inter, SF Pro; Playfair). The concrete font list is open‑ended; favor legible, premium faces.
 
 ## Interaction Patterns
-- Micro‑interactions: gentle hover shimmer, subtle press scale, checkbox bounce, celebratory bursts on notable events.
-- Keyboard: Cmd/Ctrl+N focuses new task; Cmd/Ctrl+A sets “All” filter; Enter/Escape confirm/cancel editing in appropriate contexts.
-- Touch: 48px targets; passive listeners for scrolling/gestures; mobile‑friendly popovers.
-- Motion: Prefer transform/opacity; honor prefers‑reduced‑motion.
+- Micro‑interactions: subtle, premium, and “zen” — each action should feel rewarding without being loud. Think gentle shimmer, light tactile cues, and tasteful celebratory moments.
+- Keyboard: convenient shortcuts for common actions (new task, filter changes, confirm/cancel edits) while avoiding conflicts with text entry.
+- Touch: comfortable targets and forgiving gestures that feel natural on mobile.
+- Motion: restrained and calming; animations should enhance clarity and never distract. Respect reduced‑motion preferences.
 
 ## Design & Behavior Directives (consolidated)
 - Visual language
-  - Glass‑morphism surfaces (translucent backgrounds, backdrop‑blur, soft borders).
-  - Glowing accents tied to the active theme; restrained, tasteful intensity.
-  - Subtle, diffused shadows; generous negative space; harmonious palettes.
+  - Glass‑morphism surfaces (translucent layers, soft borders) with restrained glow accents informed by the active theme.
+  - Gentle depth (diffused shadows), generous negative space, and harmonious palettes.
 - Typography
-  - Clear hierarchy (size/weight/spacing); smooth font transitions where used.
+  - Clear hierarchy and comfortable reading rhythm. Font changes should feel smooth and non‑jarring.
 - Iconography
-  - Consistent set (e.g., Lucide); simple, meaningful metaphors.
-- Micro‑interactions (typical ranges; adapt per component)
-  - Hover: scale(1.02–1.05), glow lift, or gentle color shift.
-  - Active: press scale(0.95–0.98) with quick rebound.
-  - Focus: visible outline/glow on keyboard navigation.
-  - Selection: subtle pulse to confirm state change.
-- Animation principles
-  - Easing: natural curves (e.g., cubic‑bezier(0.4, 0, 0.2, 1)).
-  - Performance: animate transform/opacity; avoid expensive paints.
-  - Purposeful: motion guides attention; avoid decorative noise.
+  - Consistent, minimal, and meaningful.
+- Micro‑interactions
+  - Interactions should feel rewarding and “dopamine‑positive” yet understated — a brief moment of delight, then out of the way.
+  - Focus states are unmistakable but elegant; selection confirms subtly.
+- Animation
+  - Calming, supportive motion only. The goal is clarity and polish, not spectacle.
 - Audio design
-  - Subtle, “dopamine‑positive” feedback; never blocks interaction.
-  - Examples: theme change chime; font change whoosh; soft button blip; task complete “golden” chime; delete “velvet swipe”; gentle volume tick.
-  - Technical: Web Audio or tiny assets; single global mute; respects reduced motion preference.
+  - Subtle cues that complement visuals (e.g., gentle chime or soft click); never intrusive and always optional.
+  - One global sound control; respects user sensitivity (e.g., reduced motion/audio contexts).
 - Component notes
-  - Settings Panel: glass window with sticky header, clear close affordance; immediate apply; scrollable content.
-  - Task List: premium checkbox feedback, inline edit with Save/Cancel, character counters, hover affordances.
-  - General UI: consistent glass buttons, subtle hover shimmer, accessible focus.
-  - Modals: theme‑adaptive glow; danger states use theme‑appropriate “danger” accents (no hardcoded red); ARIA complete.
+  - Settings Panel: premium, focused, easy to dismiss; changes apply immediately.
+  - Task List: luxurious checkbox feel, inline edits with clear Save/Cancel, visible character guidance.
+  - Modals: theme‑aware glow for destructive actions; accessible structure and behavior.
 - Responsiveness & a11y
-  - Mobile‑first, fluid layout; touch targets ≥48px; adaptive spacing.
-  - Keyboard navigation everywhere; ARIA labels/roles; WCAG AA contrast.
-  - Respect prefers‑reduced‑motion.
-- Performance & quality
-  - Fast load, responsive interactions (<100ms perceived), 60fps animations on modern devices; cross‑browser.
+  - Mobile‑first fluidity, generous touch targets, and adaptable spacing.
+  - Keyboard navigation throughout; semantic roles/labels; sufficient contrast.
+- Quality bar
+  - Feels instant, smooth, and dependable across modern devices and browsers.
 
 ## Behavior & Persistence
 - Persist across reloads: tasks, settings (theme, font, sound enabled, volume), simple stats/karma, achievements state, last music track/volume where applicable.
@@ -101,8 +93,8 @@
 - Color contrast meets AA; theme palettes chosen for legibility.
 
 ## Performance
-- Target instant interactions (<100ms perceived), 60fps animations on modern mobile.
-- Avoid heavy paints; limit blur and large shadows; use GPU‑friendly properties.
+- Interactions should feel instant and smooth, with no jank or stalls.
+- Visual effects remain tasteful and light so the experience stays fluid on common mobile hardware.
 
 ## Non‑Goals (For Now)
 - Accounts, sync, or multi‑device state.
