@@ -175,6 +175,11 @@
 - Interactions should feel instant and smooth, with no jank or stalls.
 - Visual effects remain tasteful and light so the experience stays fluid on common mobile hardware.
 
+## Energy & Background Behavior
+- Animations should be appealing yet frugal; favor approaches that keep devices cool and battery usage low.
+- When the app is not visible (e.g., tabbed out or in the background), suspend non‑essential dynamic effects (parallax, heavy visualizers, continuous animations) and resume gracefully on return.
+- Keep essential state updates intact while visuals are paused; the UI should pick up seamlessly when the app regains focus.
+
 ## Non‑Goals (For Now)
 - Accounts, sync, or multi‑device state.
 - Complex analytics; keep insights lightweight and local.
