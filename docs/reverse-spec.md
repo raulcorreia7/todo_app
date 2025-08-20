@@ -104,6 +104,36 @@
   - Brief envelopes and gentle fades; never compete with interaction speed.
   - Respect user sensitivity and system preferences.
 
+## Music Player & Visualizer — Behavioral Spec
+- Purpose and feel
+  - A minimal, premium player that complements the app — subtle, calm, and rewarding to use.
+  - Micro‑rewards on interactions (e.g., a brief visual lift on play/pause or next/prev) while staying understated.
+- Player controls & UI
+  - Play/Pause, Previous, Next, Volume slider; optional Pin to keep the popover open.
+  - Clear state: playing, paused, buffering. Controls remain responsive during buffering.
+  - Small visual feedback on control taps; no flashy transitions.
+  - Anchors to the center action bar; positions sensibly on mobile and desktop.
+- Streaming & sources
+  - Accepts external track URLs (e.g., CDN/cloud); streams progressively.
+  - Gracefully handles network conditions and errors; never blocks the UI.
+  - Track list is configurable and can be extended without code changes to the app’s core.
+- Metadata & display
+  - Shows current track name (friendly title), index/total, and duration/current time when metadata is available.
+  - If duration isn’t known, the UI degrades gracefully (e.g., omits or shows an unobtrusive placeholder).
+- Playback behavior
+  - Gentle fades on start/stop/track switches; brief, occasional silence gaps between tracks for breathing room.
+  - No hard cuts or pops; state transitions feel smooth and premium.
+  - Respects the global sound toggle (mute silences player output but does not pause playback).
+- Visualizer
+  - Minimal “luxury” visualizer that reacts to music in a tasteful, non‑distracting way (e.g., simple bars or subtle glow).
+  - Designed to work well even at low amplitudes and with ambient tracks.
+- Persistence
+  - Remembers last track index and volume across sessions.
+  - Does not auto‑start without a user gesture where required; may hint gently that music is available.
+- Accessibility & performance
+  - Keyboard reachable; clear labels; no reliance on color alone for state.
+  - Lightweight visuals and animations; remains fluid on common mobile hardware.
+
 ## Accessibility
 - Clear focus indicators and keyboard reachability for all interactive elements.
 - ARIA‑labeled modal dialog with focus trap; ESC closes (unless unsafe).
