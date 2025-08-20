@@ -75,3 +75,25 @@ The modal will replace existing confirm() calls in:
 4. Replace confirm() calls with modal.show() calls
 5. Test all delete operations with modals
 6. Ensure accessibility compliance
+
+## Event Contracts
+- Open/close requests originate via center bar or feature modules using bus events.
+- Bus: `centerbar:delete`, `centerbar:clear` trigger confirm flows; results emitted via callbacks, not new events.
+- Use constants from `js/constants.js` to avoid string drift.
+
+## Accessibility Checklist
+- Focus moves to modal on open; returns to invoker on close.
+- `aria-modal`, `role="dialog"`, labelled and described by title/body.
+- ESC closes (unless critical destructive flow requires explicit cancel).
+- Trap focus within modal while open.
+
+## QA Matrix
+- Delete single task, clear completed, delete all: confirm/deny paths.
+- Theme switch while modal open: styles remain correct.
+- Mobile viewport: modal readable, buttons reachable; no scroll-jank.
+- Screen reader: announces title/description and button roles.
+
+## Acceptance Criteria
+- All destructive actions use the ModalManager.
+- No `window.confirm` usages remain.
+- Keyboard and screen-reader interactions pass manual checks.

@@ -151,3 +151,15 @@ For issues or questions about the modal glow migration:
 - Verify theme system initialization
 - Review CSS variable values in browser dev tools
 - Test in different browsers to isolate browser-specific issues
+
+## Status & Rollout
+
+- Status: Implemented in styles and theme manager; verify per-theme tokens exist.
+- Integration checklist:
+  - Theme sets `--danger-glow-color` and `--danger-glow-shadow` on change.
+  - Danger modals use `.delete-modal` class and reference the variables.
+  - No hardcoded red remains in modal CSS.
+- Acceptance criteria:
+  - Visual parity or improvement across dark/light themes.
+  - No regressions to non-danger modals.
+  - Meets AA contrast in both modes.

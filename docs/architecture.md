@@ -1,4 +1,6 @@
 
+> See also: `docs/architecture-modernization.md` for the proposed React + TypeScript migration plan.
+
 ## Architecture Diagram (Conceptual)
 
 ```mermaid
