@@ -1,0 +1,5 @@
+[
+  { "url": "https://cdn.example.com/ambient/nocturne.mp3", "title": "Nocturne in Glass", "duration": 184 },
+  { "url": "https://cdn.example.com/ambient/aurora.mp3",   "title": "Aurora Drift" },
+  { "url": "https://cdn.example.com/ambient/pearl.mp3",     "title": "Pearl Horizon" }
+]

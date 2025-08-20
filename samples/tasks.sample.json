@@ -1,0 +1,8 @@
+[
+  { "title": "Plan weekly goals", "description": "Focus on 3 priorities for the week.", "completed": false },
+  { "title": "Refine feature spec", "description": "Tighten language, cut filler.", "completed": false },
+  { "title": "Exercise 20 minutes", "completed": true },
+  { "title": "Gratitude note", "description": "Write a short thank‑you.", "completed": false },
+  { "title": "Inbox zero", "description": "Archive or reply to remaining 10 emails.", "completed": false },
+  { "title": "Meditation 10 minutes", "completed": true }
+]

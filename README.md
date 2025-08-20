@@ -14,6 +14,8 @@ Premium, offline-first todo app with elegant interactions, theming, and subtle a
 
 ## Documentation
 - Start here: `docs/README.md` (documentation map)
+- Reverse spec: `docs/reverse-spec.md` (authoritative high-level spec)
+- Prompt: `docs/prompt.md` (copy/paste to regenerate)
 - Contributor guide: `AGENTS.md`
 
 ## Project Notes
