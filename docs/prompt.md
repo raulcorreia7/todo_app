@@ -1,17 +1,34 @@
-# Prompt‑Ready Spec
+# Build Instructions (Use with reverse-spec.md)
 
-- Ethos: Premium, luxurious, subtle, zen. Rewarding micro‑interactions that feel “dopamine‑positive” but never loud or flashy.
-- Scope: Single‑page, offline‑friendly todo app. No server. Fast and accessible on mobile/desktop.
+Implement the “Luxury Todo” app strictly according to reverse-spec.md. Favor clarity, fidelity, and performance over novelty. Do not include backends or build steps.
 
-- Tasks: Add/edit/complete/delete with optional description. Inline edit with Save/Cancel and character counters. Filters: All/Active/Completed. Clear completed and Delete all with confirm. Friendly empty state. “Edit with AI” offers a preview and accept/cancel, preserving meaning while removing noise.
-- Insights: Daily quote in header; compact stat cards (Total, Done, simple “Karma”). Achievements and celebratory moments — optional and unobtrusive.
-- Settings: One floating panel for theme, font, sound toggle, volume; Utilities include Reset to defaults. Changes apply instantly and persist.
-- Theming & Fonts: Token‑based (CSS variables). Provide a curated set of elegant themes (10–15) and at least one serif and one sans‑serif font. Names/palettes/families are flexible; ensure high contrast and premium mood.
-- Center Action Bar: Floating toolbar with two groups: Settings, Music, Sound (global mute); Test, Clear Completed, Delete All.
-- Modal: Glass, theme‑aware glow; accessible (dialog semantics, ESC, focus management).
+Constraints
+- Static site only: generate `index.html`, `js/*.js`, `styles/*.css` (and minimal assets if needed). No bundlers or servers.
+- Community libraries allowed via CDN (e.g., Lucide icons, Google Fonts, lightweight helpers). Avoid heavyweight frameworks unless essential.
+- Token-based theming: define CSS variables in `styles/theme-system.css` and consume them across components.
+- Events: use clear, named CustomEvents and keep event names centralized (e.g., expose under a single global `App.EVENTS`).
 
-- Audio SFX: Subtle, optional cues. Task actions (add/complete/edit/delete) vary within a pleasant, consonant family to avoid fatigue; short progression may end with a light “reward”. Non‑task cues (settings, theme, font, volume, toggle, progress) use mild variation around base tones. One global sound control mutes all audio (does not pause music).
+Deliverables
+- `index.html`: page structure, CSS links, CDN libraries, ordered script tags.
+- `styles/`: `theme-system.css` (tokens), `main.css` (imports or links), component layers (modals, components, interactions, responsive).
+- `js/`: modules reflecting the app structure (bus, storage, themes, audio, music(+visualizer), settings(+loader), modal-manager, app controller, helpers).
+- Optional `assets/` if strictly necessary (icons/covers), but prefer CDN.
 
-- Music Player: Minimal, premium UI with Play/Pause, Prev/Next, Volume, optional Pin. Streams external track URLs; handles buffering/errors gracefully. Shows track name, index/total, duration/current time when available. Gentle fades; occasional brief silence gaps. Subtle visualizer. Remembers last track and volume. No auto‑start; may hint gently after user gesture.
+Libraries (examples)
+- Icons: Lucide via CDN.
+- Fonts: Google Fonts (Inter, Playfair, SF‑like where licensing allows) via `<link>`.
+- Small helpers permitted (e.g., micro‑animation, utility debounce) via CDN if they keep the footprint small.
 
-- Accessibility & Performance: Keyboard reachable, clear labels, AA contrast, honors reduced motion. Interactions feel instant and smooth; visuals stay tasteful and light. Suspend non‑essential animations when the tab is hidden; resume gracefully.
+Behavioral Requirements
+- Treat reverse-spec.md as authoritative for ethos, IA, features, task action rewards, audio SFX, music player/visualizer, achievements, accessibility, and energy behavior.
+- Music: support streaming external track URLs; display title/index/duration when available; handle buffering; gentle fades; subtle visualizer.
+- Audio SFX: subtle anti‑fatigue cues; global sound toggle mutes all audio without pausing music.
+- Accessibility: keyboard reachability, dialog semantics, AA contrast, honor reduced motion.
+- Performance/Energy: GPU‑friendly effects; suspend non‑essential animations when the tab is hidden; resume gracefully.
+
+Style & Structure
+- Keep files small and readable; prefer plain classes/modules and the global event bus for decoupling.
+- Avoid over‑engineering; match the premium/zen tone with subtle micro‑interactions.
+
+Output
+- Provide only the static site artifacts (HTML/CSS/JS). Assume all details, interactions, and copy from reverse-spec.md.
