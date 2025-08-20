@@ -1,27 +1,24 @@
-# luxury-todo-server
+# Luxury Todo
 
-A premium todo experience focused on elegant interactions, thoughtful gamification, and customizable aesthetics
+Premium, offline-first todo app with elegant interactions, theming, and subtle audio. Runs as a static site with a lightweight local server for development.
 
-Premium todo application with elegant design and thoughtful interactions
+## Quick Start
+- Install: `npm install`
+- Develop: `npm run dev` (serves at `http://localhost:8080`)
+- Version bump: `npm run version` (syncs package, manifest, and commit-count)
 
-• Glass-morphism UI with nebula backgrounds
-• Premium audio feedback and music integration
-• Gamified task completion with karma system
-• Customizable themes and typography
-• Daily inspirational quotes
+## Features
+- Theming via CSS variables, curated palettes, and typography options.
+- Fast, accessible UI with micro-interactions and optional ambient music.
+- Local persistence for tasks, settings, stats, and achievements.
 
-## Setup
-```bash
-npm install
-```
+## Documentation
+- Start here: `docs/README.md` (documentation map)
+- Contributor guide: `AGENTS.md`
 
-## Running
-```bash
-npm run dev
-```
-*Starts server on port 8080*
-
-After setup, run the development server and open http://localhost:8080
+## Project Notes
+- Minimal static hosting (GitHub Pages). No server required.
+- Global event bus coordinates modules; event and storage keys in `js/constants.js`.
 
 ## Documentation
 - Architecture & Migration: see `docs/architecture-modernization.md` for current architecture, proposed React+TS stack, CSS strategy, and phased plan.

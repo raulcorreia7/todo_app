@@ -1,12 +1,12 @@
-# Documentation Map
+# Documentation
 
-- Architecture (current focus): `docs/architecture-modernization.md`
-- Architecture (legacy note): `docs/architecture.md`
-- Technical notes: `docs/technical.md`
-- Events catalog: `docs/events.md`
-- Product requirements: `docs/product_requirement_docs.md`
-- Theme feedback system: `docs/theme-feedback-system.md`
+This set replaces older, scattered docs with a simple, up‑to‑date structure.
 
-Related root docs
-- Modal glow guide: `modal-glow-migration-guide.md`
-- Modal implementation plan: `modal-implementation-plan.md`
+- Product: `docs/product.md` — requirements and success criteria
+- Architecture: `docs/architecture.md` — current modules and data flow
+- Development: `docs/development.md` — setup, scripts, conventions
+- UI & CSS: `docs/ui-css.md` — tokens, patterns, accessibility
+- Events: `docs/events.md` — event names and payloads
+- Migration: `docs/migration.md` — React + TypeScript plan (optional)
+
+Contributor guide lives at `AGENTS.md`.
