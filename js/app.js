@@ -3,6 +3,10 @@
  * Coordinates all components and manages the todo list
  */
 
+// Safe access to constants
+const __E = (window.App && window.App.EVENTS) || null;
+const __K = (window.App && window.App.KEYS) || null;
+
 class TodoApp {
   constructor() {
     this.tasks = [];
@@ -70,10 +74,14 @@ class TodoApp {
         typeof bus !== "undefined" &&
         typeof bus.dispatchEvent === "function"
       ) {
-        bus.dispatchEvent(new CustomEvent("app:ready"));
+        bus.dispatchEvent(
+          new CustomEvent(__E ? __E.APP_READY : "app:ready")
+        );
       } else {
         // Fallback: also fire a DOM event so listeners without the bus can hook in
-        document.dispatchEvent(new CustomEvent("app:ready"));
+        document.dispatchEvent(
+          new CustomEvent(__E ? __E.APP_READY : "app:ready")
+        );
       }
     } catch (e) {
       console.warn("Failed to dispatch app:ready event", e);
@@ -507,7 +515,9 @@ class TodoApp {
         // Settings button is handled by modal-manager.js
 
         // Open/toggle music UI popover (not playback) — handle via explicit toggle to avoid styles issues
-        bus.addEventListener("centerbar:music", () => {
+        bus.addEventListener(
+          __E ? __E.CENTERBAR.MUSIC : "centerbar:music",
+          () => {
           try {
             const pop = document.getElementById("musicPopover");
             if (!pop) return;
@@ -540,10 +550,11 @@ class TodoApp {
           } catch (err) {
             console.warn("[bus] centerbar:music failed", err);
           }
-        });
+        }
+        );
 
         // Add test data
-        bus.addEventListener("centerbar:test", () => {
+        bus.addEventListener(__E ? __E.CENTERBAR.TEST : "centerbar:test", () => {
           try {
             if (typeof this.addTestData === "function") {
               this.addTestData();
@@ -563,7 +574,7 @@ class TodoApp {
         });
 
         // Clear completed
-        bus.addEventListener("centerbar:clear", () => {
+        bus.addEventListener(__E ? __E.CENTERBAR.CLEAR : "centerbar:clear", () => {
           try {
             if (typeof this.clearCompleted === "function") {
               this.clearCompleted();
@@ -583,7 +594,7 @@ class TodoApp {
         });
 
         // Toggle global sound effects (does not affect music transport)
-        bus.addEventListener("centerbar:sound", () => {
+        bus.addEventListener(__E ? __E.CENTERBAR.SOUND : "centerbar:sound", () => {
           try {
             if (
               typeof settingsManager !== "undefined" &&
@@ -618,7 +629,7 @@ class TodoApp {
         });
 
         // Delete all
-        bus.addEventListener("centerbar:delete", () => {
+        bus.addEventListener(__E ? __E.CENTERBAR.DELETE : "centerbar:delete", () => {
           try {
             if (typeof this.deleteAll === "function") {
               this.deleteAll();
@@ -640,8 +651,13 @@ class TodoApp {
         console.warn("[bus] centerbar wiring failed", err);
       }
 
-      bus.addEventListener("tasksUpdated", () => this.render());
-      bus.addEventListener("settingsChanged", (e) => {
+      bus.addEventListener(
+        __E ? __E.TASKS_UPDATED : "tasksUpdated",
+        () => this.render()
+      );
+      bus.addEventListener(
+        __E ? __E.SETTINGS_CHANGED : "settingsChanged",
+        (e) => {
         const detail = e && e.detail ? e.detail : {};
         // prefer globalMute if present
         const isEnabled =
@@ -653,7 +669,8 @@ class TodoApp {
         // keep the volume button visuals in sync
         this.updateVolumeButtonState(isEnabled);
         this.render();
-      });
+      }
+      );
 
       // Keep music button state in sync with actual playback
       const syncMusicBtn = (playing) => {
@@ -662,21 +679,39 @@ class TodoApp {
         btn.classList.toggle("is-playing", !!playing);
         btn.classList.toggle("is-paused", !playing);
       };
-      bus.addEventListener("music:started", () => syncMusicBtn(true));
-      bus.addEventListener("music:playing", () => syncMusicBtn(true));
-      bus.addEventListener("music:paused", () => syncMusicBtn(false));
-      bus.addEventListener("music:silenceStart", () => syncMusicBtn(false));
-      bus.addEventListener("music:buffering", (e) => {
+      bus.addEventListener(
+        __E ? __E.MUSIC.STARTED : "music:started",
+        () => syncMusicBtn(true)
+      );
+      bus.addEventListener(
+        __E ? __E.MUSIC.PLAYING : "music:playing",
+        () => syncMusicBtn(true)
+      );
+      bus.addEventListener(
+        __E ? __E.MUSIC.PAUSED : "music:paused",
+        () => syncMusicBtn(false)
+      );
+      bus.addEventListener(
+        __E ? __E.MUSIC.SILENCE_START : "music:silenceStart",
+        () => syncMusicBtn(false)
+      );
+      bus.addEventListener(
+        __E ? __E.MUSIC.BUFFERING : "music:buffering",
+        (e) => {
         const btn = document.getElementById("volumeBtn");
         if (!btn) return;
         btn.classList.toggle("buffering", !!(e.detail && e.detail.buffering));
-      });
-      bus.addEventListener("music:hintStart", () => {
+      }
+      );
+      bus.addEventListener(
+        __E ? __E.MUSIC.HINT_START : "music:hintStart",
+        () => {
         const btn = document.getElementById("volumeBtn");
         if (!btn) return;
         btn.classList.add("hint");
         setTimeout(() => btn.classList.remove("hint"), 3000);
-      });
+      }
+      );
     }
 
     // Keyboard shortcuts
@@ -905,7 +940,9 @@ class TodoApp {
 
     // Dispatch tasksUpdated event to notify other components
     if (typeof bus !== "undefined") {
-      bus.dispatchEvent(new CustomEvent("tasksUpdated"));
+      bus.dispatchEvent(
+        new CustomEvent(__E ? __E.TASKS_UPDATED : "tasksUpdated")
+      );
     }
 
     // Schedule auto-save for any dirty tasks
