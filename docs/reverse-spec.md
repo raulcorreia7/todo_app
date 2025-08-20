@@ -19,6 +19,7 @@
 - Haptics (optional): subtle, device‑appropriate haptic taps for key confirmations where supported and enabled.
 - Onboarding hints: gentle first‑run affordances (e.g., highlight settings/music availability) that disappear quickly.
 - Extensibility: event‑bus friendly; future features can hook into well‑named events without reshaping core flows.
+  - Modules can listen for a global “app ready” signal to coordinate deferred work.
 
 ## Functional Requirements
 - Tasks
@@ -46,6 +47,7 @@
 - Header: App title + daily quote.
 - Add Task: Title input (placeholder), optional description textarea, live character counter.
 - Stats: Three compact cards (Total, Done, Karma) with simple iconography.
+ - Optional Progress view: a lightweight readout/panel summarizing daily/overall momentum without clutter.
 - Filters: All | Active | Completed.
 - Task List: Scrollable list of cards with hover affordances, checkbox/complete, edit, save/cancel, delete.
 - Empty State: Centered icon and message when no tasks.
@@ -79,6 +81,7 @@
 - Micro‑interactions: subtle, premium, and “zen” — each action should feel rewarding without being loud. Think gentle shimmer, light tactile cues, and tasteful celebratory moments.
 - Keyboard: convenient shortcuts for common actions (new task, filter changes, confirm/cancel edits) while avoiding conflicts with text entry.
 - Touch: comfortable targets and forgiving gestures that feel natural on mobile.
+ - Optional swipe gestures on mobile for convenience (e.g., reveal actions); provide accessible alternatives.
 - Motion: restrained and calming; animations should enhance clarity and never distract. Respect reduced‑motion preferences.
 
 ## Design & Behavior Directives (consolidated)
@@ -88,7 +91,7 @@
 - Typography
   - Clear hierarchy and comfortable reading rhythm. Font changes should feel smooth and non‑jarring.
 - Iconography
-  - Consistent, minimal, and meaningful.
+  - Consistent, minimal, and meaningful; use one icon set across toolbar/cards for cohesion.
 - Micro‑interactions
   - Interactions should feel rewarding and “dopamine‑positive” yet understated — a brief moment of delight, then out of the way.
   - Task actions (add, edit, complete, delete) are first‑class and receive a higher‑grade feedback package (visual + audio + optional haptic) compared to secondary actions.
@@ -103,6 +106,7 @@
   - Task List: luxurious checkbox feel, inline edits with clear Save/Cancel, visible character guidance.
   - Modals: theme‑aware glow for destructive actions; accessible structure and behavior.
   - Achievements: Settings > Achievements displays elegant cards with title, description, progress %, and unlocked/complete state; desktop hover shows a minimal popover with condition and last‑unlocked time.
+  - Tooltips (desktop): minimal, non‑blocking hints where helpful (e.g., achievements), disabled on touch contexts.
 - Responsiveness & a11y
   - Mobile‑first fluidity, generous touch targets, and adaptable spacing.
   - Keyboard navigation throughout; semantic roles/labels; sufficient contrast.
