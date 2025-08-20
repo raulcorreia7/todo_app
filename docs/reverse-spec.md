@@ -87,6 +87,23 @@
 - Immediate feedback on settings changes; no full reload required.
 - Music hint: if playback requires user gesture, surface a gentle visual nudge on the music button.
 
+## Audio & Music — Behavioral Spec (high level)
+- Global semantics
+  - One global sound toggle governs all SFX and music output; muting does not pause music playback.
+  - Volume changes feel smooth and subtle across the whole app.
+- Sound categories (illustrative; exact palette open‑ended)
+  - Task cues: add, complete, edit, delete (brief, premium notifications).
+  - UX cues: settings tap/open, theme change, progress open, font change, volume adjust, sound toggle.
+  - Celebrations: soft victory/reward moments on meaningful milestones.
+- Anti‑fatigue tonal design
+  - Task cues vary pitch within a pleasant, consonant family (e.g., pentatonic‑like) to keep repetition fresh.
+  - Each task category progresses through a short sequence of variations; after a small run, a lightweight “reward” flourish may play, then the sequence resets.
+  - Non‑task cues apply mild randomization around a base tone to avoid monotony without attracting attention.
+- Experience goals
+  - Cues are dopamine‑positive but understated; they complement visual polish and are fully optional.
+  - Brief envelopes and gentle fades; never compete with interaction speed.
+  - Respect user sensitivity and system preferences.
+
 ## Accessibility
 - Clear focus indicators and keyboard reachability for all interactive elements.
 - ARIA‑labeled modal dialog with focus trap; ESC closes (unless unsafe).
