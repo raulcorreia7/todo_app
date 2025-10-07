@@ -1,5 +1,7 @@
 # Product
 
+> Keep this document as the source of truth—refresh it before expanding scope or altering experiences so implementation aligns with documented goals.
+
 ## Vision
 Premium, offline-friendly todo app with elegant interactions, fast performance, accessible design, and optional ambient audio.
 

@@ -1,5 +1,7 @@
 # Build Instructions (Use with reverse-spec.md)
 
+> Keep this prompt synchronized with `docs/reverse-spec.md`; update both before handing off implementation work.
+
 Implement the “Luxury Todo” app strictly according to reverse-spec.md. Favor clarity, fidelity, and performance over novelty. Do not include backends or build steps.
 
 Constraints

@@ -1,5 +1,7 @@
 # Achievements (High Level)
 
+> Update this catalog before tweaking progression logic so UX, audio, and copy stay synchronized.
+
 Spirit
 - Celebrate mindful, steady progress with subtle, zen‑toned rewards.
 

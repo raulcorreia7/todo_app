@@ -1,5 +1,7 @@
 # Luxury Todo — Reverse‑Engineered Product Spec
 
+> Maintain this spec as the authoritative reference; revise it first whenever scope or UX decisions evolve so downstream docs stay consistent.
+
 ## Ethos
 - Premium, calm, and delightful. Glass‑morphism visuals with soft glow accents, nebula background, and subtle grain.
 - Interactions feel snappy and intentional; motion is understated and performance‑friendly.

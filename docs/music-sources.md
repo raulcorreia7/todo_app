@@ -1,5 +1,7 @@
 # Music Sources (High Level)
 
+> Keep this spec current before altering media pipelines so tooling and configuration changes track with the documented contract.
+
 Goal
 - Allow external streaming tracks to be used by the minimal, premium music player.
 

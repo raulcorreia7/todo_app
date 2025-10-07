@@ -1,5 +1,7 @@
 # UI & CSS
 
+> **Documentation-first reminder:** Revise this guide before changing styling architecture so implementation follows the documented system.
+
 ## Tokens
 - Single source: `styles/theme-system.css` defines color, spacing, and typography variables.
 - Use variables in components; avoid hardcoded colors.

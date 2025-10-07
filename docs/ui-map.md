@@ -1,5 +1,7 @@
 # UI Map (High Level)
 
+> Refresh this map before redesigning flows so designers and engineers reference a single, authoritative layout snapshot.
+
 - Header: app title, daily quote (clickable to cycle).
 - Add Task: title input, optional description textarea, live char counters, add button.
 - Stats: three compact cards — Total, Done, Karma.
