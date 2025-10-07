@@ -1,5 +1,7 @@
 # QA Walk (High Level)
 
+> Keep this checklist current before running regression passes; update with new flows or acceptance criteria prior to implementation work.
+
 Core flows
 - Add task (title only; with description). Expect premium micro‑reward.
 - Edit task (manual); Edit with AI (preview, accept/cancel). Expect elevated reward on accept.

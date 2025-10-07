@@ -1,5 +1,7 @@
 # Events Catalog
 
+> Update this catalog before implementing new events or payload changes so downstream consumers stay aligned.
+
 Central reference for application events. Prefer constants from `js/constants.js` when dispatching or subscribing.
 
 ## Bus Events (CustomEvent)

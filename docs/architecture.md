@@ -1,6 +1,7 @@
 # Architecture
 
 ## Overview
+- Documentation-first reminder: update this diagram and notes before shipping structural changes so downstream docs stay in sync.
 - Static web app served at `index.html`.
 - Modules in `js/` communicate via a global EventBus (`js/bus.js`).
 - Persistence via `storageManager` (`js/storage.js`) using localStorage.

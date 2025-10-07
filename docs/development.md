@@ -9,6 +9,7 @@
 - `npm run version`: sync version across package.json, manifest.json, and `commit-count.txt`
 
 ## Conventions
+- Documentation-first: when planning changes, update relevant docs (architecture, UI, QA) before implementing so reviewers see intent.
 - Event and storage keys: use `window.App.EVENTS` and `window.App.KEYS` from `js/constants.js`.
 - Prefer bus events over direct DOM wiring for cross-module actions.
 - Keep large file edits focused; avoid drive‑by refactors unrelated to the change.

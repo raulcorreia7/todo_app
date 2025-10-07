@@ -2,12 +2,14 @@
 
 This set replaces older, scattered docs with a simple, up‑to‑date structure.
 
+> **Documentation-first workflow:** Before starting implementation—especially on the migration branch—confirm relevant docs are current. Update architecture, development, UI, and QA references first so changes always follow recorded guidance.
+
 - Product: `docs/product.md` — requirements and success criteria
 - Architecture: `docs/architecture.md` — current modules and data flow
 - Development: `docs/development.md` — setup, scripts, conventions
 - UI & CSS: `docs/ui-css.md` — tokens, patterns, accessibility
 - Events: `docs/events.md` — event names and payloads
-- Migration: `docs/migration.md` — React + TypeScript plan (optional)
+- Migration: `docs/migration.md` — React + TypeScript plan and Codex subagent launch templates
 - Reverse Spec: `docs/reverse-spec.md` — high-level spec to regenerate the app
 - Prompt: `docs/prompt.md` — copy/paste prompt extracted from the reverse spec
 - UI Map: `docs/ui-map.md` — page areas and component states
