@@ -5,7 +5,15 @@ const STORAGE_KEYS = {
   SETTINGS: "luxury-todo-settings-v2",
   GAMIFICATION: "luxury-todo-gamification-v2",
   STATISTICS: "luxury-todo-stats-v2",
+  MUSIC_VOLUME: "music-volume",
+  MUSIC_PLAYING: "music-playing",
+  MUSIC_CURRENT_TRACK: "music-current-track",
+  AFFIRMATIONS: "luxury-todo-affirmations",
+  DAILY_SUMMARY: "luxury-todo-last-summary",
+  QUOTE: "luxury-todo-quote",
 } as const;
+
+const RESETTABLE_STORAGE_KEYS: readonly string[] = Object.values(STORAGE_KEYS);
 
 function isLocalStorageAvailable(): boolean {
   try {
@@ -57,27 +65,36 @@ export const tasksStorage = {
 };
 
 export const settingsStorage = {
-  get: (): Settings | null => getItems<Settings | null>(STORAGE_KEYS.SETTINGS, null),
-  set: (settings: Settings): boolean => setItem(STORAGE_KEYS.SETTINGS, settings),
+  get: (): Settings | null =>
+    getItems<Settings | null>(STORAGE_KEYS.SETTINGS, null),
+  set: (settings: Settings): boolean =>
+    setItem(STORAGE_KEYS.SETTINGS, settings),
 };
 
 export const gamificationStorage = {
-  get: (): GamificationState | null => getItems<GamificationState | null>(STORAGE_KEYS.GAMIFICATION, null),
-  set: (state: GamificationState): boolean => setItem(STORAGE_KEYS.GAMIFICATION, state),
+  get: (): GamificationState | null =>
+    getItems<GamificationState | null>(STORAGE_KEYS.GAMIFICATION, null),
+  set: (state: GamificationState): boolean =>
+    setItem(STORAGE_KEYS.GAMIFICATION, state),
 };
 
 export const statisticsStorage = {
-  get: (): Statistics | null => getItems<Statistics | null>(STORAGE_KEYS.STATISTICS, null),
+  get: (): Statistics | null =>
+    getItems<Statistics | null>(STORAGE_KEYS.STATISTICS, null),
   set: (stats: Statistics): boolean => setItem(STORAGE_KEYS.STATISTICS, stats),
 };
 
 export function clearAllStorage(): boolean {
-  return (
-    tasksStorage.clear() &&
-    removeItem(STORAGE_KEYS.SETTINGS) &&
-    removeItem(STORAGE_KEYS.GAMIFICATION) &&
-    removeItem(STORAGE_KEYS.STATISTICS)
-  );
+  if (!available) return false;
+
+  try {
+    RESETTABLE_STORAGE_KEYS.forEach((key) => {
+      localStorage.removeItem(key);
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export { STORAGE_KEYS };

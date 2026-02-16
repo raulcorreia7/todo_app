@@ -69,12 +69,28 @@ describe("settingsStore", () => {
 
     it("applies theme to document", () => {
       settingsActions.setTheme("aurora");
-      expect(document.documentElement.getAttribute("data-theme")).toBe("aurora");
+      expect(document.documentElement.getAttribute("data-theme")).toBe(
+        "aurora"
+      );
     });
 
     it("persists theme change", () => {
       settingsActions.setTheme("champagne");
       expect(mockLocalStorage.setItem).toHaveBeenCalled();
+    });
+
+    it("updates muted text color for dark themes", () => {
+      settingsActions.setTheme("midnight");
+      expect(
+        document.documentElement.style.getPropertyValue("--color-text-muted")
+      ).toBe("rgba(219, 234, 254, 0.64)");
+    });
+
+    it("updates muted text color for light themes", () => {
+      settingsActions.setTheme("ivory");
+      expect(
+        document.documentElement.style.getPropertyValue("--color-text-muted")
+      ).toBe("rgba(73, 80, 87, 0.72)");
     });
   });
 
@@ -191,12 +207,16 @@ describe("settingsStore", () => {
 
     it("applies default theme to document", async () => {
       settingsActions.setTheme("graphite");
-      expect(document.documentElement.getAttribute("data-theme")).toBe("graphite");
+      expect(document.documentElement.getAttribute("data-theme")).toBe(
+        "graphite"
+      );
       settingsActions.resetToDefaults();
       mockLocalStorage.clear();
       vi.resetModules();
       await import("@/stores/settingsStore");
-      expect(document.documentElement.getAttribute("data-theme")).toBe("emerald");
+      expect(document.documentElement.getAttribute("data-theme")).toBe(
+        "emerald"
+      );
     });
   });
 });

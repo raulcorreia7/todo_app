@@ -1,35 +1,55 @@
 import { settingsStore } from "@/stores/settingsStore";
 
-export type SoundType = "add" | "complete" | "delete" | "achievement" | "victory" | "click";
+export type SoundType =
+  | "add"
+  | "complete"
+  | "delete"
+  | "achievement"
+  | "victory"
+  | "click";
+
+const AUDIO_VOLUME_MIN = 0;
+const AUDIO_VOLUME_MAX = 100;
+const AUDIO_MASTER_GAIN_SCALE = 0.5;
+const AUDIO_QUEUE_GAP_SECONDS = 0.02;
+
+const SOUND_DURATIONS: Record<SoundType, number> = {
+  add: 0.2,
+  complete: 0.56,
+  delete: 0.2,
+  achievement: 0.8,
+  victory: 0.95,
+  click: 0.05,
+};
 
 class AudioService {
   private audioContext: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private initialized = false;
   private soundStep = 0;
+  private queuedUntil = 0;
+  private readonly queueGap = AUDIO_QUEUE_GAP_SECONDS;
   private pentatonicFreqs = [
-    261.63,
-    293.66,
-    329.63,
-    392.00,
-    440.00,
-    523.25,
-    587.33,
+    261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33,
   ];
 
   async init(): Promise<void> {
     if (this.initialized) return;
 
     try {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.audioContext = new (
+        window.AudioContext || (window as any).webkitAudioContext
+      )();
       this.masterGain = this.audioContext.createGain();
       this.masterGain.connect(this.audioContext.destination);
-      this.masterGain.gain.value = (settingsStore.volume / 100) * 0.5;
+      this.masterGain.gain.value =
+        (settingsStore.volume / AUDIO_VOLUME_MAX) * AUDIO_MASTER_GAIN_SCALE;
 
       if (this.audioContext.state === "suspended") {
         await this.audioContext.resume();
       }
 
+      this.queuedUntil = this.audioContext.currentTime;
       this.initialized = true;
     } catch (error) {
       console.warn("Audio initialization failed:", error);
@@ -54,51 +74,58 @@ class AudioService {
     const ctx = this.ensureContext();
     if (!ctx || !this.masterGain) return;
 
+    const startTime = Math.max(ctx.currentTime, this.queuedUntil);
+    let duration = SOUND_DURATIONS.click;
+
     switch (sound) {
       case "add":
-        this.playAdd(ctx);
+        duration = this.playAdd(ctx, startTime);
         break;
       case "complete":
-        this.playComplete(ctx);
+        duration = this.playComplete(ctx, startTime);
         break;
       case "delete":
-        this.playDelete(ctx);
+        duration = this.playDelete(ctx, startTime);
         break;
       case "achievement":
-        this.playAchievement(ctx);
+        duration = this.playAchievement(ctx, startTime);
         break;
       case "victory":
-        this.playVictory(ctx);
+        duration = this.playVictory(ctx, startTime);
         break;
       case "click":
-        this.playClick(ctx);
+        duration = this.playClick(ctx, startTime);
         break;
     }
+
+    this.queuedUntil = startTime + duration + this.queueGap;
   }
 
-  private playAdd(ctx: AudioContext): void {
-    const now = ctx.currentTime;
+  private playAdd(ctx: AudioContext, startTime: number): number {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = "sine";
-    osc.frequency.setValueAtTime(350, now);
-    osc.frequency.exponentialRampToValueAtTime(525, now + 0.1);
+    osc.frequency.setValueAtTime(350, startTime);
+    osc.frequency.exponentialRampToValueAtTime(525, startTime + 0.1);
 
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
 
     osc.connect(gain);
     gain.connect(this.masterGain!);
 
-    osc.start(now);
-    osc.stop(now + 0.2);
+    osc.start(startTime);
+    osc.stop(startTime + SOUND_DURATIONS.add);
+
+    return SOUND_DURATIONS.add;
   }
 
-  private playComplete(ctx: AudioContext): void {
-    const now = ctx.currentTime;
-    const baseFreq = this.pentatonicFreqs[this.soundStep % this.pentatonicFreqs.length] ?? 523.25;
+  private playComplete(ctx: AudioContext, startTime: number): number {
+    const baseFreq =
+      this.pentatonicFreqs[this.soundStep % this.pentatonicFreqs.length] ??
+      523.25;
     this.soundStep++;
     const frequencies = [baseFreq, baseFreq * 1.25, baseFreq * 1.5];
 
@@ -109,47 +136,49 @@ class AudioService {
       osc.type = "sine";
       osc.frequency.value = freq;
 
-      const startTime = now + i * 0.08;
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+      const noteStart = startTime + i * 0.08;
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(0.2, noteStart + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.4);
 
       osc.connect(gain);
       gain.connect(this.masterGain!);
 
-      osc.start(startTime);
-      osc.stop(startTime + 0.4);
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.4);
     });
+
+    return SOUND_DURATIONS.complete;
   }
 
-  private playDelete(ctx: AudioContext): void {
-    const now = ctx.currentTime;
+  private playDelete(ctx: AudioContext, startTime: number): number {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
 
     osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(300, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+    osc.frequency.setValueAtTime(300, startTime);
+    osc.frequency.exponentialRampToValueAtTime(80, startTime + 0.2);
 
     filter.type = "lowpass";
-    filter.frequency.setValueAtTime(600, now);
-    filter.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+    filter.frequency.setValueAtTime(600, startTime);
+    filter.frequency.exponentialRampToValueAtTime(150, startTime + 0.2);
 
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
 
     osc.connect(filter);
     filter.connect(gain);
     gain.connect(this.masterGain!);
 
-    osc.start(now);
-    osc.stop(now + 0.2);
+    osc.start(startTime);
+    osc.stop(startTime + SOUND_DURATIONS.delete);
+
+    return SOUND_DURATIONS.delete;
   }
 
-  private playAchievement(ctx: AudioContext): void {
-    const now = ctx.currentTime;
+  private playAchievement(ctx: AudioContext, startTime: number): number {
     const notes = [523, 659, 784, 1047];
 
     notes.forEach((freq, i) => {
@@ -159,21 +188,22 @@ class AudioService {
       osc.type = "sine";
       osc.frequency.value = freq;
 
-      const startTime = now + i * 0.1;
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.2, startTime + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+      const noteStart = startTime + i * 0.1;
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(0.2, noteStart + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.5);
 
       osc.connect(gain);
       gain.connect(this.masterGain!);
 
-      osc.start(startTime);
-      osc.stop(startTime + 0.5);
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.5);
     });
+
+    return SOUND_DURATIONS.achievement;
   }
 
-  private playVictory(ctx: AudioContext): void {
-    const now = ctx.currentTime;
+  private playVictory(ctx: AudioContext, startTime: number): number {
     const melody = [
       { freq: 392, time: 0 },
       { freq: 523, time: 0.15 },
@@ -189,42 +219,48 @@ class AudioService {
       osc.type = "sine";
       osc.frequency.value = freq;
 
-      const startTime = now + time;
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.22, startTime + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+      const noteStart = startTime + time;
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(0.22, noteStart + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.35);
 
       osc.connect(gain);
       gain.connect(this.masterGain!);
 
-      osc.start(startTime);
-      osc.stop(startTime + 0.35);
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.35);
     });
+
+    return SOUND_DURATIONS.victory;
   }
 
-  private playClick(ctx: AudioContext): void {
-    const now = ctx.currentTime;
+  private playClick(ctx: AudioContext, startTime: number): number {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = "sine";
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.03);
+    osc.frequency.setValueAtTime(800, startTime);
+    osc.frequency.exponentialRampToValueAtTime(600, startTime + 0.03);
 
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.1, now + 0.005);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.1, startTime + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.05);
 
     osc.connect(gain);
     gain.connect(this.masterGain!);
 
-    osc.start(now);
-    osc.stop(now + 0.05);
+    osc.start(startTime);
+    osc.stop(startTime + SOUND_DURATIONS.click);
+
+    return SOUND_DURATIONS.click;
   }
 
   setVolume(volume: number): void {
     if (this.masterGain) {
-      this.masterGain.gain.value = (Math.max(0, Math.min(100, volume)) / 100) * 0.5;
+      this.masterGain.gain.value =
+        (Math.max(AUDIO_VOLUME_MIN, Math.min(AUDIO_VOLUME_MAX, volume)) /
+          AUDIO_VOLUME_MAX) *
+        AUDIO_MASTER_GAIN_SCALE;
     }
   }
 
@@ -233,8 +269,10 @@ class AudioService {
 
     if (!enabled) {
       this.audioContext.suspend().catch(() => {});
+      this.queuedUntil = this.audioContext.currentTime;
     } else {
       this.audioContext.resume().catch(() => {});
+      this.queuedUntil = this.audioContext.currentTime;
     }
   }
 

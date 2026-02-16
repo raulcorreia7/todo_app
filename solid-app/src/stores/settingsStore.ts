@@ -21,6 +21,11 @@ const defaultSettings: Settings = {
   font: "inter",
 };
 
+const THEME_TEXT_MUTED_ALPHA: Record<"light" | "dark", number> = {
+  light: 0.72,
+  dark: 0.64,
+};
+
 function loadSettings(): Settings {
   const stored = settingsStorage.get();
   return stored ? { ...defaultSettings, ...stored } : { ...defaultSettings };
@@ -53,13 +58,17 @@ function applyTheme(theme: ThemeId): void {
   root.style.setProperty("--color-secondary", selectedTheme.secondary);
   root.style.setProperty("--color-accent", selectedTheme.accent);
   root.style.setProperty("--color-text", selectedTheme.text);
+  root.style.setProperty(
+    "--color-text-muted",
+    hexToRgba(selectedTheme.text, THEME_TEXT_MUTED_ALPHA[tone])
+  );
   root.style.setProperty("--color-glow", selectedTheme.glow);
   root.style.setProperty("--color-shadow", selectedTheme.shadow);
   root.style.setProperty("--color-glass", selectedTheme.glass);
   root.style.setProperty("--color-border", selectedTheme.border);
   root.style.setProperty(
     "--color-border-soft",
-    "color-mix(in oklab, var(--color-border) 50%, transparent)",
+    "color-mix(in oklab, var(--color-border) 50%, transparent)"
   );
 
   root.style.setProperty("--danger-glow-color", selectedTheme.dangerGlow);
@@ -69,14 +78,23 @@ function applyTheme(theme: ThemeId): void {
   root.style.setProperty("--danger-glass", hexToRgba(dangerGlow, 0.12));
   root.style.setProperty("--danger-glass-hover", hexToRgba(dangerGlow, 0.2));
   root.style.setProperty("--danger-glass-ghost", hexToRgba(dangerGlow, 0.08));
-  root.style.setProperty("--danger-glass-ghost-hover", hexToRgba(dangerGlow, 0.15));
+  root.style.setProperty(
+    "--danger-glass-ghost-hover",
+    hexToRgba(dangerGlow, 0.15)
+  );
   root.style.setProperty("--danger-border", hexToRgba(dangerGlow, 0.3));
   root.style.setProperty("--danger-border-hover", hexToRgba(dangerGlow, 0.5));
   root.style.setProperty("--danger-border-ghost", hexToRgba(dangerGlow, 0.25));
-  root.style.setProperty("--danger-border-ghost-hover", hexToRgba(dangerGlow, 0.4));
+  root.style.setProperty(
+    "--danger-border-ghost-hover",
+    hexToRgba(dangerGlow, 0.4)
+  );
   root.style.setProperty("--danger-shadow-hover", hexToRgba(dangerGlow, 0.3));
   root.style.setProperty("--danger-shadow-ghost", hexToRgba(dangerGlow, 0.15));
-  root.style.setProperty("--danger-shadow-ghost-hover", hexToRgba(dangerGlow, 0.25));
+  root.style.setProperty(
+    "--danger-shadow-ghost-hover",
+    hexToRgba(dangerGlow, 0.25)
+  );
   root.style.setProperty("--danger-highlight", hexToRgba(dangerGlow, 0.4));
 
   root.style.setProperty("--stat-icon-color", getThemeStatIconColor(theme));
@@ -91,10 +109,16 @@ function applyTheme(theme: ThemeId): void {
   root.style.setProperty("--ai-canvas-filter", getThemeAICanvasFilter(theme));
 
   root.style.setProperty("--particle-color", selectedTheme.particleColor);
-  root.style.setProperty("--particle-count", String(selectedTheme.particleCount));
+  root.style.setProperty(
+    "--particle-count",
+    String(selectedTheme.particleCount)
+  );
   root.style.setProperty("--particle-size", String(selectedTheme.particleSize));
 
-  root.style.setProperty("--animation-duration", selectedTheme.animationDuration);
+  root.style.setProperty(
+    "--animation-duration",
+    selectedTheme.animationDuration
+  );
   root.style.setProperty("--animation-easing", selectedTheme.animationEasing);
 
   root.style.setProperty("--glass-bg", selectedTheme.glass);

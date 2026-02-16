@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+const COMPLETE_SOUND_DURATION_SECONDS = 0.56;
+
 const mockLocalStorage = (() => {
   let store: Record<string, string> = {};
   return {
@@ -62,12 +64,23 @@ function createMockBiquadFilter() {
 }
 
 class MockAudioContext {
+  static instances: MockAudioContext[] = [];
+
   state = "running";
   currentTime = 0;
   destination = {};
-  
+  oscillators: Array<ReturnType<typeof createMockOscillator>> = [];
+
+  constructor() {
+    MockAudioContext.instances.push(this);
+  }
+
   createGain = vi.fn(() => createMockGainNode());
-  createOscillator = vi.fn(() => createMockOscillator());
+  createOscillator = vi.fn(() => {
+    const osc = createMockOscillator();
+    this.oscillators.push(osc);
+    return osc;
+  });
   createBiquadFilter = vi.fn(() => createMockBiquadFilter());
   resume = vi.fn(() => Promise.resolve());
   suspend = vi.fn(() => Promise.resolve());
@@ -93,6 +106,7 @@ describe("AudioService", () => {
   beforeEach(async () => {
     vi.resetModules();
     mockLocalStorage.clear();
+    MockAudioContext.instances = [];
 
     global.AudioContext = MockAudioContext as any;
     (global as any).webkitAudioContext = MockAudioContext;
@@ -129,6 +143,25 @@ describe("AudioService", () => {
 
     it("plays click sound without error", async () => {
       await expect(audioService.play("click")).resolves.not.toThrow();
+    });
+
+    it("queues sounds so they do not overlap", async () => {
+      await audioService.init();
+
+      await audioService.play("complete");
+      await audioService.play("achievement");
+
+      const ctx = MockAudioContext.instances[0];
+      const oscillators = ctx?.oscillators ?? [];
+
+      expect(oscillators.length).toBeGreaterThanOrEqual(7);
+
+      const firstAchievementStart = oscillators[3]?.start.mock.calls[0]?.[0] as
+        | number
+        | undefined;
+      expect(firstAchievementStart).toBeGreaterThanOrEqual(
+        COMPLETE_SOUND_DURATION_SECONDS
+      );
     });
   });
 

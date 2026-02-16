@@ -7,19 +7,16 @@
     "start": "npm install && serve -l 8080 -s .",
     "dev": "npm install && serve -l 8080 -s .",
     "setup": "npm install",
-    "version": "node scripts/update-version.js"
+    "version": "node scripts/update-version.js",
+    "lint": "npm --prefix solid-app run lint",
+    "format": "npm --prefix solid-app run format",
+    "format:check": "npm --prefix solid-app run format:check",
+    "typecheck": "npm --prefix solid-app run typecheck"
   },
   "dependencies": {
     "serve": "14.x"
   },
-  "keywords": [
-    "server",
-    "todo",
-    "pwa",
-    "mobile",
-    "localhost",
-    "hot-reload"
-  ],
+  "keywords": ["server", "todo", "pwa", "mobile", "localhost", "hot-reload"],
   "author": "Raúl Correia",
   "license": "MIT",
   "engines": {
