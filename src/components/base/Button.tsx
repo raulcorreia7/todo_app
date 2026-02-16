@@ -26,7 +26,7 @@ function Button(props: ButtonProps) {
       {...others}
       type={local.type ?? "button"}
       disabled={local.disabled}
-      onClick={local.onClick}
+      onClick={(e) => typeof local.onClick === "function" && local.onClick(e)}
       classList={{
         [local.class ?? ""]: !!local.class,
         button: true,
