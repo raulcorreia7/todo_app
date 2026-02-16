@@ -31,7 +31,7 @@ Premium, offline-friendly todo app with elegant interactions, fast performance, 
 
 ## Constraints
 - Static hosting (GitHub Pages). No server backend.
-- LocalStorage via `storageManager`; events via `bus` and constants.
+- LocalStorage via storage service; state management via SolidJS stores.
 
 ## Success Criteria
 - Fast, intuitive flows; no console errors in steady state.
