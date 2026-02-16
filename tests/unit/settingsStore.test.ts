@@ -90,7 +90,7 @@ describe("settingsStore", () => {
       settingsActions.setTheme("ivory");
       expect(
         document.documentElement.style.getPropertyValue("--color-text-muted")
-      ).toBe("rgba(73, 80, 87, 0.72)");
+      ).toBe("rgba(52, 58, 64, 0.72)");
     });
 
     it("uses improved accent color for midnight theme", () => {
@@ -100,11 +100,11 @@ describe("settingsStore", () => {
       ).toBe("#38bdf8");
     });
 
-    it("uses readable accent color for low-contrast light themes", () => {
+    it("uses readable accent color for ivory theme", () => {
       settingsActions.setTheme("ivory");
       expect(
         document.documentElement.style.getPropertyValue("--accent-color")
-      ).toBe("#6c757d");
+      ).toBe("#5a6268");
     });
 
     it("preserves original accent when contrast is already strong", () => {
