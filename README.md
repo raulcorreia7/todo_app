@@ -1,28 +1,96 @@
 # Luxury Todo
 
-Premium, offline-first todo app with elegant interactions, theming, and subtle audio. Runs as a static site with a lightweight local server for development.
+Premium todo app with gamification, themes, and AI features.
 
-## Quick Start
-- Install: `npm install`
-- Develop: `npm run dev` (serves at `http://localhost:8080`)
-- Version bump: `npm run version` (syncs package, manifest, and commit-count)
+## Tech Stack
 
-## Features
-- Theming via CSS variables, curated palettes, and typography options.
-- Fast, accessible UI with micro-interactions and optional ambient music.
-- Local persistence for tasks, settings, stats, and achievements.
+- **SolidJS** - Reactive UI framework
+- **TypeScript** - Type-safe JavaScript
+- **Vite** - Fast build tool and dev server
+- **pnpm** - Package manager
 
-## Documentation
-- Start here: `docs/README.md` (documentation map)
-- Reverse spec: `docs/reverse-spec.md` (authoritative high-level spec)
-- Prompt: `docs/prompt.md` (copy/paste to regenerate)
-- Contributor guide: `AGENTS.md`
+## Prerequisites
 
-## Project Notes
-- Minimal static hosting (GitHub Pages). No server required.
-- Global event bus coordinates modules; event and storage keys in `js/constants.js`.
+- Node.js 20+
+- pnpm
 
-## Documentation
-- Architecture & Migration: see `docs/architecture-modernization.md` for current architecture, proposed React+TS stack, CSS strategy, and phased plan.
-- Events Catalog: see `docs/events.md` for bus/DOM events and payloads.
-- Contributor Guide: see `AGENTS.md` for project structure, commands, and conventions.
+## Setup
+
+```bash
+pnpm install
+cp .env.example .env
+pnpm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) to view the app.
+
+## Available Scripts
+
+| Command                  | Description              |
+| ------------------------ | ------------------------ |
+| `pnpm run dev`           | Start development server |
+| `pnpm run build`         | Build for production     |
+| `pnpm run preview`       | Preview production build |
+| `pnpm run test`          | Run unit tests           |
+| `pnpm run test:ui`       | Run tests with UI        |
+| `pnpm run test:coverage` | Run tests with coverage  |
+| `pnpm run test:e2e`      | Run end-to-end tests     |
+| `pnpm run lint`          | Lint code                |
+| `pnpm run lint:fix`      | Fix lint errors          |
+| `pnpm run format`        | Format code              |
+| `pnpm run format:check`  | Check formatting         |
+| `pnpm run typecheck`     | Type check               |
+
+## Project Structure
+
+```
+src/
+├── components/       # UI components
+│   ├── ai/          # AI-related components
+│   ├── base/        # Base components (Button, Input, etc.)
+│   ├── center-bar/  # Center action bar
+│   ├── gamification/# Achievements, karma display
+│   ├── layout/      # App layout components
+│   ├── music/       # Music player
+│   ├── settings/    # Settings panel
+│   ├── statistics/  # Stats display
+│   └── tasks/       # Task components
+├── hooks/           # Custom Solid hooks
+├── services/        # Business logic (AI, audio, storage)
+├── stores/          # Solid stores for state management
+├── styles/          # CSS styles and themes
+├── types/           # TypeScript type definitions
+├── utils/           # Utility functions
+└── assets/          # Static assets
+tests/
+├── setup.ts         # Test setup
+└── unit/            # Unit tests
+```
+
+## Environment Variables
+
+Create a `.env` file based on `.env.example`:
+
+```env
+VITE_LLM7_API_KEY=your_api_key_here
+```
+
+## Testing
+
+```bash
+pnpm run test           # Run unit tests
+pnpm run test:coverage  # Run with coverage report
+pnpm run test:e2e       # Run Playwright e2e tests
+```
+
+## Build
+
+```bash
+pnpm run build
+```
+
+Output goes to the `dist/` folder.
+
+## License
+
+MIT
