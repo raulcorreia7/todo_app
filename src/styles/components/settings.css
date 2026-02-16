@@ -149,16 +149,25 @@
   align-items: flex-end;
   justify-content: center;
   padding: var(--space-xs);
+  box-shadow:
+    inset -20px -20px 40px -20px
+      color-mix(in oklab, var(--theme-glow) 30%, transparent),
+    0 2px 8px color-mix(in oklab, var(--theme-glow) 25%, transparent);
 }
 
 .theme-option:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px var(--overlay-backdrop);
+  box-shadow:
+    inset -25px -25px 50px -20px
+      color-mix(in oklab, var(--theme-glow) 40%, transparent),
+    0 6px 16px color-mix(in oklab, var(--theme-glow) 35%, transparent);
 }
 
 .theme-option--active {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px var(--accent-color);
+  border-color: var(--theme-glow);
+  box-shadow:
+    0 0 0 2px var(--theme-glow),
+    0 0 12px color-mix(in oklab, var(--theme-glow) 50%, transparent);
 }
 
 .theme-option--active::after {
@@ -168,8 +177,9 @@
   right: 4px;
   width: 8px;
   height: 8px;
-  background: var(--accent-color);
+  background: var(--theme-glow);
   border-radius: 50%;
+  box-shadow: 0 0 6px var(--theme-glow);
 }
 
 .theme-option__name {

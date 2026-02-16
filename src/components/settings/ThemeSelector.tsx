@@ -19,6 +19,7 @@ export function ThemeSelector() {
               class={`theme-option ${isActive() ? "theme-option--active" : ""}`}
               style={{
                 background: `linear-gradient(135deg, ${theme().primary}, ${theme().accent})`,
+                "--theme-glow": theme().glow,
               }}
               onClick={() => settingsActions.setTheme(themeId)}
               role="option"
