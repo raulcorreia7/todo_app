@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, createEffect, onCleanup } from "solid-js";
 import {
   Settings,
   Music,
@@ -9,6 +9,7 @@ import {
 } from "lucide-solid";
 import { settingsStore, settingsActions } from "@/stores";
 import { audioService } from "@/services/audio";
+import { musicService } from "@/services/music";
 import { BroomIcon } from "@/components/icons";
 import { useCenterBarVisibility } from "@/hooks/useCenterBarVisibility";
 
@@ -24,12 +25,33 @@ export interface CenterActionBarProps {
   onAction?: (action: CenterActionBarEvent) => void;
   isMusicPlaying?: boolean;
   isMusicBuffering?: boolean;
+  musicHintPulse?: number;
 }
 
 export default function CenterActionBar(props: CenterActionBarProps) {
   const { isHidden } = useCenterBarVisibility({
     hideDelay: 2000,
     scrollThreshold: 80,
+  });
+
+  createEffect(() => {
+    const pulse = props.musicHintPulse ?? 0;
+    if (pulse <= 0) return;
+
+    const btn = document.getElementById("cabMusic");
+    if (!btn) return;
+
+    btn.classList.remove("hint");
+    void btn.offsetWidth;
+    btn.classList.add("hint");
+
+    const timeoutId = window.setTimeout(() => {
+      btn.classList.remove("hint");
+    }, 3000);
+
+    onCleanup(() => {
+      window.clearTimeout(timeoutId);
+    });
   });
 
   const handleSettings = () => {
@@ -56,12 +78,18 @@ export default function CenterActionBar(props: CenterActionBarProps) {
     if (btn) {
       btn.classList.remove("sound-enabled", "sound-disabled");
       void btn.offsetWidth;
-      btn.classList.add(settingsStore.soundEnabled ? "sound-disabled" : "sound-enabled");
-      setTimeout(() => btn.classList.remove("sound-enabled", "sound-disabled"), 600);
+      btn.classList.add(
+        settingsStore.soundEnabled ? "sound-disabled" : "sound-enabled"
+      );
+      setTimeout(
+        () => btn.classList.remove("sound-enabled", "sound-disabled"),
+        600
+      );
     }
     const newEnabled = !settingsStore.soundEnabled;
     settingsActions.setSoundEnabled(newEnabled);
     audioService.setEnabled(newEnabled);
+    musicService.setGlobalMute(!newEnabled);
     props.onAction?.("sound");
   };
 
@@ -125,7 +153,7 @@ export default function CenterActionBar(props: CenterActionBarProps) {
             classList={{
               "is-playing": props.isMusicPlaying,
               "is-paused": !props.isMusicPlaying,
-              "buffering": props.isMusicBuffering ?? false,
+              buffering: props.isMusicBuffering ?? false,
             }}
             aria-label="Music"
             title="Music"
@@ -138,12 +166,17 @@ export default function CenterActionBar(props: CenterActionBarProps) {
           <button
             id="cabSound"
             class="btn btn--floating-action"
-            aria-label={settingsStore.soundEnabled ? "Mute sound" : "Enable sound"}
+            aria-label={
+              settingsStore.soundEnabled ? "Mute sound" : "Enable sound"
+            }
             title={settingsStore.soundEnabled ? "Mute sound" : "Enable sound"}
             data-action="sound"
             onClick={handleSound}
           >
-            <Show when={settingsStore.soundEnabled} fallback={<VolumeX size={20} class="lucide-icon" />}>
+            <Show
+              when={settingsStore.soundEnabled}
+              fallback={<VolumeX size={20} class="lucide-icon" />}
+            >
               <Volume2 size={20} class="lucide-icon" />
             </Show>
           </button>
@@ -192,7 +225,9 @@ export default function CenterActionBar(props: CenterActionBarProps) {
 }
 
 function createZenBurst(btn: HTMLElement) {
-  const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const prefersReduced = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
   if (prefersReduced) return;
 
   const rect = btn.getBoundingClientRect();
@@ -200,7 +235,8 @@ function createZenBurst(btn: HTMLElement) {
   const cy = rect.top + rect.height / 2 + window.scrollY;
 
   const container = document.createElement("div");
-  container.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1000;";
+  container.style.cssText =
+    "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1000;";
   document.body.appendChild(container);
 
   const ring = document.createElement("div");

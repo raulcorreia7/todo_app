@@ -23,21 +23,21 @@ export const DEFAULT_THEME_ID: ThemeId = "emerald";
 export const THEMES = {
   midnight: {
     name: "Midnight",
-    primary: "#1a1a2e",
-    secondary: "#16213e",
-    accent: "#0f3460",
-    text: "#e94560",
-    glow: "#e94560",
-    glowPrimary: "#ff6b6b",
-    glowSecondary: "#ffd93d",
-    dangerGlow: "#e94560",
-    dangerShadow: "rgba(233, 69, 96, 0.5)",
-    particleColor: "#ffffff",
+    primary: "#0b1020",
+    secondary: "#111a33",
+    accent: "#1f3b73",
+    text: "#dbeafe",
+    glow: "#60a5fa",
+    glowPrimary: "#38bdf8",
+    glowSecondary: "#93c5fd",
+    dangerGlow: "#ef4444",
+    dangerShadow: "rgba(239, 68, 68, 0.5)",
+    particleColor: "#93c5fd",
     particleCount: 60,
-    particleSize: 4,
-    shadow: "rgba(233, 69, 96, 0.3)",
-    glass: "rgba(26, 26, 46, 0.8)",
-    border: "rgba(233, 69, 96, 0.2)",
+    particleSize: 3,
+    shadow: "rgba(96, 165, 250, 0.32)",
+    glass: "rgba(11, 16, 32, 0.82)",
+    border: "rgba(96, 165, 250, 0.24)",
     tags: ["dark", "cool"],
     animationDuration: "2.5s",
     animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -341,7 +341,7 @@ export const THEMES = {
 export type ThemeConfig = (typeof THEMES)[ThemeId];
 
 const STAT_ICON_COLORS: Partial<Record<ThemeId, string>> = {
-  midnight: "#e94560",
+  midnight: "#60a5fa",
   ivory: "#495057",
   champagne: "#daa520",
   graphite: "#999999",
@@ -369,7 +369,11 @@ export function getThemeGlassBlur(themeId: ThemeId): string {
 }
 
 export function getThemeAICanvasFilter(themeId: ThemeId): string {
-  if (themeId === "arcticSky" || themeId === "aurora" || themeId === "midnight") {
+  if (
+    themeId === "arcticSky" ||
+    themeId === "aurora" ||
+    themeId === "midnight"
+  ) {
     return `drop-shadow(0 0 10px ${THEMES[themeId].glowPrimary})`;
   }
 

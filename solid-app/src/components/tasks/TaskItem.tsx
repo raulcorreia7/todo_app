@@ -1,13 +1,18 @@
 import { createSignal, Show } from "solid-js";
 import type { Task } from "@/types";
 import { taskActions, taskStore } from "@/stores/taskStore";
-import { recordTaskEdit, recordTaskDelete, recordTaskCompletion } from "@/stores/gamificationStore";
+import {
+  recordTaskEdit,
+  recordTaskDelete,
+  recordTaskCompletion,
+} from "@/stores/gamificationStore";
 import { AIRefactorButton } from "@/components/ai";
 import { showConfirmModal } from "@/components/base";
 import type { RefactorResult } from "@/services/ai";
 import { audioService } from "@/services/audio";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
-import { spawnParticles } from "@/utils/particles";
+import { spawnParticles, spawnCelebration } from "@/utils/particles";
+import { vibrate } from "@/utils/haptics";
 
 const TITLE_MAX = 100;
 const DESCRIPTION_MAX = 500;
@@ -35,14 +40,41 @@ export default function TaskItem(props: TaskItemProps) {
   });
 
   function handleToggle(event?: Event) {
-    const taskElement = (event?.target as HTMLElement)?.closest(".task-item") as HTMLElement | null;
+    const taskElement = (event?.target as HTMLElement)?.closest(
+      ".task-item"
+    ) as HTMLElement | null;
     const wasCompleted = props.task.completed;
+    const previousCounts = taskStore.taskCounts();
+
     taskActions.toggleTask(props.task.id);
+
     if (!wasCompleted) {
       recordTaskCompletion();
       audioService.play("complete");
+      vibrate("complete");
+
       if (taskElement) {
         spawnParticles(taskElement);
+        document.dispatchEvent(
+          new CustomEvent("taskCompleted", {
+            detail: { taskElement, taskId: props.task.id },
+          })
+        );
+      }
+
+      const updatedCounts = taskStore.taskCounts();
+      const reachedVictory =
+        updatedCounts.total > 0 &&
+        updatedCounts.completed === updatedCounts.total &&
+        previousCounts.completed !== previousCounts.total;
+
+      if (reachedVictory) {
+        audioService.play("victory");
+        vibrate("victory");
+        if (taskElement) {
+          spawnCelebration(taskElement);
+        }
+        document.dispatchEvent(new CustomEvent("allTasksCompleted"));
       }
     }
   }
@@ -61,11 +93,13 @@ export default function TaskItem(props: TaskItemProps) {
         description: editDescription().trim().slice(0, DESCRIPTION_MAX),
       });
       recordTaskEdit();
+      vibrate("subtle");
     }
     setIsEditing(false);
   }
 
   function handleCancel() {
+    vibrate("subtle");
     setIsEditing(false);
   }
 
@@ -81,6 +115,7 @@ export default function TaskItem(props: TaskItemProps) {
       taskActions.deleteTask(props.task.id);
       recordTaskDelete();
       audioService.play("delete");
+      vibrate("delete");
     }
   }
 
@@ -118,13 +153,22 @@ export default function TaskItem(props: TaskItemProps) {
               placeholder="Task description"
               maxlength={DESCRIPTION_MAX}
             />
-            <span class={charCounterClass(editDescription().length, DESCRIPTION_MAX)}>
+            <span
+              class={charCounterClass(
+                editDescription().length,
+                DESCRIPTION_MAX
+              )}
+            >
               {editDescription().length}/{DESCRIPTION_MAX}
             </span>
           </div>
           <div class="task-edit-actions">
-            <button class="task-edit-save-btn" onClick={handleSave}>Save</button>
-            <button class="task-edit-cancel-btn" onClick={handleCancel}>Cancel</button>
+            <button class="task-edit-save-btn" onClick={handleSave}>
+              Save
+            </button>
+            <button class="task-edit-cancel-btn" onClick={handleCancel}>
+              Cancel
+            </button>
           </div>
         </div>
       }
@@ -135,7 +179,11 @@ export default function TaskItem(props: TaskItemProps) {
         onTouchStart={binders.onTouchStart}
         onTouchMove={binders.onTouchMove}
         onTouchEnd={binders.onTouchEnd}
-        style={isSwiping() ? { transform: `translateX(${swipeOffset() * 0.3}px)` } : undefined}
+        style={
+          isSwiping()
+            ? { transform: `translateX(${swipeOffset() * 0.3}px)` }
+            : undefined
+        }
       >
         <label class="task-checkbox luxury-checkbox">
           <input
@@ -153,19 +201,43 @@ export default function TaskItem(props: TaskItemProps) {
         </div>
         <div class="task-actions">
           <button class="task-edit-btn" onClick={handleEdit} title="Edit task">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-              <path d="m15 5 4 4"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="m15 5 4 4" />
             </svg>
           </button>
           <AIRefactorButton task={props.task} onRefactor={handleAIRefactor} />
-          <button class="task-delete-btn" onClick={handleDelete} title="Delete task">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18"/>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-              <line x1="10" x2="10" y1="11" y2="17"/>
-              <line x1="14" x2="14" y1="11" y2="17"/>
+          <button
+            class="task-delete-btn"
+            onClick={handleDelete}
+            title="Delete task"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              <line x1="10" x2="10" y1="11" y2="17" />
+              <line x1="14" x2="14" y1="11" y2="17" />
             </svg>
           </button>
         </div>

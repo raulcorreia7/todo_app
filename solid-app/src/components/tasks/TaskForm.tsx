@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import type { TaskInput } from "@/types";
 import { taskActions } from "@/stores/taskStore";
 import { audioService } from "@/services/audio";
+import { vibrate } from "@/utils/haptics";
 
 interface TaskFormProps {
   onSubmit?: (input: TaskInput) => void;
@@ -43,12 +44,17 @@ export default function TaskForm(props?: TaskFormProps) {
     }
 
     audioService.play("add");
+    vibrate("add");
     setTitle("");
     setDescription("");
   }
 
   return (
-    <form id="addTaskForm" class="task-form add-task-form" onSubmit={handleSubmit}>
+    <form
+      id="addTaskForm"
+      class="task-form add-task-form"
+      onSubmit={handleSubmit}
+    >
       <div class="task-form__input-container input-container">
         <input
           type="text"
@@ -65,7 +71,14 @@ export default function TaskForm(props?: TaskFormProps) {
           class={`btn btn--primary task-form__add-btn add-task-btn ${confirmAnim() ? "task-form__add-btn--confirm" : ""}`}
           aria-label="Add task"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>

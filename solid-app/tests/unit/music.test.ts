@@ -155,27 +155,62 @@ describe("MusicService", () => {
       musicService.setVolume(1);
       expect(musicService.getVolume()).toBe(1);
     });
+
+    it("tracks global mute state", () => {
+      musicService.setGlobalMute(true);
+      expect(musicService.isGloballyMuted()).toBe(true);
+      musicService.setGlobalMute(false);
+      expect(musicService.isGloballyMuted()).toBe(false);
+    });
+  });
+
+  describe("subscriptions", () => {
+    it("emits state updates to subscribers", () => {
+      const listener = vi.fn();
+      const unsubscribe = musicService.subscribe(listener);
+
+      musicService.play();
+
+      expect(listener).toHaveBeenCalled();
+      const latestCall =
+        listener.mock.calls[listener.mock.calls.length - 1]?.[0];
+      expect(latestCall?.isPlaying).toBe(true);
+
+      unsubscribe();
+    });
   });
 
   describe("persistence", () => {
     it("saves volume to localStorage", () => {
       musicService.setVolume(0.75);
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith("music-volume", "0.75");
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        "music-volume",
+        "0.75"
+      );
     });
 
     it("saves playing state to localStorage", () => {
       musicService.play();
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith("music-playing", "true");
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        "music-playing",
+        "true"
+      );
     });
 
     it("saves paused state to localStorage", () => {
       musicService.pause();
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith("music-playing", "false");
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        "music-playing",
+        "false"
+      );
     });
 
     it("saves current track index to localStorage", () => {
       musicService.next();
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith("music-current-track", "1");
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        "music-current-track",
+        "1"
+      );
     });
   });
 

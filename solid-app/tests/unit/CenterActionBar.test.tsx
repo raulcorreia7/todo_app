@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
 import CenterActionBar from "@/components/center-bar/CenterActionBar";
 import { settingsStore, settingsActions } from "@/stores/settingsStore";
+import { musicService } from "@/services/music";
 
 const mockLocalStorage = (() => {
   let store: Record<string, string> = {};
@@ -78,8 +79,29 @@ describe("CenterActionBar", () => {
       const { container, unmount } = render(() => <CenterActionBar />);
       const actions = ["settings", "music", "sound", "test", "clear", "delete"];
       actions.forEach((action) => {
-        expect(container.querySelector(`[data-action="${action}"]`)).toBeInTheDocument();
+        expect(
+          container.querySelector(`[data-action="${action}"]`)
+        ).toBeInTheDocument();
       });
+      unmount();
+    });
+
+    it("applies music playing class when playing", () => {
+      const { container, unmount } = render(() => (
+        <CenterActionBar isMusicPlaying={true} isMusicBuffering={false} />
+      ));
+      const musicBtn = container.querySelector("#cabMusic");
+      expect(musicBtn).toHaveClass("is-playing");
+      expect(musicBtn).not.toHaveClass("is-paused");
+      unmount();
+    });
+
+    it("applies music buffering class when buffering", () => {
+      const { container, unmount } = render(() => (
+        <CenterActionBar isMusicPlaying={true} isMusicBuffering={true} />
+      ));
+      const musicBtn = container.querySelector("#cabMusic");
+      expect(musicBtn).toHaveClass("buffering");
       unmount();
     });
   });
@@ -87,7 +109,9 @@ describe("CenterActionBar", () => {
   describe("action buttons emit correct actions", () => {
     it("emits settings action when Settings button is clicked", async () => {
       const onAction = vi.fn();
-      const { container, unmount } = render(() => <CenterActionBar onAction={onAction} />);
+      const { container, unmount } = render(() => (
+        <CenterActionBar onAction={onAction} />
+      ));
       const settingsBtn = container.querySelector('[data-action="settings"]');
       if (settingsBtn) {
         await fireEvent.click(settingsBtn);
@@ -98,7 +122,9 @@ describe("CenterActionBar", () => {
 
     it("emits music action when Music button is clicked", async () => {
       const onAction = vi.fn();
-      const { container, unmount } = render(() => <CenterActionBar onAction={onAction} />);
+      const { container, unmount } = render(() => (
+        <CenterActionBar onAction={onAction} />
+      ));
       const musicBtn = container.querySelector('[data-action="music"]');
       if (musicBtn) {
         await fireEvent.click(musicBtn);
@@ -109,7 +135,9 @@ describe("CenterActionBar", () => {
 
     it("emits sound action when Sound button is clicked", async () => {
       const onAction = vi.fn();
-      const { container, unmount } = render(() => <CenterActionBar onAction={onAction} />);
+      const { container, unmount } = render(() => (
+        <CenterActionBar onAction={onAction} />
+      ));
       const soundBtn = container.querySelector('[data-action="sound"]');
       if (soundBtn) {
         await fireEvent.click(soundBtn);
@@ -120,7 +148,9 @@ describe("CenterActionBar", () => {
 
     it("emits test action when Test button is clicked", async () => {
       const onAction = vi.fn();
-      const { container, unmount } = render(() => <CenterActionBar onAction={onAction} />);
+      const { container, unmount } = render(() => (
+        <CenterActionBar onAction={onAction} />
+      ));
       const testBtn = container.querySelector('[data-action="test"]');
       if (testBtn) {
         await fireEvent.click(testBtn);
@@ -131,7 +161,9 @@ describe("CenterActionBar", () => {
 
     it("emits clear action when Clear button is clicked", async () => {
       const onAction = vi.fn();
-      const { container, unmount } = render(() => <CenterActionBar onAction={onAction} />);
+      const { container, unmount } = render(() => (
+        <CenterActionBar onAction={onAction} />
+      ));
       const clearBtn = container.querySelector('[data-action="clear"]');
       if (clearBtn) {
         await fireEvent.click(clearBtn);
@@ -142,7 +174,9 @@ describe("CenterActionBar", () => {
 
     it("emits delete action when Delete button is clicked", async () => {
       const onAction = vi.fn();
-      const { container, unmount } = render(() => <CenterActionBar onAction={onAction} />);
+      const { container, unmount } = render(() => (
+        <CenterActionBar onAction={onAction} />
+      ));
       const deleteBtn = container.querySelector('[data-action="delete"]');
       if (deleteBtn) {
         await fireEvent.click(deleteBtn);
@@ -154,6 +188,7 @@ describe("CenterActionBar", () => {
 
   describe("sound toggle functionality", () => {
     it("toggles sound from enabled to disabled when clicked", async () => {
+      const muteSpy = vi.spyOn(musicService, "setGlobalMute");
       settingsActions.setSoundEnabled(true);
       const { container, unmount } = render(() => <CenterActionBar />);
       const soundBtn = container.querySelector('[data-action="sound"]');
@@ -161,10 +196,12 @@ describe("CenterActionBar", () => {
         await fireEvent.click(soundBtn);
       }
       expect(settingsStore.soundEnabled).toBe(false);
+      expect(muteSpy).toHaveBeenCalledWith(true);
       unmount();
     });
 
     it("toggles sound from disabled to enabled when clicked", async () => {
+      const muteSpy = vi.spyOn(musicService, "setGlobalMute");
       settingsActions.setSoundEnabled(false);
       const { container, unmount } = render(() => <CenterActionBar />);
       const soundBtn = container.querySelector('[data-action="sound"]');
@@ -172,6 +209,7 @@ describe("CenterActionBar", () => {
         await fireEvent.click(soundBtn);
       }
       expect(settingsStore.soundEnabled).toBe(true);
+      expect(muteSpy).toHaveBeenCalledWith(false);
       unmount();
     });
 

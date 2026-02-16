@@ -1,5 +1,6 @@
 import { settingsStore, settingsActions } from "@/stores";
 import { audioService } from "@/services/audio";
+import { musicService } from "@/services/music";
 
 export function SoundSettings() {
   function handleVolumeChange(e: Event) {
@@ -14,6 +15,7 @@ export function SoundSettings() {
     const enabled = target.checked;
     settingsActions.setSoundEnabled(enabled);
     audioService.setEnabled(enabled);
+    musicService.setGlobalMute(!enabled);
   }
 
   return (
@@ -27,7 +29,9 @@ export function SoundSettings() {
         <span class="sound-settings__toggle-label">Sound Enabled</span>
       </label>
       <div class="sound-settings__volume">
-        <label class="sound-settings__volume-label">Volume: {settingsStore.volume}%</label>
+        <label class="sound-settings__volume-label">
+          Volume: {settingsStore.volume}%
+        </label>
         <input
           type="range"
           min="0"
