@@ -33,7 +33,9 @@ describe("ThemeSelector", () => {
   describe("renders all theme options", () => {
     it("renders theme selector container", () => {
       const { getByRole } = render(() => <ThemeSelector />);
-      expect(getByRole("listbox", { name: "Select theme" })).toBeInTheDocument();
+      expect(
+        getByRole("listbox", { name: "Select theme" })
+      ).toBeInTheDocument();
     });
 
     it("renders all theme options", () => {
@@ -47,6 +49,21 @@ describe("ThemeSelector", () => {
       expect(getByText("Midnight")).toBeInTheDocument();
       expect(getByText("Ivory")).toBeInTheDocument();
       expect(getByText("Emerald")).toBeInTheDocument();
+    });
+
+    it("applies per-card label contrast variables", () => {
+      const { getAllByRole } = render(() => <ThemeSelector />);
+      const options = getAllByRole("option");
+      const ivoryOption = options.find((opt) =>
+        opt.getAttribute("aria-label")?.includes("Ivory")
+      );
+
+      expect(ivoryOption?.getAttribute("style")).toContain(
+        "--theme-option-text: #0f172a"
+      );
+      expect(ivoryOption?.getAttribute("style")).toContain(
+        "--theme-option-label-bg"
+      );
     });
   });
 
