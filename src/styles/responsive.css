@@ -1,4 +1,14 @@
 @media (max-width: 768px) {
+  .theme-selector {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: var(--space-xs);
+  }
+
+  .theme-option__name {
+    font-size: 0.5rem;
+    padding: 0.15rem 0.25rem;
+  }
+
   .theme-cards-container {
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 0.5rem;
@@ -19,6 +29,15 @@
 }
 
 @media (max-width: 480px) {
+  .theme-selector {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .theme-option__name {
+    font-size: 0.45rem;
+  }
+
   .theme-cards-container {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.4rem;
