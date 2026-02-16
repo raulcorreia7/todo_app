@@ -1,0 +1,389 @@
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.btn,
+button,
+[role="button"] {
+  transition:
+    transform 180ms var(--ease-silk, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    box-shadow 220ms var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    background-color 180ms ease,
+    color 180ms ease;
+  will-change: transform, box-shadow;
+}
+
+.btn:hover,
+button:hover,
+[role="button"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -6px var(--color-shadow, rgba(0,0,0,0.15));
+}
+
+.btn:active,
+button:active,
+[role="button"]:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px -4px var(--color-shadow, rgba(0,0,0,0.2));
+}
+
+.btn--primary.pulse,
+button.btn--primary.pulse {
+  animation: zenPulse 1.8s var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)) infinite;
+}
+
+.luxury-checkbox {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.luxury-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.luxury-checkbox .checkmark {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-border, rgba(233, 69, 96, 0.2));
+  border-radius: 50%;
+  background: transparent;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 160ms var(--ease-silk, cubic-bezier(0.34, 1.56, 0.64, 1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.luxury-checkbox:hover .checkmark {
+  transform: translateY(-0.5px);
+}
+
+.luxury-checkbox .checkmark::after {
+  content: '✓';
+  font-size: 16px;
+  color: white;
+  font-weight: 700;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 160ms ease, transform 220ms var(--ease-silk, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.luxury-checkbox input[type="checkbox"]:checked + .checkmark {
+  background: linear-gradient(135deg, var(--accent-color, #0f3460), var(--glow-color, #e94560));
+  border-color: var(--accent-color, #0f3460);
+  box-shadow: 0 0 15px var(--glow-color, rgba(233, 69, 96, 0.5));
+}
+
+.luxury-checkbox input[type="checkbox"]:checked + .checkmark::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.task-item {
+  transition:
+    transform 200ms var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    box-shadow 220ms var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    background-color 180ms ease,
+    border-color 180ms ease;
+  will-change: transform, box-shadow;
+  border-radius: var(--radius-lg, 0.75rem);
+}
+
+.ai-edit-nebula {
+  position: relative;
+  z-index: 100;
+  animation: nebula-pulse 1.2s ease-in-out;
+  transform-origin: center;
+}
+
+@media (max-width: 768px) {
+  .ai-edit-nebula {
+    animation-duration: 0.8s;
+  }
+}
+
+@supports not (animation: nebula-pulse) {
+  .ai-edit-nebula {
+    transition: box-shadow 1.2s ease-in-out;
+    box-shadow:
+      0 0 20px 8px rgba(99, 102, 241, 0.6),
+      0 0 30px 12px rgba(233, 69, 96, 0.4);
+  }
+}
+
+.task-item.hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -12px var(--color-shadow, rgba(0,0,0,0.25));
+}
+
+.task-item.new {
+  animation: taskEnter 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.task-item.edit-mode {
+  animation: taskEditEnter 300ms var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+}
+
+.task-item.exit-edit-mode {
+  animation: taskEditExit 260ms ease both;
+}
+
+.ai-refactor-btn {
+  transition:
+    transform 180ms var(--ease-silk, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    box-shadow 220ms var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+
+.ai-refactor-btn.charging {
+  animation: chargingPulse 900ms ease-in-out infinite;
+}
+
+.ai-refactor-btn.loading {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+#volumeBtn.enabled {
+  box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.2);
+}
+
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--glass-primary-hover, rgba(255,255,255,0.18));
+  transition: box-shadow 180ms ease;
+}
+
+.floating-settings {
+  opacity: 0.7;
+  transition: opacity 200ms var(--ease-subtle, ease);
+}
+
+.floating-settings:hover {
+  opacity: 1;
+}
+
+.floating-settings .settings-btn {
+  width: var(--btn-size-secondary, 42px);
+  height: var(--btn-size-secondary, 42px);
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md, 8px);
+  background: var(--glass-primary);
+  border: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition:
+    filter 160ms var(--ease-subtle, ease),
+    box-shadow 200ms var(--ease-velvet, ease);
+}
+
+.floating-settings .settings-btn:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 6px 16px -8px var(--color-shadow, rgba(0,0,0,0.18));
+}
+
+.floating-settings .settings-btn svg {
+  width: var(--icon-size-secondary, 20px);
+  height: var(--icon-size-secondary, 20px);
+}
+
+.floating-actions {
+  transition: transform 260ms var(--ease-subtle, ease), opacity 220ms ease;
+}
+
+.ai-edit-glow {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--animation-duration, 2.5s) var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.ai-edit-glow::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    var(--ai-glow-before-start, var(--glow-primary, #ff6b6b)) 0%,
+    var(--ai-glow-before-mid, var(--glow-secondary, #ffd93d)) 30%,
+    transparent 70%
+  );
+  opacity: 0;
+  box-shadow: var(--ai-glow-before-shadow, none);
+  transform: scale(0.5) rotate(0deg);
+  transition: all var(--animation-duration, 2.5s) var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
+  pointer-events: none;
+}
+
+.ai-edit-glow::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    var(--ai-glow-after-start, var(--glow-secondary, #ffd93d)) 0%,
+    var(--ai-glow-after-mid, var(--glow-primary, #ff6b6b)) 40%,
+    transparent 80%
+  );
+  opacity: 0;
+  box-shadow: var(--ai-glow-after-shadow, none);
+  transform: scale(0.3) rotate(180deg);
+  transition: all var(--animation-duration, 2.5s) var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
+  pointer-events: none;
+}
+
+.ai-edit-glow.active::before,
+.ai-edit-glow.active::after {
+  opacity: 0.8;
+  transform: scale(1.2) rotate(360deg);
+}
+
+.ai-edit-glow.loading::before {
+  animation: aiEditPulse var(--animation-duration, 2.5s) ease-in-out infinite;
+}
+
+.ai-edit-glow.loading::after {
+  animation: aiEditPulse var(--animation-duration, 2.5s) ease-in-out infinite 0.5s;
+}
+
+.ai-edit-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ai-edit-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: var(--ai-canvas-filter, none);
+}
+
+@media (max-width: 768px) {
+  .ai-edit-glow::before,
+  .ai-edit-glow::after {
+    transform: scale(0.3) rotate(0deg);
+  }
+
+  .ai-edit-glow.active::before,
+  .ai-edit-glow.active::after {
+    transform: scale(0.8) rotate(360deg);
+  }
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.ripple-effect:active::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(2);
+}
+
+.hover-glow-effect {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.hover-glow-effect:hover {
+  box-shadow: 0 0 20px var(--glow-color, rgba(99, 102, 241, 0.5));
+  transform: translateY(-1px);
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  animation: sparkle-fade 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes sparkle-fade {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0) translate(var(--sparkle-x, 10px), var(--sparkle-y, -10px));
+  }
+}
+
+.celebration-particle {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  animation: celebration-fall 1.5s ease-out forwards;
+}
+
+@keyframes celebration-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg);
+  }
+}
+
+.achievement-glow {
+  animation: achievement-pulse 0.6s ease-out;
+}
+
+@keyframes achievement-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(46, 213, 115, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(46, 213, 115, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 213, 115, 0);
+  }
+}

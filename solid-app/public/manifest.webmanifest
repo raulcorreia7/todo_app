@@ -1,0 +1,20 @@
+{
+  "name": "Luxury Todo",
+  "short_name": "Todo",
+  "description": "Premium todo app with gamification",
+  "theme_color": "#0c4a3e",
+  "background_color": "#0c4a3e",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

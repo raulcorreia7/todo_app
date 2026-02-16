@@ -1,0 +1,42 @@
+/**
+ * CSS Cascade Layers
+ * Ensures proper ordering of styles from original todo_app to solid-app port
+ * 
+ * Layer order (lowest to highest specificity):
+ * 1. reset - Base resets
+ * 2. tokens - Design tokens/variables
+ * 3. themes - Theme system overrides
+ * 4. base - Foundation styles
+ * 5. layout - Layout components
+ * 6. components - UI components
+ * 7. utilities - Utility classes
+ * 8. overrides - High-specificity overrides
+ */
+
+@layer reset, tokens, themes, base, layout, components, utilities, overrides;
+
+/* Apply layers to imports */
+@layer tokens {
+  @import './tokens.css';
+}
+
+@layer themes {
+  @import './theme-system.css';
+}
+
+@layer base {
+  @import './base.css';
+}
+
+@layer components {
+  @import './components/index.css';
+}
+
+@layer utilities {
+  @import './utilities.css';
+}
+
+/* Animation keyframes need to be in a global context */
+@import './animations.css';
+@import './interactions.css';
+@import './responsive.css';

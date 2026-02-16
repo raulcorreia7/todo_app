@@ -1,0 +1,265 @@
+/**
+ * Design Tokens
+ * Foundational design system tokens - framework-agnostic and reusable
+ * All values are defined as CSS custom properties for easy theming
+ */
+
+:root {
+  /* ==================== Color System ==================== */
+  
+  /* Primary Palette */
+  --color-primary: #0c4a3e;
+  --color-secondary: #134e4a;
+  --color-accent: #2ecc71;
+  --color-text: #e8f8f5;
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-glow: #2ecc71;
+  --color-shadow: rgba(46, 204, 113, 0.3);
+  --color-glass: rgba(12, 74, 62, 0.8);
+  --color-border: rgba(46, 204, 113, 0.2);
+  --color-border-soft: color-mix(in oklab, var(--color-border) 50%, transparent);
+
+  /* Semantic Colors */
+  --color-warning: #ff9800;
+  --color-error: #f44336;
+  --color-success: #4caf50;
+  --color-info: #2196f3;
+
+  /* Glass Effects */
+  --glass-primary: rgba(255, 255, 255, 0.12);
+  --glass-primary-hover: rgba(255, 255, 255, 0.18);
+  --glass-highlight: rgba(255, 255, 255, 0.4);
+  --glass-blur: blur(20px);
+  --glass-radius: var(--radius-lg);
+
+  /* Danger/Destructive Colors */
+  --danger-glass: rgba(231, 76, 60, 0.12);
+  --danger-glass-hover: rgba(231, 76, 60, 0.2);
+  --danger-glass-ghost: rgba(231, 76, 60, 0.08);
+  --danger-glass-ghost-hover: rgba(231, 76, 60, 0.15);
+  --danger-border: rgba(231, 76, 60, 0.3);
+  --danger-border-hover: rgba(231, 76, 60, 0.5);
+  --danger-border-ghost: rgba(231, 76, 60, 0.25);
+  --danger-border-ghost-hover: rgba(231, 76, 60, 0.4);
+  --danger-text: #dc143c;
+  --danger-shadow: rgba(231, 76, 60, 0.2);
+  --danger-shadow-hover: rgba(231, 76, 60, 0.3);
+  --danger-shadow-ghost: rgba(231, 76, 60, 0.15);
+  --danger-shadow-ghost-hover: rgba(231, 76, 60, 0.25);
+  --danger-highlight: rgba(231, 76, 60, 0.4);
+
+  /* Light theme label colors */
+  --stat-label-color-light: rgba(0, 0, 0, 0.7);
+  --stat-value-color-light: var(--color-text);
+
+  /* Shimmer Effects */
+  --shimmer-light: rgba(255, 255, 255, 0.1);
+  --shimmer-medium: rgba(255, 255, 255, 0.2);
+  --shimmer-subtle: rgba(255, 255, 255, 0.05);
+
+  /* UI Semantic Colors */
+  --color-text-on-accent: white;
+  --overlay-backdrop: rgba(0, 0, 0, 0.6);
+  --overlay-backdrop-light: rgba(0, 0, 0, 0.5);
+
+  /* AI Feature Colors */
+  --ai-accent: #6366f1;
+  --ai-accent-glow: rgba(99, 102, 241, 0.3);
+  --success-accent: #10b981;
+  --success-accent-glow: rgba(16, 185, 129, 0.3);
+  --warning-text: #f59e0b;
+  --error-text: #ef4444;
+
+  /* Interactive States */
+  --delete-hover-bg: rgba(255, 71, 87, 0.15);
+  --delete-hover-border: #ff4757;
+
+  /* Inset Shadows */
+  --inset-shadow-light: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --inset-shadow-dark: inset 0 1px 0 rgba(0, 0, 0, 0.08);
+
+  /* Focus Ring */
+  --focus-ring-glow: rgba(233, 69, 96, 0.15);
+  --text-shadow-glow: rgba(0, 0, 0, 0.08);
+
+  /* ==================== Typography ==================== */
+
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-playfair: 'Playfair Display', serif;
+  --font-sf: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-base: var(--font-inter);
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.5rem;
+  --font-size-5xl: 3.5rem;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.6;
+  --line-height-relaxed: 1.8;
+
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+
+  /* ==================== Spacing ==================== */
+
+  --space-0: 0;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 5rem;
+  --space-5xl: 6rem;
+
+  /* Golden Ratio Spacing */
+  --space-golden-xs: 0.1618rem;
+  --space-golden-sm: 0.382rem;
+  --space-golden-md: 0.618rem;
+  --space-golden-lg: 1rem;
+  --space-golden-xl: 1.618rem;
+
+  /* ==================== Border Radius ==================== */
+
+  --radius-none: 0;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ==================== Shadows ==================== */
+
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 20px var(--color-shadow);
+
+  /* ==================== Z-Index Scale ==================== */
+
+  --z-base: 0;
+  --z-content: 10;
+  --z-footer: 100;
+  --z-floating-actions: 900;
+  --z-floating-settings: 920;
+  --z-achievements: 1000;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-panel-backdrop: 1000;
+  --z-panel: 1010;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1100;
+  --z-tooltip: 1200;
+  --z-toast: 1400;
+
+  /* ==================== Transitions ==================== */
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms ease;
+  --effect-transition: 300ms ease;
+
+  /* Easing Functions */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-silk: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-velvet: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-organic: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-subtle: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ==================== Animation Durations ==================== */
+
+  --animation-duration: 2.6s;
+  --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-timing-fast: 150ms;
+  --animation-timing-normal: 300ms;
+  --animation-timing-slow: 500ms;
+
+  /* ==================== Effects ==================== */
+
+  --effect-hover: translateY(-2px);
+  --effect-glow: 0 0 20px var(--color-shadow);
+
+  /* ==================== Component Sizing ==================== */
+
+  --icon-size-xs: 14px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 18px;
+  --icon-size-lg: 20px;
+  --icon-size-xl: 24px;
+  --icon-size-floating: 24px;
+  --icon-size-primary: 20px;
+  --icon-size-secondary: 18px;
+
+  --btn-size-sm: 32px;
+  --btn-size-md: 36px;
+  --btn-size-lg: 44px;
+  --btn-size-xl: 48px;
+  --btn-size-floating: 48px;
+  --btn-size-primary: 44px;
+  --btn-size-secondary: 36px;
+
+  /* ==================== Stat Cards ==================== */
+
+  --stat-card-bg: rgba(255, 255, 255, 0.03);
+  --stat-card-border-color: rgba(255, 255, 255, 0.08);
+  --stat-card-hover-bg: rgba(255, 255, 255, 0.06);
+  --stat-card-hover-border-color: color-mix(in oklab, var(--color-accent) 30%, var(--color-border));
+  --stat-card-hover-shadow: 0 12px 28px var(--color-shadow), 0 0 25px color-mix(in oklab, var(--color-glow) 25%, transparent);
+
+  --stat-icon-bg-start: color-mix(in oklab, var(--color-accent) 15%, transparent);
+  --stat-icon-bg-end: color-mix(in oklab, var(--color-accent) 8%, transparent);
+  --stat-icon-glow-color: color-mix(in oklab, var(--color-glow) 40%, transparent);
+  --stat-icon-hover-glow-color: color-mix(in oklab, var(--color-glow) 60%, transparent);
+  --stat-icon-border-glow-opacity: 0.2;
+
+  --stat-label-color: rgba(255, 255, 255, 0.6);
+  --stat-value-color: var(--color-text);
+  --stat-label-hover-opacity: 1;
+  --stat-value-hover-opacity: 1;
+
+  --stat-progress-ring-bg-color: color-mix(in oklab, var(--color-border) 60%, transparent);
+  --stat-progress-ring-fill-color: var(--color-accent);
+  --stat-progress-ring-glow-color: color-mix(in oklab, var(--color-glow) 50%, transparent);
+
+  /* ==================== Legacy Aliases ==================== */
+  /* These maintain backward compatibility with existing code */
+
+  --primary-color: var(--color-primary);
+  --secondary-color: var(--color-secondary);
+  --accent-color: var(--color-accent);
+  --glow-color: var(--color-glow);
+  --shadow-color: var(--color-shadow);
+  --font-family-inter: var(--font-inter);
+}
+
+/* ==================== Responsive Token Overrides ==================== */
+
+@media (max-width: 768px) {
+  :root {
+    --space-md: 0.75rem;
+    --space-lg: 1rem;
+    --space-xl: 1.5rem;
+  }
+}

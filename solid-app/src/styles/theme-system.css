@@ -1,0 +1,107 @@
+/**
+ * Theme System
+ * Theme values come from src/config/themes.ts via settingsStore.applyTheme.
+ */
+
+@import './tokens.css';
+
+:root {
+  --primary-color: var(--color-primary);
+  --secondary-color: var(--color-secondary);
+  --accent-color: var(--color-accent);
+  --glow-color: var(--color-glow);
+  --shadow-color: var(--color-shadow);
+
+  --glow-primary: var(--color-glow);
+  --glow-secondary: #ffffff;
+
+  --danger-glow-color: var(--danger-text);
+  --danger-glow-shadow: var(--danger-shadow);
+
+  --particle-color: var(--color-glow);
+  --particle-count: 55;
+  --particle-size: 4;
+
+  --glass-bg: var(--color-glass);
+  --glass-border-color: var(--color-border);
+  --glass-border: 1px solid var(--glass-border-color);
+
+  --ai-glow-before-start: var(--glow-primary);
+  --ai-glow-before-mid: var(--glow-secondary);
+  --ai-glow-after-start: var(--glow-secondary);
+  --ai-glow-after-mid: var(--glow-primary);
+  --ai-glow-before-shadow: none;
+  --ai-glow-after-shadow: none;
+  --ai-canvas-filter: none;
+
+  --stat-icon-color: var(--color-glow);
+}
+
+[data-theme-tone="light"] {
+  --stat-label-color: var(--stat-label-color-light);
+  --stat-value-color: var(--stat-value-color-light);
+
+  --stat-card-bg: rgba(0, 0, 0, 0.03);
+  --stat-card-border-color: rgba(0, 0, 0, 0.08);
+  --stat-card-hover-bg: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme-tone="dark"] {
+  --stat-label-color: rgba(255, 255, 255, 0.6);
+  --stat-value-color: var(--color-text);
+
+  --stat-card-bg: rgba(255, 255, 255, 0.03);
+  --stat-card-border-color: rgba(255, 255, 255, 0.08);
+  --stat-card-hover-bg: rgba(255, 255, 255, 0.06);
+}
+
+.font-inter {
+  font-family: var(--font-inter);
+}
+
+.font-playfair {
+  font-family: var(--font-playfair);
+}
+
+.font-sf {
+  font-family: var(--font-sf);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .nebula-bg {
+    animation: none !important;
+  }
+}
+
+.tooltip {
+  position: fixed;
+  background: rgba(17, 24, 39, 0.92);
+  color: var(--color-text, #fff);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
+  z-index: var(--z-tooltip);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 160ms var(--ease-subtle, ease), transform 160ms var(--ease-subtle, ease);
+  pointer-events: none;
+  max-width: 240px;
+  text-align: center;
+  box-shadow: 0 2px 8px color-mix(in oklab, var(--color-shadow, rgba(0, 0, 0, 0.2)) 40%, transparent);
+  border: 1px solid var(--color-border-soft, rgba(255, 255, 255, 0.12));
+}
+
+.tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

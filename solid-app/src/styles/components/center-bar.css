@@ -1,0 +1,399 @@
+/* Center Action Bar Component
+   Scope: only styles for the centered floating actions toolbar
+   Goal: keep icon visibility independent of currentColor regressions
+*/
+
+/* Container and groups (minimal structure hooks) */
+.center-action-bar {}
+.center-action-bar .action-group {}
+.center-action-bar .action-subgroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Vertical separator tweaks */
+.center-action-bar .vertical-separator {
+  height: 20px;
+  width: 1px;
+  background: var(--color-border, rgba(255,255,255,0.22));
+  opacity: 0.9;
+  margin: 0 6px;
+  align-self: center;
+}
+
+/* Buttons: adopt glass look consistent with the design system */
+.center-action-bar .btn--floating-action {
+  color: var(--color-text, #e8f8f5) !important;
+  background: color-mix(in oklab, var(--color-glass, rgba(0,0,0,0.35)) 85%, transparent);
+  border: 1px solid var(--color-border, rgba(255,255,255,0.22));
+  position: relative;
+  z-index: 1;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  flex-grow: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Floating action buttons for mobile (40x40) */
+@media (max-width: 768px) {
+  .center-action-bar .btn--floating-action {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    min-width: 40px;
+  }
+  .center-action-bar .btn--floating-action svg {
+    width: 18px;
+    height: 18px;
+  }
+  .center-action-bar .action-subgroup {
+    gap: 8px;
+  }
+  .center-action-bar .action-group {
+    padding: 4px;
+  }
+}
+
+/* Icons: explicit stroke so visibility does not rely on inherited currentColor */
+.center-action-bar .btn--floating-action svg {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  stroke: var(--color-text, #e8f8f5) !important;
+  fill: none;
+  stroke-width: 2;
+  opacity: 1;
+  filter: none;
+  pointer-events: none;
+  position: relative;
+  z-index: 2;
+}
+
+/* Override global hover behavior for center action bar icons */
+.center-action-bar .btn--floating-action:hover svg {
+  stroke: var(--color-text, #e8f8f5) !important;
+  transform: none;
+}
+
+.center-action-bar .btn--floating-action:hover {
+  background: color-mix(in oklab, var(--color-glass, rgba(0,0,0,0.35)) 90%, transparent);
+  transform: scale(1.05);
+}
+
+.center-action-bar .btn--floating-action:disabled svg {
+  opacity: 0.6;
+}
+
+/* Add focus states for accessibility */
+.center-action-bar .btn--floating-action:focus {
+  outline: 2px solid var(--color-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+.center-action-bar .btn--floating-action:focus-visible {
+  outline: 2px solid var(--color-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+/* Mobile-first container padding to keep edges within bounds */
+.center-action-bar {
+  padding: 0 2.5vw;
+}
+
+/* Tablet/desktop scaling */
+@media (min-width: 640px) {
+  .center-action-bar .btn--floating-action {
+    width: 48px;
+    height: 48px;
+    border-radius: 9999px;
+  }
+  .center-action-bar .btn--floating-action svg {
+    width: 24px;
+    height: 24px;
+  }
+  .center-action-bar .action-subgroup {
+    gap: 8px;
+  }
+  .center-action-bar {
+    padding: 0 1.25vw;
+  }
+  .center-action-bar .vertical-separator {
+    height: 28px;
+    margin: 0 10px;
+  }
+}
+
+/* Sound button animations */
+.center-action-bar .btn--floating-action[data-action="sound"] {
+  transition: all 0.3s ease;
+}
+
+/* Sound enabled animation */
+.center-action-bar .btn--floating-action[data-action="sound"].sound-enabled {
+  animation: soundEnabledPulse 0.6s ease-out;
+}
+
+@keyframes soundEnabledPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 var(--success-accent-glow);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Music button states: playing/buffering/paused */
+.center-action-bar #cabMusic {
+  animation:
+    cabMusicSpin 6s linear infinite,
+    cabMusicBreath 2.4s ease-in-out infinite,
+    cabMusicAura 3.2s ease-in-out infinite;
+  animation-play-state: paused;
+  transform-origin: center;
+  position: relative;
+  isolation: isolate;
+  will-change: transform, box-shadow;
+}
+.center-action-bar #cabMusic .lucide-icon {
+  animation: cabIconSpin 6s linear infinite;
+  animation-play-state: paused;
+  transform-origin: center;
+  will-change: transform;
+}
+
+/* When playing, only resume the timelines instead of re-attaching them */
+.center-action-bar #cabMusic.is-playing {
+  animation-play-state: running !important;
+}
+.center-action-bar #cabMusic.is-playing .lucide-icon {
+  animation-play-state: running !important;
+}
+
+.center-action-bar #cabMusic.is-playing::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 0 var(--ai-accent-glow);
+  pointer-events: none;
+  animation: cabMusicAura 3.2s ease-in-out infinite;
+  animation-play-state: running !important;
+  z-index: -1;
+}
+.center-action-bar #cabMusic.buffering {
+  position: relative;
+  isolation: isolate;
+}
+.center-action-bar #cabMusic.buffering::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid var(--ai-accent-glow);
+  animation: ripple-wave 0.9s ease-out infinite;
+  pointer-events: none;
+}
+/* When paused, only pause the timelines (do not remove animations) */
+.center-action-bar #cabMusic.is-paused {
+  animation-play-state: paused !important;
+}
+.center-action-bar #cabMusic.is-paused .lucide-icon {
+  animation-play-state: paused !important;
+}
+
+@keyframes cabMusicBreath {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 transparent; }
+  50%      { transform: scale(1.03); box-shadow: 0 6px 16px -8px var(--ai-accent-glow); }
+}
+@keyframes cabMusicSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes cabIconSpin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Subtle premium aura pulsing around the button while playing */
+@keyframes cabMusicAura {
+  0%   { box-shadow: 0 0 0 0 var(--ai-accent-glow); }
+  50%  { box-shadow: 0 0 18px 4px var(--ai-accent-glow); }
+  100% { box-shadow: 0 0 0 0 var(--ai-accent-glow); }
+}
+
+@keyframes ripple-wave {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* Settings open pulse hook */
+.center-action-bar #cabSettings.open-pulse {
+  animation: cabOpenPulse 0.5s ease-out;
+}
+@keyframes cabOpenPulse {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 var(--ai-accent-glow); }
+  70%  { transform: scale(1.06); box-shadow: 0 0 0 10px transparent; }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+
+/* Test button sparkle hook */
+.center-action-bar #cabTest.sparkle-hit {
+  animation: cabTestSpark 0.5s ease-out;
+}
+@keyframes cabTestSpark {
+  0%   { box-shadow: 0 0 0 0 var(--success-accent-glow); transform: scale(1); }
+  70%  { box-shadow: 0 0 0 12px transparent; transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+}
+
+/* Clear micro-sweep effect */
+.center-action-bar #cabClear.micro-sweep {
+  animation: cabBroomSweep 0.45s ease-out;
+}
+@keyframes cabBroomSweep {
+  0%   { transform: rotate(0deg); }
+  40%  { transform: rotate(-12deg); }
+  80%  { transform: rotate(6deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Delete danger shake */
+.center-action-bar #cabDelete.danger-shake {
+  animation: shake-x 0.35s linear;
+  box-shadow: 0 0 0 0 var(--danger-shadow-hover);
+}
+
+/* Sound disabled animation */
+.center-action-bar .btn--floating-action[data-action="sound"].sound-disabled {
+  animation: soundDisabledPulse 0.6s ease-out;
+}
+
+@keyframes soundDisabledPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 var(--danger-shadow);
+  }
+  70% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Hint state used by music manager when autoplay blocked */
+.center-action-bar #cabMusic.hint {
+  box-shadow: 0 0 0 0 var(--ai-accent-glow);
+  animation: aiRefactorPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes aiRefactorPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--ai-accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 8px var(--ai-accent-glow);
+  }
+}
+
+/* Zen burst ripple animation */
+@keyframes cabZenRipple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.75;
+  }
+  100% {
+    width: 60px;
+    height: 60px;
+    opacity: 0;
+  }
+}
+
+/* Ensure center action bar and all its children are non-interactive when hidden */
+.center-action-bar.is-hidden {
+  pointer-events: none !important;
+}
+
+.center-action-bar.is-hidden * {
+  pointer-events: none !important;
+}
+
+/* Remove any visual hover/focus feedback when hidden */
+.center-action-bar.is-hidden .btn--floating-action:focus {
+  outline: none;
+}
+
+.center-action-bar.is-hidden .btn--floating-action:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Particle field for test button */
+.center-action-bar .particle-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Positioning for the floating bar */
+.center-action-bar.floating-actions {
+  position: fixed;
+  top: auto;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-floating-actions, 100);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.center-action-bar.floating-actions.is-hidden {
+  transform: translateX(-50%) translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .center-action-bar .btn--floating-action {
+    transition: none;
+  }
+  .center-action-bar #cabMusic,
+  .center-action-bar #cabMusic .lucide-icon {
+    animation: none;
+  }
+  .center-action-bar .btn--floating-action.sound-enabled,
+  .center-action-bar .btn--floating-action.sound-disabled,
+  .center-action-bar #cabSettings.open-pulse,
+  .center-action-bar #cabTest.sparkle-hit,
+  .center-action-bar #cabClear.micro-sweep,
+  .center-action-bar #cabDelete.danger-shake {
+    animation: none;
+  }
+}
