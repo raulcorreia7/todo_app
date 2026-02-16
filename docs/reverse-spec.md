@@ -20,7 +20,7 @@
 - PWA (optional): installable experience with offline cache for core assets; respects the same local‑only data policy.
 - Haptics (optional): subtle, device‑appropriate haptic taps for key confirmations where supported and enabled.
 - Onboarding hints: gentle first‑run affordances (e.g., highlight settings/music availability) that disappear quickly.
-- Extensibility: event‑bus friendly; future features can hook into well‑named events without reshaping core flows.
+- Extensibility: store-based architecture; future features can extend existing stores without reshaping core flows.
   - Modules can listen for a global “app ready” signal to coordinate deferred work.
 
 ## Functional Requirements
