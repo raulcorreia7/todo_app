@@ -215,6 +215,7 @@
   color: var(--color-text);
 }
 
+.modal-close,
 .modal-header__close {
   display: flex;
   align-items: center;
@@ -228,6 +229,18 @@
   cursor: pointer;
   transition: all var(--effect-transition);
   opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.modal-close__icon,
+.modal-close svg,
+.modal-header__close svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }
 
 .close-btn {
@@ -246,12 +259,19 @@
   border-radius: 50%;
 }
 
+.modal-close:hover,
 .modal-header__close:hover,
 .close-btn:hover {
   background: var(--shimmer-light);
   opacity: 1;
   transform: scale(1.1);
   box-shadow: 0 0 15px var(--color-glow);
+}
+
+.modal-close:focus-visible,
+.modal-header__close:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent-color) 40%, transparent);
+  outline-offset: 2px;
 }
 
 .modal-body {

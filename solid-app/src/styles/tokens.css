@@ -6,7 +6,7 @@
 
 :root {
   /* ==================== Color System ==================== */
-  
+
   /* Primary Palette */
   --color-primary: #0c4a3e;
   --color-secondary: #134e4a;
@@ -17,7 +17,11 @@
   --color-shadow: rgba(46, 204, 113, 0.3);
   --color-glass: rgba(12, 74, 62, 0.8);
   --color-border: rgba(46, 204, 113, 0.2);
-  --color-border-soft: color-mix(in oklab, var(--color-border) 50%, transparent);
+  --color-border-soft: color-mix(
+    in oklab,
+    var(--color-border) 50%,
+    transparent
+  );
 
   /* Semantic Colors */
   --color-warning: #ff9800;
@@ -84,9 +88,9 @@
 
   /* ==================== Typography ==================== */
 
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-playfair: 'Playfair Display', serif;
-  --font-sf: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-playfair: "Playfair Display", serif;
+  --font-sf: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-family-base: var(--font-inter);
 
   --font-size-xs: 0.75rem;
@@ -146,9 +150,12 @@
 
   --shadow-none: none;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --shadow-glow: 0 0 20px var(--color-shadow);
 
@@ -225,13 +232,31 @@
   --stat-card-bg: rgba(255, 255, 255, 0.03);
   --stat-card-border-color: rgba(255, 255, 255, 0.08);
   --stat-card-hover-bg: rgba(255, 255, 255, 0.06);
-  --stat-card-hover-border-color: color-mix(in oklab, var(--color-accent) 30%, var(--color-border));
-  --stat-card-hover-shadow: 0 12px 28px var(--color-shadow), 0 0 25px color-mix(in oklab, var(--color-glow) 25%, transparent);
+  --stat-card-hover-border-color: color-mix(
+    in oklab,
+    var(--color-accent) 30%,
+    var(--color-border)
+  );
+  --stat-card-hover-shadow:
+    0 12px 28px var(--color-shadow),
+    0 0 25px color-mix(in oklab, var(--color-glow) 25%, transparent);
 
-  --stat-icon-bg-start: color-mix(in oklab, var(--color-accent) 15%, transparent);
+  --stat-icon-bg-start: color-mix(
+    in oklab,
+    var(--color-accent) 15%,
+    transparent
+  );
   --stat-icon-bg-end: color-mix(in oklab, var(--color-accent) 8%, transparent);
-  --stat-icon-glow-color: color-mix(in oklab, var(--color-glow) 40%, transparent);
-  --stat-icon-hover-glow-color: color-mix(in oklab, var(--color-glow) 60%, transparent);
+  --stat-icon-glow-color: color-mix(
+    in oklab,
+    var(--color-glow) 40%,
+    transparent
+  );
+  --stat-icon-hover-glow-color: color-mix(
+    in oklab,
+    var(--color-glow) 60%,
+    transparent
+  );
   --stat-icon-border-glow-opacity: 0.2;
 
   --stat-label-color: rgba(255, 255, 255, 0.6);
@@ -239,9 +264,17 @@
   --stat-label-hover-opacity: 1;
   --stat-value-hover-opacity: 1;
 
-  --stat-progress-ring-bg-color: color-mix(in oklab, var(--color-border) 60%, transparent);
+  --stat-progress-ring-bg-color: color-mix(
+    in oklab,
+    var(--color-border) 60%,
+    transparent
+  );
   --stat-progress-ring-fill-color: var(--color-accent);
-  --stat-progress-ring-glow-color: color-mix(in oklab, var(--color-glow) 50%, transparent);
+  --stat-progress-ring-glow-color: color-mix(
+    in oklab,
+    var(--color-glow) 50%,
+    transparent
+  );
 
   /* ==================== Legacy Aliases ==================== */
   /* These maintain backward compatibility with existing code */
@@ -249,8 +282,23 @@
   --primary-color: var(--color-primary);
   --secondary-color: var(--color-secondary);
   --accent-color: var(--color-accent);
+  --accent-color-alpha: color-mix(
+    in oklab,
+    var(--accent-color) 18%,
+    transparent
+  );
   --glow-color: var(--color-glow);
   --shadow-color: var(--color-shadow);
+  --surface-primary: var(--glass-bg);
+  --surface-secondary: var(--glass-primary);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-muted);
+  --border-color: var(--color-border);
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
   --font-family-inter: var(--font-inter);
 }
 
