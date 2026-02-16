@@ -39,6 +39,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 Types:
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation
@@ -48,6 +49,7 @@ Types:
 - `chore` - Maintenance
 
 Examples:
+
 ```
 feat(tasks): add priority levels
 fix(ai): handle empty task description

@@ -11,7 +11,9 @@ interface TaskState {
 }
 
 const [newTaskIds, setNewTaskIds] = createSignal<Set<string>>(new Set());
-const [completedTaskIds, setCompletedTaskIds] = createSignal<Set<string>>(new Set());
+const [completedTaskIds, setCompletedTaskIds] = createSignal<Set<string>>(
+  new Set()
+);
 
 const initialState: TaskState = {
   tasks: tasksStorage.get(),
@@ -48,7 +50,10 @@ function addTask(input: TaskInput): void {
   recordTaskCreation();
 }
 
-function updateTask(id: string, updates: Partial<Omit<Task, "id" | "createdAt">>): void {
+function updateTask(
+  id: string,
+  updates: Partial<Omit<Task, "id" | "createdAt">>
+): void {
   setState(
     "tasks",
     (task) => task.id === id,

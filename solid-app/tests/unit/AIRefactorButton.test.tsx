@@ -90,7 +90,10 @@ describe("AIRefactorButton", () => {
       const { container, unmount } = render(() => (
         <AIRefactorButton task={mockTask} onRefactor={vi.fn()} />
       ));
-      expect(container.querySelector(".task-ai-btn")).toHaveAttribute("title", "AI Refactor");
+      expect(container.querySelector(".task-ai-btn")).toHaveAttribute(
+        "title",
+        "AI Refactor"
+      );
       unmount();
     });
   });
@@ -118,7 +121,10 @@ describe("AIRefactorButton", () => {
   describe("click handling", () => {
     it("calls refactorTask when clicked", async () => {
       isConfigured.mockReturnValue(true);
-      refactorTask.mockResolvedValue({ title: "New Title", description: "New Desc" });
+      refactorTask.mockResolvedValue({
+        title: "New Title",
+        description: "New Desc",
+      });
       const { container, unmount } = render(() => (
         <AIRefactorButton task={mockTask} onRefactor={vi.fn()} />
       ));
@@ -148,7 +154,9 @@ describe("AIRefactorButton", () => {
 
     it("shows loading state when clicked", async () => {
       isConfigured.mockReturnValue(true);
-      refactorTask.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
+      refactorTask.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
       const { container, unmount } = render(() => (
         <AIRefactorButton task={mockTask} onRefactor={vi.fn()} />
       ));
@@ -156,13 +164,17 @@ describe("AIRefactorButton", () => {
       if (btn) {
         await fireEvent.click(btn);
       }
-      expect(container.querySelector(".task-ai-btn")).toHaveAttribute("disabled");
+      expect(container.querySelector(".task-ai-btn")).toHaveAttribute(
+        "disabled"
+      );
       unmount();
     });
 
     it("does not call refactorTask when already loading", async () => {
       isConfigured.mockReturnValue(true);
-      refactorTask.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
+      refactorTask.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
       const { container, unmount } = render(() => (
         <AIRefactorButton task={mockTask} onRefactor={vi.fn()} />
       ));

@@ -102,11 +102,15 @@
   max-height: 90vh;
   overflow: hidden;
   transform: scale(0.95);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   margin: 1rem;
   animation: modalAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  position: relative;
+  contain: layout paint;
 }
 
 .modal.active .modal-content {
@@ -114,47 +118,64 @@
   box-shadow:
     0 25px 50px -12px var(--overlay-backdrop),
     0 0 0 1px var(--glass-border-color),
-    0 0 20px var(--color-glow);
-  animation: softBreathingGlow 4s ease-in-out infinite;
+    0 0 14px color-mix(in oklab, var(--color-glow) 50%, transparent);
+  animation: modalSurfaceBreath 4s ease-in-out infinite;
 }
 
 .modal.danger.active .modal-content {
   box-shadow:
     0 25px 50px -12px var(--overlay-backdrop),
     0 0 0 1px var(--glass-border-color),
-    0 0 20px var(--danger-shadow-hover);
-  animation: softBreathingGlowDanger 4s ease-in-out infinite;
+    0 0 14px color-mix(in oklab, var(--danger-shadow-hover) 50%, transparent);
 }
 
-@keyframes softBreathingGlowDanger {
+.modal-content::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-glow) 35%, transparent) 0%,
+    transparent 72%
+  );
+  opacity: 0;
+  transform: scale(0.96);
+  z-index: -1;
+}
+
+.modal.active .modal-content::before {
+  animation: modalAuraBreath 4s ease-in-out infinite;
+}
+
+.modal.danger.active .modal-content::before {
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--danger-shadow-hover) 42%, transparent) 0%,
+    transparent 72%
+  );
+}
+
+@keyframes modalSurfaceBreath {
   0%,
   100% {
-    box-shadow:
-      0 25px 50px -12px var(--overlay-backdrop),
-      0 0 0 1px var(--glass-border-color),
-      0 0 20px var(--danger-shadow-hover);
+    transform: scale(1);
   }
   50% {
-    box-shadow:
-      0 25px 50px -12px var(--overlay-backdrop),
-      0 0 0 1px var(--glass-border-color),
-      0 0 30px var(--danger-shadow-hover);
+    transform: scale(1.004);
   }
 }
 
-@keyframes softBreathingGlow {
+@keyframes modalAuraBreath {
   0%,
   100% {
-    box-shadow:
-      0 25px 50px -12px var(--overlay-backdrop),
-      0 0 0 1px var(--glass-border-color),
-      0 0 20px var(--color-glow);
+    opacity: 0.09;
+    transform: scale(0.96);
   }
   50% {
-    box-shadow:
-      0 25px 50px -12px var(--overlay-backdrop),
-      0 0 0 1px var(--glass-border-color),
-      0 0 30px var(--color-glow);
+    opacity: 0.22;
+    transform: scale(1.01);
   }
 }
 
@@ -328,28 +349,19 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  animation: dangerPulse 2s ease-in-out infinite;
+  animation: dangerBreathGpu 2.4s ease-in-out infinite;
+  will-change: transform;
 }
 
-@keyframes dangerPulse {
+@keyframes dangerBreathGpu {
   0% {
-    box-shadow:
-      0 4px 15px var(--danger-shadow, rgba(239, 68, 68, 0.2)),
-      0 0 0 1px var(--danger-border, rgba(239, 68, 68, 0.3)),
-      0 0 20px var(--danger-shadow, rgba(239, 68, 68, 0.2));
+    transform: translateY(0) scale(1);
   }
   50% {
-    box-shadow:
-      0 4px 20px var(--danger-shadow, rgba(239, 68, 68, 0.2)),
-      0 0 0 1px var(--danger-border, rgba(239, 68, 68, 0.3)),
-      0 0 30px var(--danger-shadow, rgba(239, 68, 68, 0.2)),
-      0 0 40px var(--danger-shadow, rgba(239, 68, 68, 0.2));
+    transform: translateY(-0.5px) scale(1.012);
   }
   100% {
-    box-shadow:
-      0 4px 15px var(--danger-shadow, rgba(239, 68, 68, 0.2)),
-      0 0 0 1px var(--danger-border, rgba(239, 68, 68, 0.3)),
-      0 0 20px var(--danger-shadow, rgba(239, 68, 68, 0.2));
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -373,21 +385,20 @@
 .modal-footer .btn--danger-hybrid::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: linear-gradient(
     90deg,
     transparent,
     var(--shimmer-medium),
     transparent
   );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
   transition: none;
 }
 
 .modal-footer .btn--danger-hybrid:hover::before {
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: modal-shimmer 1.5s ease-in-out infinite;
 }
 
 .modal.deleting .modal-content {
@@ -522,13 +533,13 @@
 }
 
 .modal.deleting .modal-content {
+  position: relative;
+  z-index: 1;
   border-color: var(--accent-color);
   box-shadow:
     0 25px 50px -12px var(--overlay-backdrop),
     0 0 0 1px var(--accent-color),
-    0 0 40px var(--danger-shadow-hover),
-    0 0 60px var(--accent-color),
-    0 0 80px var(--danger-shadow-hover);
+    0 0 24px color-mix(in oklab, var(--danger-shadow-hover) 72%, transparent);
 }
 
 .modal {
@@ -536,20 +547,6 @@
     0 0 30px var(--color-glow),
     0 0 60px var(--color-shadow),
     inset 0 0 20px var(--shimmer-subtle);
-}
-
-.modal.active .modal-content {
-  animation: subtlePulse 4s ease-in-out infinite;
-}
-
-@keyframes subtlePulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.005);
-  }
 }
 
 .modal.delete-modal.active .modal-content {
@@ -580,61 +577,69 @@
 }
 
 .modal.deleting {
-  box-shadow:
-    0 0 240px var(--danger-text),
-    0 0 480px var(--danger-shadow-hover),
-    0 0 720px var(--danger-shadow-hover),
-    inset 0 0 150px var(--glass-primary);
-  animation: glowFadeOut 1.2s ease-out forwards;
+  position: relative;
+  animation: deletingContainerPulse 1.2s ease-out forwards;
 }
 
-@keyframes glowFadeOut {
+.modal.deleting::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--danger-text) 35%, transparent) 0%,
+    color-mix(in oklab, var(--danger-shadow-hover) 20%, transparent) 45%,
+    transparent 75%
+  );
+  opacity: 0;
+  transform: scale(0.92);
+  will-change: transform, opacity;
+  animation: deletingAuraPulse 1.2s ease-out forwards;
+}
+
+@keyframes deletingContainerPulse {
   0% {
-    box-shadow:
-      0 0 240px var(--danger-text),
-      0 0 480px var(--danger-shadow-hover),
-      0 0 720px var(--danger-shadow-hover),
-      inset 0 0 150px var(--glass-primary);
     opacity: 1;
   }
   50% {
-    box-shadow:
-      0 0 300px var(--danger-text),
-      0 0 600px var(--danger-shadow-hover),
-      0 0 900px var(--danger-shadow-hover),
-      inset 0 0 180px var(--glass-primary-hover);
     opacity: 0.9;
   }
   100% {
-    box-shadow:
-      0 0 360px var(--danger-text),
-      0 0 720px var(--danger-shadow-hover),
-      0 0 1080px var(--danger-shadow-hover),
-      inset 0 0 210px var(--glass-highlight);
     opacity: 0.7;
   }
 }
 
-@keyframes shimmer {
+@keyframes deletingAuraPulse {
   0% {
-    left: -100%;
+    opacity: 0.15;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 0.42;
+    transform: scale(1.06);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.16);
+  }
+}
+
+@keyframes modal-shimmer {
+  0% {
+    transform: translate3d(-120%, 0, 0);
     opacity: 0;
   }
   50% {
     opacity: 1;
   }
   100% {
-    left: 100%;
+    transform: translate3d(120%, 0, 0);
     opacity: 0;
-  }
-}
-
-@keyframes wave {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
   }
 }
 
@@ -792,21 +797,20 @@
 .confirm-modal__btn--cancel::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: linear-gradient(
     90deg,
     transparent,
     var(--shimmer-light),
     transparent
   );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
   transition: none;
 }
 
 .confirm-modal__btn--cancel:hover::before {
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: modal-shimmer 1.5s ease-in-out infinite;
 }
 
 .confirm-modal__btn--cancel:hover {
@@ -841,21 +845,20 @@
 .confirm-modal__btn--danger::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: linear-gradient(
     90deg,
     transparent,
     var(--danger-highlight),
     transparent
   );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
   transition: none;
 }
 
 .confirm-modal__btn--danger:hover::before {
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: modal-shimmer 1.5s ease-in-out infinite;
 }
 
 .confirm-modal__btn--danger:hover {

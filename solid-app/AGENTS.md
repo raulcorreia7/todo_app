@@ -15,6 +15,7 @@ This is a SolidJS application using fine-grained reactivity. The architecture fo
 ### Stores
 
 Located in `src/stores/`. Each store exports:
+
 - A reactive store/state signal
 - Actions for modifying state
 
@@ -30,6 +31,7 @@ export const taskActions = {
 ### Components
 
 Components use SolidJS reactivity:
+
 - Use `createSignal` for local state
 - Use `createEffect` for side effects
 - Access store values directly in JSX for reactivity
@@ -37,6 +39,7 @@ Components use SolidJS reactivity:
 ### Services
 
 Located in `src/services/`. Pure functions and async operations:
+
 - `ai.ts` - AI/LLM integration
 - `audio.ts` - Sound effects
 - `music.ts` - Background music
@@ -47,8 +50,8 @@ Located in `src/services/`. Pure functions and async operations:
 Use the `@/` alias for src imports:
 
 ```typescript
-import { taskStore } from '@/stores/taskStore';
-import { Button } from '@/components/base';
+import { taskStore } from "@/stores/taskStore";
+import { Button } from "@/components/base";
 ```
 
 ## Testing

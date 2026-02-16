@@ -13,13 +13,28 @@ const AUDIO_VOLUME_MAX = 100;
 const AUDIO_MASTER_GAIN_SCALE = 0.5;
 const AUDIO_QUEUE_GAP_SECONDS = 0.02;
 
-const SOUND_DURATIONS: Record<SoundType, number> = {
-  add: 0.2,
-  complete: 0.56,
-  delete: 0.2,
-  achievement: 0.8,
-  victory: 0.95,
-  click: 0.05,
+type QueueBehavior = "immediate" | "anchor" | "queued";
+type SoundPriority = "low" | "medium" | "high";
+
+const SOUND_PRIORITY_WEIGHT: Record<SoundPriority, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+};
+
+type SoundPlaybackConfig = {
+  duration: number;
+  queueBehavior: QueueBehavior;
+  priority: SoundPriority;
+};
+
+const SOUND_PLAYBACK_CONFIG: Record<SoundType, SoundPlaybackConfig> = {
+  add: { duration: 0.2, queueBehavior: "immediate", priority: "low" },
+  complete: { duration: 0.56, queueBehavior: "anchor", priority: "medium" },
+  delete: { duration: 0.2, queueBehavior: "immediate", priority: "low" },
+  achievement: { duration: 0.8, queueBehavior: "queued", priority: "high" },
+  victory: { duration: 0.95, queueBehavior: "queued", priority: "high" },
+  click: { duration: 0.05, queueBehavior: "immediate", priority: "low" },
 };
 
 class AudioService {
@@ -28,6 +43,7 @@ class AudioService {
   private initialized = false;
   private soundStep = 0;
   private queuedUntil = 0;
+  private queuedPriorityWeight = 0;
   private readonly queueGap = AUDIO_QUEUE_GAP_SECONDS;
   private pentatonicFreqs = [
     261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33,
@@ -74,8 +90,34 @@ class AudioService {
     const ctx = this.ensureContext();
     if (!ctx || !this.masterGain) return;
 
-    const startTime = Math.max(ctx.currentTime, this.queuedUntil);
-    let duration = SOUND_DURATIONS.click;
+    const playbackConfig = SOUND_PLAYBACK_CONFIG[sound];
+    const soundPriorityWeight = SOUND_PRIORITY_WEIGHT[playbackConfig.priority];
+    const now = ctx.currentTime;
+
+    if (now >= this.queuedUntil) {
+      this.queuedPriorityWeight = 0;
+    }
+
+    const hasQueuedWindow = this.queuedUntil > now;
+
+    let startTime = now;
+    if (playbackConfig.queueBehavior === "queued") {
+      startTime = Math.max(now, this.queuedUntil);
+    } else if (
+      playbackConfig.queueBehavior === "anchor" &&
+      hasQueuedWindow &&
+      this.queuedPriorityWeight > soundPriorityWeight
+    ) {
+      startTime = this.queuedUntil;
+    } else if (
+      playbackConfig.queueBehavior === "immediate" &&
+      hasQueuedWindow &&
+      this.queuedPriorityWeight > soundPriorityWeight
+    ) {
+      return;
+    }
+
+    let duration = SOUND_PLAYBACK_CONFIG.click.duration;
 
     switch (sound) {
       case "add":
@@ -98,7 +140,16 @@ class AudioService {
         break;
     }
 
-    this.queuedUntil = startTime + duration + this.queueGap;
+    if (
+      playbackConfig.queueBehavior === "anchor" ||
+      playbackConfig.queueBehavior === "queued"
+    ) {
+      this.queuedUntil = startTime + duration + this.queueGap;
+      this.queuedPriorityWeight = Math.max(
+        this.queuedPriorityWeight,
+        soundPriorityWeight
+      );
+    }
   }
 
   private playAdd(ctx: AudioContext, startTime: number): number {
@@ -117,9 +168,9 @@ class AudioService {
     gain.connect(this.masterGain!);
 
     osc.start(startTime);
-    osc.stop(startTime + SOUND_DURATIONS.add);
+    osc.stop(startTime + SOUND_PLAYBACK_CONFIG.add.duration);
 
-    return SOUND_DURATIONS.add;
+    return SOUND_PLAYBACK_CONFIG.add.duration;
   }
 
   private playComplete(ctx: AudioContext, startTime: number): number {
@@ -148,7 +199,7 @@ class AudioService {
       osc.stop(noteStart + 0.4);
     });
 
-    return SOUND_DURATIONS.complete;
+    return SOUND_PLAYBACK_CONFIG.complete.duration;
   }
 
   private playDelete(ctx: AudioContext, startTime: number): number {
@@ -173,9 +224,9 @@ class AudioService {
     gain.connect(this.masterGain!);
 
     osc.start(startTime);
-    osc.stop(startTime + SOUND_DURATIONS.delete);
+    osc.stop(startTime + SOUND_PLAYBACK_CONFIG.delete.duration);
 
-    return SOUND_DURATIONS.delete;
+    return SOUND_PLAYBACK_CONFIG.delete.duration;
   }
 
   private playAchievement(ctx: AudioContext, startTime: number): number {
@@ -200,7 +251,7 @@ class AudioService {
       osc.stop(noteStart + 0.5);
     });
 
-    return SOUND_DURATIONS.achievement;
+    return SOUND_PLAYBACK_CONFIG.achievement.duration;
   }
 
   private playVictory(ctx: AudioContext, startTime: number): number {
@@ -231,7 +282,7 @@ class AudioService {
       osc.stop(noteStart + 0.35);
     });
 
-    return SOUND_DURATIONS.victory;
+    return SOUND_PLAYBACK_CONFIG.victory.duration;
   }
 
   private playClick(ctx: AudioContext, startTime: number): number {
@@ -250,9 +301,9 @@ class AudioService {
     gain.connect(this.masterGain!);
 
     osc.start(startTime);
-    osc.stop(startTime + SOUND_DURATIONS.click);
+    osc.stop(startTime + SOUND_PLAYBACK_CONFIG.click.duration);
 
-    return SOUND_DURATIONS.click;
+    return SOUND_PLAYBACK_CONFIG.click.duration;
   }
 
   setVolume(volume: number): void {
@@ -270,9 +321,11 @@ class AudioService {
     if (!enabled) {
       this.audioContext.suspend().catch(() => {});
       this.queuedUntil = this.audioContext.currentTime;
+      this.queuedPriorityWeight = 0;
     } else {
       this.audioContext.resume().catch(() => {});
       this.queuedUntil = this.audioContext.currentTime;
+      this.queuedPriorityWeight = 0;
     }
   }
 

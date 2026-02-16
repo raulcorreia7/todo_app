@@ -98,10 +98,16 @@ function getShownToday(): Set<number> {
   return shownToday;
 }
 
-export function checkForAffirmation(todayCompleted: number): Affirmation | null {
+export function checkForAffirmation(
+  todayCompleted: number
+): Affirmation | null {
   const shown = getShownToday();
 
-  if (!MILESTONE_COUNTS.includes(todayCompleted as typeof MILESTONE_COUNTS[number])) {
+  if (
+    !MILESTONE_COUNTS.includes(
+      todayCompleted as (typeof MILESTONE_COUNTS)[number]
+    )
+  ) {
     return null;
   }
 

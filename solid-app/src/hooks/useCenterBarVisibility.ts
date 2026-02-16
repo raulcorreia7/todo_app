@@ -5,7 +5,9 @@ interface CenterBarVisibilityOptions {
   scrollThreshold?: number;
 }
 
-export function useCenterBarVisibility(options: CenterBarVisibilityOptions = {}) {
+export function useCenterBarVisibility(
+  options: CenterBarVisibilityOptions = {}
+) {
   const { hideDelay = 2000, scrollThreshold = 80 } = options;
 
   const [isVisible, setIsVisible] = createSignal(true);

@@ -54,7 +54,7 @@ export function addKarma(points: number): void {
   setGamificationState(
     produce((state) => {
       state.karmaPoints += points;
-    }),
+    })
   );
   persist();
 }
@@ -63,8 +63,11 @@ export function unlockAchievement(achievement: Achievement): void {
   if (hasAchievement(achievement.id)) return;
   setGamificationState(
     produce((state) => {
-      state.achievements.push({ ...achievement, unlockedAt: new Date().toISOString() });
-    }),
+      state.achievements.push({
+        ...achievement,
+        unlockedAt: new Date().toISOString(),
+      });
+    })
   );
   audioService.play("achievement");
   showAchievementNotification(achievement);
@@ -75,10 +78,13 @@ export function recordTaskCreation(): void {
   setGamificationState(
     produce((state) => {
       state.firstTaskCreated = true;
-    }),
+    })
   );
   addKarma(1);
-  checkAchievements({ completed: gamificationState.dailyStats.completed, currentStreak: 0 });
+  checkAchievements({
+    completed: gamificationState.dailyStats.completed,
+    currentStreak: 0,
+  });
 }
 
 export function recordTaskCompletion(): void {
@@ -89,12 +95,17 @@ export function recordTaskCompletion(): void {
         state.dailyStats = { ...defaultDailyStats, lastUpdate: today };
       }
       state.dailyStats.completed += 1;
-    }),
+    })
   );
   addKarma(1);
-  checkAchievements({ completed: gamificationState.dailyStats.completed, currentStreak: 0 });
+  checkAchievements({
+    completed: gamificationState.dailyStats.completed,
+    currentStreak: 0,
+  });
 
-  const affirmation = checkForAffirmation(gamificationState.dailyStats.completed);
+  const affirmation = checkForAffirmation(
+    gamificationState.dailyStats.completed
+  );
   if (affirmation) {
     displayAffirmation(affirmation);
   }
@@ -109,10 +120,13 @@ export function recordTaskEdit(): void {
       }
       state.dailyStats.edited += 1;
       state.firstTaskEdited = true;
-    }),
+    })
   );
   addKarma(2);
-  checkAchievements({ completed: gamificationState.dailyStats.completed, currentStreak: 0 });
+  checkAchievements({
+    completed: gamificationState.dailyStats.completed,
+    currentStreak: 0,
+  });
 }
 
 export function recordTaskDelete(): void {
@@ -124,10 +138,13 @@ export function recordTaskDelete(): void {
       }
       state.dailyStats.deleted += 1;
       state.firstTaskDeleted = true;
-    }),
+    })
   );
   persist();
-  checkAchievements({ completed: gamificationState.dailyStats.completed, currentStreak: 0 });
+  checkAchievements({
+    completed: gamificationState.dailyStats.completed,
+    currentStreak: 0,
+  });
 }
 
 export function recordAIEdit(wordsCount: number = 0): void {
@@ -135,10 +152,13 @@ export function recordAIEdit(wordsCount: number = 0): void {
     produce((state) => {
       state.aiEditCount += 1;
       state.aiWordsEdited += wordsCount;
-    }),
+    })
   );
   persist();
-  checkAchievements({ completed: gamificationState.dailyStats.completed, currentStreak: 0 });
+  checkAchievements({
+    completed: gamificationState.dailyStats.completed,
+    currentStreak: 0,
+  });
 }
 
 export function resetStats(): void {
@@ -146,7 +166,10 @@ export function resetStats(): void {
   persist();
 }
 
-export function checkAchievements(stats: { completed: number; currentStreak: number }): void {
+export function checkAchievements(stats: {
+  completed: number;
+  currentStreak: number;
+}): void {
   for (const achievement of ACHIEVEMENTS) {
     if (hasAchievement(achievement.id)) continue;
     if (achievement.condition?.(gamificationState, stats)) {

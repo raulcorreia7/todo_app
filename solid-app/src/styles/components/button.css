@@ -12,25 +12,35 @@
   backdrop-filter: var(--glass-blur);
   color: var(--color-text);
   border: var(--glass-border);
-  transition: all var(--effect-transition);
+  transition:
+    transform var(--effect-transition),
+    box-shadow var(--effect-transition),
+    background-color var(--effect-transition),
+    border-color var(--effect-transition),
+    color var(--effect-transition);
   outline: none;
   position: relative;
   overflow: hidden;
+  will-change: transform;
 }
 
 .btn::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, var(--shimmer-light), transparent);
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-light),
+    transparent
+  );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
   transition: none;
 }
 
 .btn:hover::before {
-  animation: wave 2s linear infinite;
+  animation: btn-wave 2s linear infinite;
 }
 
 .btn:hover {
@@ -57,30 +67,57 @@
 .btn--primary {
   background: var(--glass-primary);
   border-color: var(--color-border);
-  animation: zenFloat 3s ease-in-out infinite;
   position: relative;
   overflow: hidden;
 }
 
 .btn--primary::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, var(--shimmer-medium), transparent);
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-medium),
+    transparent
+  );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
   transition: none;
 }
 
 .btn--primary:hover::before {
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: btn-shimmer 1.5s ease-in-out infinite;
 }
 
-@keyframes shimmer {
-  0%   { left: -100%; opacity: 0; }
-  50%  { opacity: 1; }
-  100% { left: 100%; opacity: 0; }
+@keyframes btn-shimmer {
+  0% {
+    opacity: 0;
+    transform: translate3d(-120%, 0, 0);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(120%, 0, 0);
+  }
+}
+
+@keyframes btn-wave {
+  0% {
+    transform: translate3d(-120%, 0, 0);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(120%, 0, 0);
+    opacity: 0;
+  }
 }
 
 .btn--primary:hover {
@@ -101,7 +138,6 @@
   background: var(--danger-glass);
   border-color: var(--danger-border);
   color: var(--danger-text);
-  animation: dangerPulse 2s ease-in-out infinite;
 }
 
 .btn--danger:hover {

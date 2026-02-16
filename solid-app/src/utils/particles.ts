@@ -31,12 +31,27 @@ interface CompletionEffectState {
   duration: number;
 }
 
+const DEFAULT_SPARKLE_COUNT = 16;
+const DEFAULT_STAR_COUNT = 6;
+const MAX_ACTIVE_EFFECTS = 3;
+const DEFAULT_VICTORY_WAVES = 5;
+const MAX_CANVAS_PIXEL_RATIO = 2;
+
 class AnimationManager {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private isAnimating = false;
   private activeEffects: CompletionEffectState[] = [];
   private animationId: number | null = null;
+  private pixelRatio = 1;
+  private spriteCache = new Map<string, HTMLCanvasElement>();
+  private lastFrameTime = 0;
+  private onResize = () => this.resizeCanvas();
+  private onVisibilityChange = () => {
+    if (!document.hidden && this.activeEffects.length > 0) {
+      this.startAnimationLoop();
+    }
+  };
 
   init(): void {
     if (typeof window === "undefined") return;
@@ -57,18 +72,31 @@ class AnimationManager {
       z-index: 1000;
       opacity: 0;
       transition: opacity 0.2s ease;
+      will-change: opacity;
+      contain: strict;
     `;
 
     document.body.appendChild(this.canvas);
-    this.ctx = this.canvas.getContext("2d");
+    this.ctx = this.canvas.getContext("2d", {
+      alpha: true,
+      desynchronized: true,
+    });
     this.resizeCanvas();
-    window.addEventListener("resize", () => this.resizeCanvas());
+    window.addEventListener("resize", this.onResize, { passive: true });
   }
 
   private resizeCanvas(): void {
-    if (!this.canvas) return;
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    if (!this.canvas || !this.ctx) return;
+
+    this.pixelRatio = Math.min(
+      window.devicePixelRatio || 1,
+      MAX_CANVAS_PIXEL_RATIO
+    );
+    this.canvas.width = Math.floor(window.innerWidth * this.pixelRatio);
+    this.canvas.height = Math.floor(window.innerHeight * this.pixelRatio);
+    this.canvas.style.width = `${window.innerWidth}px`;
+    this.canvas.style.height = `${window.innerHeight}px`;
+    this.ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
   }
 
   private setupEventListeners(): void {
@@ -79,6 +107,8 @@ class AnimationManager {
     document.addEventListener("allTasksCompleted", () => {
       this.createVictoryCelebration();
     });
+
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
   }
 
   private showCanvas(): void {
@@ -93,7 +123,12 @@ class AnimationManager {
     }
   }
 
-  private getThemeColors(): { primary: string; secondary: string; accent: string; glow: string } {
+  private getThemeColors(): {
+    primary: string;
+    secondary: string;
+    accent: string;
+    glow: string;
+  } {
     const style = getComputedStyle(document.documentElement);
     const glow = style.getPropertyValue("--color-glow").trim() || "#6366f1";
     const accent = style.getPropertyValue("--color-accent").trim() || "#8b5cf6";
@@ -107,7 +142,11 @@ class AnimationManager {
   }
 
   createTaskCompleteEffect(taskElement: HTMLElement): void {
-    if (!taskElement) return;
+    if (!taskElement || document.hidden) return;
+
+    if (this.activeEffects.length >= MAX_ACTIVE_EFFECTS) {
+      this.activeEffects.shift();
+    }
 
     const rect = taskElement.getBoundingClientRect();
     const scrollY = window.scrollY;
@@ -134,7 +173,7 @@ class AnimationManager {
     const colors = this.getThemeColors();
     const particles: Particle[] = [];
 
-    const sparkleCount = 16;
+    const sparkleCount = DEFAULT_SPARKLE_COUNT;
     for (let i = 0; i < sparkleCount; i++) {
       const angle = (i / sparkleCount) * Math.PI * 2 + Math.random() * 0.3;
       const velocity = 3 + Math.random() * 4;
@@ -145,7 +184,8 @@ class AnimationManager {
         y,
         vx: Math.cos(angle) * velocity,
         vy: Math.sin(angle) * velocity - 2,
-        size: type === "confetti" ? 4 + Math.random() * 4 : 2 + Math.random() * 3,
+        size:
+          type === "confetti" ? 4 + Math.random() * 4 : 2 + Math.random() * 3,
         life: 1,
         decay: 0.015 + Math.random() * 0.01,
         color: type === "confetti" ? this.randomConfettiColor() : colors.glow,
@@ -157,7 +197,7 @@ class AnimationManager {
       });
     }
 
-    const starCount = 6;
+    const starCount = DEFAULT_STAR_COUNT;
     for (let i = 0; i < starCount; i++) {
       const angle = (i / starCount) * Math.PI * 2;
       const velocity = 2 + Math.random() * 2;
@@ -198,39 +238,52 @@ class AnimationManager {
   private startAnimationLoop(): void {
     if (this.isAnimating) return;
     this.isAnimating = true;
+    this.lastFrameTime = performance.now();
     this.animate();
   }
 
   private animate(): void {
     if (!this.ctx || !this.canvas) return;
 
-    const currentScrollY = window.scrollY;
-    const scrollDelta = currentScrollY - (this.activeEffects[0]?.scrollOffset || 0);
+    if (document.hidden) {
+      this.isAnimating = false;
+      this.animationId = null;
+      return;
+    }
 
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const currentScrollY = window.scrollY;
+    const now = performance.now();
+    const deltaScale = Math.min((now - this.lastFrameTime) / 16.6667, 1.5);
+    this.lastFrameTime = now;
+    const width = this.canvas.width / this.pixelRatio;
+    const height = this.canvas.height / this.pixelRatio;
+
+    this.ctx.clearRect(0, 0, width, height);
 
     for (let e = this.activeEffects.length - 1; e >= 0; e--) {
       const effect = this.activeEffects[e];
       if (!effect) {
         continue;
       }
+
+      const effectScrollDelta = currentScrollY - effect.scrollOffset;
       let activeCount = 0;
 
       for (const particle of effect.particles) {
         if (particle.life <= 0) continue;
         activeCount++;
 
-        particle.x += particle.vx;
-        particle.y += particle.vy - scrollDelta;
+        particle.x += particle.vx * deltaScale;
+        particle.y += (particle.vy - effectScrollDelta) * deltaScale;
 
-        particle.vy += 0.15;
-        particle.vx *= 0.98;
+        particle.vy += 0.15 * deltaScale;
+        particle.vx *= Math.pow(0.98, deltaScale);
 
-        particle.rotation += particle.rotationSpeed;
-        particle.life -= particle.decay;
+        particle.rotation += particle.rotationSpeed * deltaScale;
+        particle.life -= particle.decay * deltaScale;
         particle.opacity = Math.max(0, particle.life);
 
-        this.drawParticle(particle, scrollDelta);
+        this.drawParticle(particle);
       }
 
       effect.scrollOffset = currentScrollY;
@@ -249,155 +302,196 @@ class AnimationManager {
     }
   }
 
-  private drawParticle(particle: Particle, _scrollDelta: number): void {
+  private drawParticle(particle: Particle): void {
     if (!this.ctx) return;
+
+    const sprite = this.getParticleSprite(particle);
 
     this.ctx.save();
     this.ctx.globalAlpha = particle.opacity;
+    this.ctx.translate(particle.x, particle.y);
 
-    switch (particle.type) {
-      case "sparkle":
-        this.drawSparkle(particle);
-        break;
-      case "confetti":
-        this.drawConfetti(particle);
-        break;
-      case "star":
-        this.drawStar(particle);
-        break;
+    if (particle.type !== "sparkle") {
+      this.ctx.rotate(particle.rotation);
     }
 
-    this.ctx.restore();
-  }
-
-  private drawSparkle(particle: Particle): void {
-    if (!this.ctx) return;
-
-    const gradient = this.ctx.createRadialGradient(
-      particle.x, particle.y, 0,
-      particle.x, particle.y, particle.size * 3
-    );
-    gradient.addColorStop(0, particle.color);
-    gradient.addColorStop(0.3, particle.color + "80");
-    gradient.addColorStop(1, "transparent");
-
-    this.ctx.fillStyle = gradient;
-    this.ctx.beginPath();
-    this.ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    this.ctx.strokeStyle = particle.color;
-    this.ctx.lineWidth = 1.5;
-    this.ctx.beginPath();
-    this.ctx.moveTo(particle.x - particle.size * 2, particle.y);
-    this.ctx.lineTo(particle.x + particle.size * 2, particle.y);
-    this.ctx.moveTo(particle.x, particle.y - particle.size * 2);
-    this.ctx.lineTo(particle.x, particle.y + particle.size * 2);
-    this.ctx.stroke();
-
-    this.ctx.fillStyle = "#ffffff";
-    this.ctx.beginPath();
-    this.ctx.arc(particle.x, particle.y, particle.size * 0.5, 0, Math.PI * 2);
-    this.ctx.fill();
-  }
-
-  private drawConfetti(particle: Particle): void {
-    if (!this.ctx) return;
-
-    this.ctx.save();
-    this.ctx.translate(particle.x, particle.y);
-    this.ctx.rotate(particle.rotation);
-
-    this.ctx.fillStyle = particle.color;
-    this.ctx.shadowColor = particle.color;
-    this.ctx.shadowBlur = 8;
-
-    this.ctx.beginPath();
-    this.ctx.roundRect(-particle.size / 2, -particle.size / 4, particle.size, particle.size / 2, 2);
-    this.ctx.fill();
+    this.ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
 
     this.ctx.restore();
   }
 
-  private drawStar(particle: Particle): void {
-    if (!this.ctx) return;
+  private getParticleSprite(particle: Particle): HTMLCanvasElement {
+    const key = `${particle.type}:${Math.round(particle.size * 10)}:${particle.color}:${particle.glowColor}`;
+    const cachedSprite = this.spriteCache.get(key);
+    if (cachedSprite) {
+      return cachedSprite;
+    }
 
-    this.ctx.save();
-    this.ctx.translate(particle.x, particle.y);
-    this.ctx.rotate(particle.rotation);
+    if (this.spriteCache.size > 96) {
+      this.spriteCache.clear();
+    }
 
-    const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, particle.size * 2);
-    gradient.addColorStop(0, "#ffffff");
-    gradient.addColorStop(0.3, particle.color);
-    gradient.addColorStop(1, "transparent");
+    const sprite = document.createElement("canvas");
+    const spriteSize = Math.max(20, Math.ceil(particle.size * 10));
+    sprite.width = spriteSize;
+    sprite.height = spriteSize;
 
-    this.ctx.fillStyle = gradient;
-    this.ctx.beginPath();
+    const ctx = sprite.getContext("2d");
+    if (!ctx) {
+      this.spriteCache.set(key, sprite);
+      return sprite;
+    }
 
-    const spikes = 5;
-    const outerRadius = particle.size;
-    const innerRadius = particle.size * 0.4;
+    const center = spriteSize / 2;
 
-    for (let i = 0; i < spikes * 2; i++) {
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const angle = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
-      const px = Math.cos(angle) * radius;
-      const py = Math.sin(angle) * radius;
+    if (particle.type === "sparkle") {
+      const glowRadius = particle.size * 3;
+      const gradient = ctx.createRadialGradient(
+        center,
+        center,
+        0,
+        center,
+        center,
+        glowRadius
+      );
+      gradient.addColorStop(0, particle.color);
+      gradient.addColorStop(0.3, `${particle.color}80`);
+      gradient.addColorStop(1, "transparent");
 
-      if (i === 0) {
-        this.ctx.moveTo(px, py);
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(center, center, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = particle.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(center - particle.size * 2, center);
+      ctx.lineTo(center + particle.size * 2, center);
+      ctx.moveTo(center, center - particle.size * 2);
+      ctx.lineTo(center, center + particle.size * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(center, center, particle.size * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (particle.type === "confetti") {
+      const confettiWidth = particle.size;
+      const confettiHeight = particle.size / 2;
+      ctx.fillStyle = particle.color;
+      ctx.shadowColor = particle.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(
+          center - confettiWidth / 2,
+          center - confettiHeight / 2,
+          confettiWidth,
+          confettiHeight,
+          2
+        );
       } else {
-        this.ctx.lineTo(px, py);
+        ctx.rect(
+          center - confettiWidth / 2,
+          center - confettiHeight / 2,
+          confettiWidth,
+          confettiHeight
+        );
       }
+
+      ctx.fill();
     }
 
-    this.ctx.closePath();
-    this.ctx.fill();
+    if (particle.type === "star") {
+      const outerRadius = particle.size;
+      const innerRadius = particle.size * 0.4;
+      const gradient = ctx.createRadialGradient(
+        center,
+        center,
+        0,
+        center,
+        center,
+        particle.size * 2
+      );
+      gradient.addColorStop(0, "#ffffff");
+      gradient.addColorStop(0.3, particle.color);
+      gradient.addColorStop(1, "transparent");
 
-    this.ctx.shadowColor = particle.glowColor;
-    this.ctx.shadowBlur = 15;
-    this.ctx.fill();
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
 
-    this.ctx.restore();
+      const spikes = 5;
+      for (let i = 0; i < spikes * 2; i++) {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const angle = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+        const pointX = center + Math.cos(angle) * radius;
+        const pointY = center + Math.sin(angle) * radius;
+
+        if (i === 0) {
+          ctx.moveTo(pointX, pointY);
+        } else {
+          ctx.lineTo(pointX, pointY);
+        }
+      }
+
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowColor = particle.glowColor;
+      ctx.shadowBlur = 15;
+      ctx.fill();
+    }
+
+    this.spriteCache.set(key, sprite);
+    return sprite;
   }
 
   createVictoryCelebration(): void {
+    if (document.hidden) return;
     this.showCanvas();
 
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
 
     const taskEl = document.createElement("div");
-    taskEl.getBoundingClientRect = () => ({
-      left: centerX - 50,
-      top: centerY - 25,
-      width: 100,
-      height: 50,
-      right: centerX + 50,
-      bottom: centerY + 25,
-      x: centerX - 50,
-      y: centerY - 25,
-      toJSON: () => ({}),
-    } as DOMRect);
+    taskEl.getBoundingClientRect = () =>
+      ({
+        left: centerX - 50,
+        top: centerY - 25,
+        width: 100,
+        height: 50,
+        right: centerX + 50,
+        bottom: centerY + 25,
+        x: centerX - 50,
+        y: centerY - 25,
+        toJSON: () => ({}),
+      }) as DOMRect;
 
     this.createTaskCompleteEffect(taskEl);
 
-    for (let i = 0; i < 5; i++) {
+    const waves = DEFAULT_VICTORY_WAVES;
+
+    for (let i = 0; i < waves; i++) {
       setTimeout(() => {
         const offsetX = (Math.random() - 0.5) * 400;
         const offsetY = (Math.random() - 0.5) * 300;
         const el = document.createElement("div");
-        el.getBoundingClientRect = () => ({
-          left: centerX + offsetX - 25,
-          top: centerY + offsetY - 12,
-          width: 50,
-          height: 25,
-          right: centerX + offsetX + 25,
-          bottom: centerY + offsetY + 12,
-          x: centerX + offsetX - 25,
-          y: centerY + offsetY - 12,
-          toJSON: () => ({}),
-        } as DOMRect);
+        el.getBoundingClientRect = () =>
+          ({
+            left: centerX + offsetX - 25,
+            top: centerY + offsetY - 12,
+            width: 50,
+            height: 25,
+            right: centerX + offsetX + 25,
+            bottom: centerY + offsetY + 12,
+            x: centerX + offsetX - 25,
+            y: centerY + offsetY - 12,
+            toJSON: () => ({}),
+          }) as DOMRect;
         this.createTaskCompleteEffect(el);
       }, i * 150);
     }
@@ -408,7 +502,10 @@ class AnimationManager {
     this.createTaskCompleteEffect(element);
   }
 
-  createAIEditFeedback(element: HTMLElement, _type: "active" | "success" | "loading" = "active"): void {
+  createAIEditFeedback(
+    element: HTMLElement,
+    _type: "active" | "success" | "loading" = "active"
+  ): void {
     if (!element) return;
     this.createTaskCompleteEffect(element);
   }
@@ -461,6 +558,11 @@ class AnimationManager {
     if (this.canvas) {
       this.canvas.remove();
     }
+    this.spriteCache.clear();
+    this.activeEffects = [];
+    this.isAnimating = false;
+    window.removeEventListener("resize", this.onResize);
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
   }
 }
 

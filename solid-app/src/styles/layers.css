@@ -17,26 +17,26 @@
 
 /* Apply layers to imports */
 @layer tokens {
-  @import './tokens.css';
+  @import "./tokens.css";
 }
 
 @layer themes {
-  @import './theme-system.css';
+  @import "./theme-system.css";
 }
 
 @layer base {
-  @import './base.css';
+  @import "./base.css";
 }
 
 @layer components {
-  @import './components/index.css';
+  @import "./components/index.css";
 }
 
 @layer utilities {
-  @import './utilities.css';
+  @import "./utilities.css";
 }
 
 /* Animation keyframes need to be in a global context */
-@import './animations.css';
-@import './interactions.css';
-@import './responsive.css';
+@import "./animations.css";
+@import "./interactions.css";
+@import "./responsive.css";

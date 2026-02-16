@@ -51,18 +51,15 @@ describe("ThemeSelector", () => {
       expect(getByText("Emerald")).toBeInTheDocument();
     });
 
-    it("applies per-card label contrast variables", () => {
+    it("uses consistent swatch label styles", () => {
       const { getAllByRole } = render(() => <ThemeSelector />);
       const options = getAllByRole("option");
       const ivoryOption = options.find((opt) =>
         opt.getAttribute("aria-label")?.includes("Ivory")
       );
 
-      expect(ivoryOption?.getAttribute("style")).toContain(
-        "--theme-option-text: #0f172a"
-      );
-      expect(ivoryOption?.getAttribute("style")).toContain(
-        "--theme-option-label-bg"
+      expect(ivoryOption?.getAttribute("style")).not.toContain(
+        "--theme-option-text"
       );
     });
   });

@@ -19,12 +19,21 @@ interface SwipeGestureReturn {
   feedbackText: () => string;
 }
 
-export function useSwipeGesture(options: SwipeGestureOptions): SwipeGestureReturn {
-  const { onSwipeRight, onSwipeLeft, threshold = 80, showFeedback = true } = options;
+export function useSwipeGesture(
+  options: SwipeGestureOptions
+): SwipeGestureReturn {
+  const {
+    onSwipeRight,
+    onSwipeLeft,
+    threshold = 80,
+    showFeedback = true,
+  } = options;
 
   const [swipeOffset, setSwipeOffset] = createSignal(0);
   const [isSwiping, setIsSwiping] = createSignal(false);
-  const [swipeDirection, setSwipeDirection] = createSignal<"left" | "right" | null>(null);
+  const [swipeDirection, setSwipeDirection] = createSignal<
+    "left" | "right" | null
+  >(null);
   const [feedbackText, setFeedbackText] = createSignal("");
 
   let touchStartX = 0;
@@ -123,7 +132,9 @@ export function useSwipeGesture(options: SwipeGestureOptions): SwipeGestureRetur
     if (!touch) return;
 
     const target = e.target as HTMLElement;
-    currentElement = target.closest ? target.closest(".task-item") as HTMLElement : null;
+    currentElement = target.closest
+      ? (target.closest(".task-item") as HTMLElement)
+      : null;
 
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
@@ -138,7 +149,8 @@ export function useSwipeGesture(options: SwipeGestureOptions): SwipeGestureRetur
 
     const deltaX = touch.clientX - touchStartX;
     const deltaY = touch.clientY - touchStartY;
-    const angle = (Math.atan2(Math.abs(deltaY), Math.abs(deltaX)) * 180) / Math.PI;
+    const angle =
+      (Math.atan2(Math.abs(deltaY), Math.abs(deltaX)) * 180) / Math.PI;
 
     if (angle < 45 && Math.abs(deltaX) > 20) {
       if (Math.abs(deltaX) > Math.abs(deltaY) * 2) {

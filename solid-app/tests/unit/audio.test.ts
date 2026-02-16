@@ -163,6 +163,19 @@ describe("AudioService", () => {
         COMPLETE_SOUND_DURATION_SECONDS
       );
     });
+
+    it("drops low-priority immediate sounds while high-priority queue is active", async () => {
+      await audioService.init();
+
+      await audioService.play("achievement");
+
+      const ctx = MockAudioContext.instances[0];
+      const oscillatorsBefore = ctx?.oscillators.length ?? 0;
+
+      await audioService.play("click");
+
+      expect(ctx?.oscillators.length ?? 0).toBe(oscillatorsBefore);
+    });
   });
 
   describe("volume control", () => {

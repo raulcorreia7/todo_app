@@ -1,8 +1,8 @@
-import '@testing-library/jest-dom';
-import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
+import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
+import { vi } from "vitest";
 
-vi.mock('lucide-solid', () => ({
+vi.mock("lucide-solid", () => ({
   Settings: () => null,
   Music: () => null,
   Volume2: () => null,

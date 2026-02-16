@@ -1,9 +1,9 @@
-import Icon from '@/components/base/Icon'
+import Icon from "@/components/base/Icon";
 
 interface StatCardProps {
-  label: string
-  value: string | number
-  icon: string
+  label: string;
+  value: string | number;
+  icon: string;
 }
 
 function StatCard(props: StatCardProps) {
@@ -17,7 +17,7 @@ function StatCard(props: StatCardProps) {
         <span class="stat-card__label">{props.label}</span>
       </div>
     </div>
-  )
+  );
 }
 
-export default StatCard
+export default StatCard;

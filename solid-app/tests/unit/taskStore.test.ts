@@ -58,7 +58,10 @@ describe("taskStore", () => {
   describe("addTask", () => {
     it("creates task with id and timestamps", () => {
       const beforeAdd = new Date().toISOString();
-      taskActions.addTask({ title: "Test Task", description: "Test description" });
+      taskActions.addTask({
+        title: "Test Task",
+        description: "Test description",
+      });
       const afterAdd = new Date().toISOString();
 
       expect(taskStore.tasks).toHaveLength(1);

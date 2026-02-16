@@ -351,13 +351,64 @@ const STAT_ICON_COLORS: Partial<Record<ThemeId, string>> = {
   arcticSky: "#4da6ff",
 };
 
+const MIN_UI_COLOR_CONTRAST_RATIO = 2.1;
+
 export function getThemeTone(themeId: ThemeId): "light" | "dark" {
   const themeTags = THEMES[themeId].tags as readonly string[];
   return themeTags.includes("light") ? "light" : "dark";
 }
 
+function resolveReadableThemeColor(
+  themeId: ThemeId,
+  preferredColor: string,
+  fallbacks: string[]
+): string {
+  const theme = THEMES[themeId];
+  const primaryColor = theme.primary;
+  const colorCandidates = [preferredColor, ...fallbacks];
+  const uniqueCandidates = [...new Set(colorCandidates)];
+
+  const preferredContrast = getContrastRatio(preferredColor, primaryColor);
+  if (preferredContrast >= MIN_UI_COLOR_CONTRAST_RATIO) {
+    return preferredColor;
+  }
+
+  const firstReadableFallback = uniqueCandidates.find(
+    (candidate) =>
+      getContrastRatio(candidate, primaryColor) >= MIN_UI_COLOR_CONTRAST_RATIO
+  );
+  if (firstReadableFallback) {
+    return firstReadableFallback;
+  }
+
+  return uniqueCandidates.reduce((bestCandidate, candidate) => {
+    const candidateContrast = getContrastRatio(candidate, primaryColor);
+    const bestContrast = getContrastRatio(bestCandidate, primaryColor);
+    return candidateContrast > bestContrast ? candidate : bestCandidate;
+  }, preferredColor);
+}
+
 export function getThemeStatIconColor(themeId: ThemeId): string {
-  return STAT_ICON_COLORS[themeId] ?? THEMES[themeId].glow;
+  const theme = THEMES[themeId];
+  const preferred = STAT_ICON_COLORS[themeId] ?? theme.glow;
+
+  return resolveReadableThemeColor(themeId, preferred, [
+    theme.glow,
+    theme.glowPrimary,
+    theme.glowSecondary,
+    theme.text,
+  ]);
+}
+
+export function getThemeUiAccentColor(themeId: ThemeId): string {
+  const theme = THEMES[themeId];
+
+  return resolveReadableThemeColor(themeId, theme.accent, [
+    theme.glow,
+    theme.glowPrimary,
+    theme.glowSecondary,
+    theme.text,
+  ]);
 }
 
 export function getThemeGlassBlur(themeId: ThemeId): string {
@@ -403,6 +454,36 @@ export function getColorBrightness(hexColor: string): number {
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
   return (r * 299 + g * 587 + b * 114) / 1000;
+}
+
+function toLinearRgbChannel(channel: number): number {
+  const normalized = channel / 255;
+  if (normalized <= 0.03928) {
+    return normalized / 12.92;
+  }
+
+  return ((normalized + 0.055) / 1.055) ** 2.4;
+}
+
+function getRelativeLuminance(hexColor: string): number {
+  const hex = hexColor.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const linearR = toLinearRgbChannel(r);
+  const linearG = toLinearRgbChannel(g);
+  const linearB = toLinearRgbChannel(b);
+
+  return 0.2126 * linearR + 0.7152 * linearG + 0.0722 * linearB;
+}
+
+export function getContrastRatio(hexColorA: string, hexColorB: string): number {
+  const luminanceA = getRelativeLuminance(hexColorA);
+  const luminanceB = getRelativeLuminance(hexColorB);
+  const lighter = Math.max(luminanceA, luminanceB);
+  const darker = Math.min(luminanceA, luminanceB);
+
+  return (lighter + 0.05) / (darker + 0.05);
 }
 
 export function getColorTemperature(hexColor: string): "warm" | "cool" {

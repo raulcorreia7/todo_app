@@ -1,16 +1,16 @@
-import { statisticsState, completionRate } from '@/stores/statisticsStore'
-import StatCard from './StatCard'
+import { statisticsState, completionRate } from "@/stores/statisticsStore";
+import StatCard from "./StatCard";
 
 function formatFocusTime(minutes: number): string {
-  const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
-  if (hours === 0) return `${mins}m`
-  if (mins === 0) return `${hours}h`
-  return `${hours}h ${mins}m`
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}m`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
 }
 
 function StatsPanel() {
-  const stats = () => statisticsState
+  const stats = () => statisticsState;
 
   return (
     <div class="stats-panel">
@@ -45,7 +45,7 @@ function StatsPanel() {
         icon="clock"
       />
     </div>
-  )
+  );
 }
 
-export default StatsPanel
+export default StatsPanel;

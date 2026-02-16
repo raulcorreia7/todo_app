@@ -21,19 +21,20 @@ button,
 button:hover,
 [role="button"]:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px -6px var(--color-shadow, rgba(0,0,0,0.15));
+  box-shadow: 0 6px 16px -6px var(--color-shadow, rgba(0, 0, 0, 0.15));
 }
 
 .btn:active,
 button:active,
 [role="button"]:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px -4px var(--color-shadow, rgba(0,0,0,0.2));
+  box-shadow: 0 2px 8px -4px var(--color-shadow, rgba(0, 0, 0, 0.2));
 }
 
 .btn--primary.pulse,
 button.btn--primary.pulse {
-  animation: zenPulse 1.8s var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)) infinite;
+  animation: zenPulse 1.8s var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1))
+    infinite;
 }
 
 .luxury-checkbox {
@@ -76,17 +77,23 @@ button.btn--primary.pulse {
 }
 
 .luxury-checkbox .checkmark::after {
-  content: '✓';
+  content: "✓";
   font-size: 16px;
   color: white;
   font-weight: 700;
   opacity: 0;
   transform: scale(0.9);
-  transition: opacity 160ms ease, transform 220ms var(--ease-silk, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition:
+    opacity 160ms ease,
+    transform 220ms var(--ease-silk, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
 .luxury-checkbox input[type="checkbox"]:checked + .checkmark {
-  background: linear-gradient(135deg, var(--accent-color, #0f3460), var(--glow-color, #e94560));
+  background: linear-gradient(
+    135deg,
+    var(--accent-color, #0f3460),
+    var(--glow-color, #e94560)
+  );
   border-color: var(--accent-color, #0f3460);
   box-shadow: 0 0 15px var(--glow-color, rgba(233, 69, 96, 0.5));
 }
@@ -130,7 +137,7 @@ button.btn--primary.pulse {
 
 .task-item.hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px -12px var(--color-shadow, rgba(0,0,0,0.25));
+  box-shadow: 0 10px 24px -12px var(--color-shadow, rgba(0, 0, 0, 0.25));
 }
 
 .task-item.new {
@@ -138,7 +145,8 @@ button.btn--primary.pulse {
 }
 
 .task-item.edit-mode {
-  animation: taskEditEnter 300ms var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+  animation: taskEditEnter 300ms
+    var(--ease-velvet, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
 }
 
 .task-item.exit-edit-mode {
@@ -166,7 +174,7 @@ button.btn--primary.pulse {
 
 .focus-ring:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--glass-primary-hover, rgba(255,255,255,0.18));
+  box-shadow: 0 0 0 3px var(--glass-primary-hover, rgba(255, 255, 255, 0.18));
   transition: box-shadow 180ms ease;
 }
 
@@ -196,7 +204,7 @@ button.btn--primary.pulse {
 
 .floating-settings .settings-btn:hover {
   filter: brightness(1.04);
-  box-shadow: 0 6px 16px -8px var(--color-shadow, rgba(0,0,0,0.18));
+  box-shadow: 0 6px 16px -8px var(--color-shadow, rgba(0, 0, 0, 0.18));
 }
 
 .floating-settings .settings-btn svg {
@@ -205,17 +213,20 @@ button.btn--primary.pulse {
 }
 
 .floating-actions {
-  transition: transform 260ms var(--ease-subtle, ease), opacity 220ms ease;
+  transition:
+    transform 260ms var(--ease-subtle, ease),
+    opacity 220ms ease;
 }
 
 .ai-edit-glow {
   position: relative;
   overflow: hidden;
-  transition: all var(--animation-duration, 2.5s) var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
+  transition: all var(--animation-duration, 2.5s)
+    var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .ai-edit-glow::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
@@ -230,12 +241,13 @@ button.btn--primary.pulse {
   opacity: 0;
   box-shadow: var(--ai-glow-before-shadow, none);
   transform: scale(0.5) rotate(0deg);
-  transition: all var(--animation-duration, 2.5s) var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
+  transition: all var(--animation-duration, 2.5s)
+    var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
   pointer-events: none;
 }
 
 .ai-edit-glow::after {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
@@ -250,7 +262,8 @@ button.btn--primary.pulse {
   opacity: 0;
   box-shadow: var(--ai-glow-after-shadow, none);
   transform: scale(0.3) rotate(180deg);
-  transition: all var(--animation-duration, 2.5s) var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
+  transition: all var(--animation-duration, 2.5s)
+    var(--animation-easing, cubic-bezier(0.4, 0, 0.2, 1));
   pointer-events: none;
 }
 
@@ -265,7 +278,8 @@ button.btn--primary.pulse {
 }
 
 .ai-edit-glow.loading::after {
-  animation: aiEditPulse var(--animation-duration, 2.5s) ease-in-out infinite 0.5s;
+  animation: aiEditPulse var(--animation-duration, 2.5s) ease-in-out infinite
+    0.5s;
 }
 
 .ai-edit-particles {
@@ -306,16 +320,22 @@ button.btn--primary.pulse {
 }
 
 .ripple-effect::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    transparent 70%
+  );
   opacity: 0;
   transform: translate(-50%, -50%) scale(0);
-  transition: transform 0.5s ease, opacity 0.5s ease;
+  transition:
+    transform 0.5s ease,
+    opacity 0.5s ease;
 }
 
 .ripple-effect:active::after {
@@ -324,7 +344,9 @@ button.btn--primary.pulse {
 }
 
 .hover-glow-effect {
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 }
 
 .hover-glow-effect:hover {
@@ -349,7 +371,8 @@ button.btn--primary.pulse {
   }
   100% {
     opacity: 0;
-    transform: scale(0) translate(var(--sparkle-x, 10px), var(--sparkle-y, -10px));
+    transform: scale(0)
+      translate(var(--sparkle-x, 10px), var(--sparkle-y, -10px));
   }
 }
 

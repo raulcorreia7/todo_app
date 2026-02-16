@@ -55,12 +55,16 @@ export default function DailySummary() {
               </div>
               <div class="daily-summary-stat-row">
                 <span class="daily-summary-stat-label">Productivity Score</span>
-                <span class="daily-summary-stat-value">{getStats().score}%</span>
+                <span class="daily-summary-stat-value">
+                  {getStats().score}%
+                </span>
               </div>
             </div>
 
             <div class="daily-summary-message">
-              <p>{getMotivationalMessage(getStats().score, getStats().completed)}</p>
+              <p>
+                {getMotivationalMessage(getStats().score, getStats().completed)}
+              </p>
             </div>
 
             <button class="daily-summary-close-btn" onClick={handleClose}>

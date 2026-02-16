@@ -1,2 +1,2 @@
-export * from "./particles"
-export * from "./achievements"
+export * from "./particles";
+export * from "./achievements";

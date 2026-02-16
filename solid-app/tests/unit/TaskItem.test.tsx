@@ -87,7 +87,9 @@ describe("TaskItem", () => {
       const task = createTask();
       taskActions.addTask({ title: task.title, description: task.description });
       const addedTask = taskStore.tasks[0];
-      const { getByRole } = render(() => <TaskItem task={{ ...task, id: addedTask.id }} />);
+      const { getByRole } = render(() => (
+        <TaskItem task={{ ...task, id: addedTask.id }} />
+      ));
       const checkbox = getByRole("checkbox");
       await fireEvent.click(checkbox);
       expect(taskStore.tasks[0].completed).toBe(true);
@@ -100,7 +102,9 @@ describe("TaskItem", () => {
       const task = createTask();
       taskActions.addTask({ title: task.title, description: task.description });
       const addedTask = taskStore.tasks[0];
-      const { container } = render(() => <TaskItem task={{ ...task, id: addedTask.id }} />);
+      const { container } = render(() => (
+        <TaskItem task={{ ...task, id: addedTask.id }} />
+      ));
       expect(taskStore.tasks).toHaveLength(1);
       const deleteButton = container.querySelector(".task-delete-btn");
       if (deleteButton) {
@@ -114,7 +118,9 @@ describe("TaskItem", () => {
       const task = createTask();
       taskActions.addTask({ title: task.title, description: task.description });
       const addedTask = taskStore.tasks[0];
-      const { container } = render(() => <TaskItem task={{ ...task, id: addedTask.id }} />);
+      const { container } = render(() => (
+        <TaskItem task={{ ...task, id: addedTask.id }} />
+      ));
       expect(taskStore.tasks).toHaveLength(1);
       const deleteButton = container.querySelector(".task-delete-btn");
       if (deleteButton) {
@@ -127,7 +133,9 @@ describe("TaskItem", () => {
   describe("edit mode shows form", () => {
     it("shows edit form when edit button is clicked", async () => {
       const task = createTask();
-      const { container, getByPlaceholderText, getByText } = render(() => <TaskItem task={task} />);
+      const { container, getByPlaceholderText, getByText } = render(() => (
+        <TaskItem task={task} />
+      ));
       const editButton = container.querySelector(".task-edit-btn");
       if (editButton) {
         await fireEvent.click(editButton);
@@ -150,7 +158,9 @@ describe("TaskItem", () => {
 
     it("returns to view mode when cancel is clicked", async () => {
       const task = createTask();
-      const { container, getByText, getByRole } = render(() => <TaskItem task={task} />);
+      const { container, getByText, getByRole } = render(() => (
+        <TaskItem task={task} />
+      ));
       const editButton = container.querySelector(".task-edit-btn");
       if (editButton) {
         await fireEvent.click(editButton);
@@ -168,7 +178,9 @@ describe("TaskItem", () => {
       const task = createTask();
       taskActions.addTask({ title: task.title, description: task.description });
       const addedTask = taskStore.tasks[0];
-      const { getByRole } = render(() => <TaskItem task={{ ...task, id: addedTask.id }} />);
+      const { getByRole } = render(() => (
+        <TaskItem task={{ ...task, id: addedTask.id }} />
+      ));
       const checkbox = getByRole("checkbox");
       await fireEvent.click(checkbox);
       expect(spy).toHaveBeenCalled();
@@ -178,9 +190,15 @@ describe("TaskItem", () => {
       const gamificationModule = await import("@/stores/gamificationStore");
       const spy = vi.spyOn(gamificationModule, "recordTaskCompletion");
       const task = createTask({ completed: true });
-      taskActions.addTask({ title: task.title, description: task.description, completed: true });
+      taskActions.addTask({
+        title: task.title,
+        description: task.description,
+        completed: true,
+      });
       const addedTask = taskStore.tasks[0];
-      const { getByRole } = render(() => <TaskItem task={{ ...task, id: addedTask.id }} />);
+      const { getByRole } = render(() => (
+        <TaskItem task={{ ...task, id: addedTask.id }} />
+      ));
       const checkbox = getByRole("checkbox");
       await fireEvent.click(checkbox);
       expect(spy).not.toHaveBeenCalled();

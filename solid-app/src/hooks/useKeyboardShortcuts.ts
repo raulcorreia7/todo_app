@@ -13,9 +13,7 @@ function isEditableElement(target: EventTarget | null): boolean {
   if (!target) return false;
   const el = target as HTMLElement;
   return (
-    el.tagName === "INPUT" ||
-    el.tagName === "TEXTAREA" ||
-    el.isContentEditable
+    el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable
   );
 }
 
@@ -25,7 +23,7 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]): void {
 
     for (const shortcut of shortcuts) {
       const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase();
-      const ctrlMatch = shortcut.ctrl ? (e.ctrlKey || e.metaKey) : true;
+      const ctrlMatch = shortcut.ctrl ? e.ctrlKey || e.metaKey : true;
       const metaMatch = shortcut.meta ? e.metaKey : true;
       const shiftMatch = shortcut.shift ? e.shiftKey : !e.shiftKey;
 

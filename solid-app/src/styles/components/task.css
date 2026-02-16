@@ -17,10 +17,12 @@
   transition: all var(--effect-transition);
   position: relative;
   overflow: visible;
+  content-visibility: auto;
+  contain-intrinsic-size: 116px;
 }
 
 .task-item::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -30,15 +32,27 @@
 }
 
 .task-item.completing::before {
-  background: radial-gradient(circle at center, var(--color-glow) 0%, transparent 70%);
+  background: radial-gradient(
+    circle at center,
+    var(--color-glow) 0%,
+    transparent 70%
+  );
   opacity: 0.3;
   animation: completeGlow 600ms var(--ease-smooth) forwards;
 }
 
 @keyframes completeGlow {
-  0% { opacity: 0; transform: scale(0.8); }
-  50% { opacity: 0.5; }
-  100% { opacity: 0; transform: scale(1.5); }
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
 }
 
 .task-item:hover {
@@ -202,7 +216,7 @@
 }
 
 .task-checkbox .checkmark::after {
-  content: '✓';
+  content: "✓";
   font-size: 20px;
   color: var(--color-text-on-accent);
   font-weight: 700;
@@ -254,13 +268,18 @@
 }
 
 .task-title::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -4px;
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-glow), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-glow),
+    transparent
+  );
   opacity: 0;
   transition: opacity var(--effect-transition);
 }
@@ -322,7 +341,9 @@
   background: var(--glass-primary-hover);
   border-color: var(--color-glow);
   transform: translateY(-1px);
-  box-shadow: 0 0 20px var(--color-glow), 0 0 30px var(--color-glow);
+  box-shadow:
+    0 0 20px var(--color-glow),
+    0 0 30px var(--color-glow);
 }
 
 .task-edit-btn:hover svg {
@@ -333,7 +354,9 @@
   background: var(--delete-hover-bg);
   border-color: var(--delete-hover-border);
   transform: translateY(-1px);
-  box-shadow: 0 0 20px var(--color-glow), 0 0 30px var(--color-glow);
+  box-shadow:
+    0 0 20px var(--color-glow),
+    0 0 30px var(--color-glow);
 }
 
 .task-delete-btn:hover svg {
@@ -343,26 +366,51 @@
 .task-ai-btn {
   position: relative;
   overflow: hidden;
-  animation: aiSuperPower 4s ease-in-out infinite;
+  box-shadow: 0 4px 15px var(--color-shadow);
+  will-change: transform;
 }
 
-@keyframes aiSuperPower {
-  0%, 100% {
-    box-shadow: 0 4px 15px var(--color-shadow);
+.task-ai-btn::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--shimmer-light) 55%, transparent) 0%,
+    transparent 72%
+  );
+  opacity: 0.16;
+  transform: scale(0.94);
+  will-change: transform, opacity;
+  animation: aiAuraPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes aiAuraPulse {
+  0%,
+  100% {
+    opacity: 0.14;
+    transform: scale(0.94);
   }
   50% {
-    box-shadow: 0 4px 15px var(--color-shadow), 0 0 20px var(--shimmer-light);
+    opacity: 0.28;
+    transform: scale(1.02);
   }
 }
 
 .task-ai-btn::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, var(--shimmer-subtle), transparent);
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-subtle),
+    transparent
+  );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
   transition: none;
 }
 
@@ -372,10 +420,12 @@
 
 @keyframes aiEnergyShimmer {
   0% {
-    left: -100%;
+    transform: translate3d(-120%, 0, 0);
+    opacity: 0;
   }
   100% {
-    left: 100%;
+    transform: translate3d(120%, 0, 0);
+    opacity: 1;
   }
 }
 
@@ -383,17 +433,16 @@
   background: var(--ai-accent-glow);
   border-color: var(--ai-accent);
   transform: translateY(-1px);
-  box-shadow: 0 0 20px var(--color-glow), 0 0 30px var(--color-glow), 0 0 40px var(--shimmer-light);
-  animation: aiSuperPowerHover 2s ease-in-out infinite;
+  box-shadow:
+    0 0 20px var(--color-glow),
+    0 0 30px var(--color-glow),
+    0 0 40px var(--shimmer-light);
 }
 
-@keyframes aiSuperPowerHover {
-  0%, 100% {
-    box-shadow: 0 0 20px var(--color-glow), 0 0 30px var(--color-glow), 0 0 40px var(--shimmer-light);
-  }
-  50% {
-    box-shadow: 0 0 25px var(--color-glow), 0 0 35px var(--color-glow), 0 0 45px var(--shimmer-light);
-  }
+.task-ai-btn:hover::after {
+  opacity: 0.34;
+  transform: scale(1.05);
+  animation-duration: 2.2s;
 }
 
 .task-ai-btn svg {
@@ -402,34 +451,23 @@
   stroke-width: 2;
   filter: drop-shadow(0 0 3px var(--color-glow));
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform;
   animation: aiIconPulse 3s ease-in-out infinite;
 }
 
 @keyframes aiIconPulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 3px var(--color-glow));
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
-    filter: drop-shadow(0 0 5px var(--color-glow));
     transform: scale(1.05);
   }
 }
 
 .task-ai-btn:hover svg {
   filter: drop-shadow(0 0 8px var(--color-glow));
-  animation: aiIconSuperPower 1.5s ease-in-out infinite;
-}
-
-@keyframes aiIconSuperPower {
-  0%, 100% {
-    filter: drop-shadow(0 0 8px var(--color-glow));
-    transform: scale(1.05);
-  }
-  50% {
-    filter: drop-shadow(0 0 12px var(--color-glow));
-    transform: scale(1.1);
-  }
+  transform: scale(1.1);
 }
 
 .task-actions svg {
@@ -562,12 +600,20 @@
 }
 
 .task-item--swipe-right {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.3)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.3),
+    rgba(16, 185, 129, 0.3)
+  ) !important;
   border-color: rgba(34, 197, 94, 0.5) !important;
 }
 
 .task-item--swipe-left {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.3),
+    rgba(220, 38, 38, 0.3)
+  ) !important;
   border-color: rgba(239, 68, 68, 0.5) !important;
 }
 
@@ -623,12 +669,23 @@
 }
 
 @keyframes swipeSuccessIn {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 @keyframes swipeSuccessOut {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
 }
-

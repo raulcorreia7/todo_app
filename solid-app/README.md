@@ -26,20 +26,20 @@ Open [http://localhost:5173](http://localhost:5173) to view the app.
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm run dev` | Start development server |
-| `pnpm run build` | Build for production |
-| `pnpm run preview` | Preview production build |
-| `pnpm run test` | Run unit tests |
-| `pnpm run test:ui` | Run tests with UI |
-| `pnpm run test:coverage` | Run tests with coverage |
-| `pnpm run test:e2e` | Run end-to-end tests |
-| `pnpm run lint` | Lint code |
-| `pnpm run lint:fix` | Fix lint errors |
-| `pnpm run format` | Format code |
-| `pnpm run format:check` | Check formatting |
-| `pnpm run typecheck` | Type check |
+| Command                  | Description              |
+| ------------------------ | ------------------------ |
+| `pnpm run dev`           | Start development server |
+| `pnpm run build`         | Build for production     |
+| `pnpm run preview`       | Preview production build |
+| `pnpm run test`          | Run unit tests           |
+| `pnpm run test:ui`       | Run tests with UI        |
+| `pnpm run test:coverage` | Run tests with coverage  |
+| `pnpm run test:e2e`      | Run end-to-end tests     |
+| `pnpm run lint`          | Lint code                |
+| `pnpm run lint:fix`      | Fix lint errors          |
+| `pnpm run format`        | Format code              |
+| `pnpm run format:check`  | Check formatting         |
+| `pnpm run typecheck`     | Type check               |
 
 ## Project Structure
 

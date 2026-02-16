@@ -27,7 +27,7 @@
 }
 
 .checkbox--checked::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 6px;
   top: 2px;

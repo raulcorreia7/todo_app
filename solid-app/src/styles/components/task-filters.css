@@ -29,7 +29,9 @@
   background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
   color: white;
   border-color: var(--accent-color);
-  box-shadow: 0 6px 20px var(--shadow-color), 0 0 15px var(--glow-color);
+  box-shadow:
+    0 6px 20px var(--shadow-color),
+    0 0 15px var(--glow-color);
   transform: translateY(-1px);
 }
 

@@ -12,7 +12,10 @@ export interface Achievement {
   description: string;
   icon: string;
   unlockedAt?: string;
-  condition?: (state: GamificationState, stats: { completed: number; currentStreak: number }) => boolean;
+  condition?: (
+    state: GamificationState,
+    stats: { completed: number; currentStreak: number }
+  ) => boolean;
   conditionText?: string;
 }
 

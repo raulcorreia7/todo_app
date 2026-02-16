@@ -81,7 +81,10 @@ export function getDailyStats(): DailyStats {
   };
 }
 
-export function getMotivationalMessage(score: number, completed: number): string {
+export function getMotivationalMessage(
+  score: number,
+  completed: number
+): string {
   if (completed === 0) {
     return "Tomorrow is a new day to start fresh and make progress!";
   } else if (score === 100) {

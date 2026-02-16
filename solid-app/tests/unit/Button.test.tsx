@@ -11,19 +11,25 @@ describe("Button", () => {
     });
 
     it("renders with secondary variant class", () => {
-      const { getByRole } = render(() => <Button variant="secondary">Click me</Button>);
+      const { getByRole } = render(() => (
+        <Button variant="secondary">Click me</Button>
+      ));
       const button = getByRole("button");
       expect(button).toHaveClass("button--secondary");
     });
 
     it("renders with danger variant class", () => {
-      const { getByRole } = render(() => <Button variant="danger">Delete</Button>);
+      const { getByRole } = render(() => (
+        <Button variant="danger">Delete</Button>
+      ));
       const button = getByRole("button");
       expect(button).toHaveClass("button--danger");
     });
 
     it("renders with ghost variant class", () => {
-      const { getByRole } = render(() => <Button variant="ghost">Cancel</Button>);
+      const { getByRole } = render(() => (
+        <Button variant="ghost">Cancel</Button>
+      ));
       const button = getByRole("button");
       expect(button).toHaveClass("button--ghost");
     });
@@ -67,7 +73,9 @@ describe("Button", () => {
   describe("click handler", () => {
     it("fires click handler when clicked", () => {
       const handleClick = vi.fn();
-      const { getByRole } = render(() => <Button onClick={handleClick}>Click me</Button>);
+      const { getByRole } = render(() => (
+        <Button onClick={handleClick}>Click me</Button>
+      ));
       const button = getByRole("button");
       button.click();
       expect(handleClick).toHaveBeenCalledTimes(1);

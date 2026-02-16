@@ -25,7 +25,10 @@ Object.defineProperty(global, "localStorage", {
 });
 
 vi.mock("@/services/storage", async () => {
-  const actual = await vi.importActual<typeof import("@/services/storage")>("@/services/storage");
+  const actual =
+    await vi.importActual<typeof import("@/services/storage")>(
+      "@/services/storage"
+    );
   return {
     ...actual,
   };
@@ -98,8 +101,22 @@ describe("storage", () => {
     it("set stores tasks and get retrieves them", async () => {
       const { tasksStorage } = await import("@/services/storage");
       const tasks = [
-        { id: "1", title: "Task 1", description: "", completed: false, createdAt: "2024-01-01", updatedAt: "2024-01-01" },
-        { id: "2", title: "Task 2", description: "Desc", completed: true, createdAt: "2024-01-02", updatedAt: "2024-01-02" },
+        {
+          id: "1",
+          title: "Task 1",
+          description: "",
+          completed: false,
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-01",
+        },
+        {
+          id: "2",
+          title: "Task 2",
+          description: "Desc",
+          completed: true,
+          createdAt: "2024-01-02",
+          updatedAt: "2024-01-02",
+        },
       ];
       tasksStorage.set(tasks);
       const result = tasksStorage.get();
@@ -108,7 +125,16 @@ describe("storage", () => {
 
     it("clear removes all tasks", async () => {
       const { tasksStorage } = await import("@/services/storage");
-      const tasks = [{ id: "1", title: "Task 1", description: "", completed: false, createdAt: "2024-01-01", updatedAt: "2024-01-01" }];
+      const tasks = [
+        {
+          id: "1",
+          title: "Task 1",
+          description: "",
+          completed: false,
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-01",
+        },
+      ];
       tasksStorage.set(tasks);
       tasksStorage.clear();
       const result = tasksStorage.get();
@@ -125,7 +151,14 @@ describe("storage", () => {
 
     it("set stores settings and get retrieves them", async () => {
       const { settingsStorage } = await import("@/services/storage");
-      const settings = { theme: "emerald" as const, darkMode: true, soundEnabled: false, volume: 75, animations: true, font: "inter" as const };
+      const settings = {
+        theme: "emerald" as const,
+        darkMode: true,
+        soundEnabled: false,
+        volume: 75,
+        animations: true,
+        font: "inter" as const,
+      };
       settingsStorage.set(settings);
       const result = settingsStorage.get();
       expect(result).toEqual(settings);
@@ -144,7 +177,13 @@ describe("storage", () => {
       const state = {
         karmaPoints: 100,
         achievements: [],
-        dailyStats: { completed: 5, edited: 2, deleted: 1, focusTime: 60, lastUpdate: "2024-01-01" },
+        dailyStats: {
+          completed: 5,
+          edited: 2,
+          deleted: 1,
+          focusTime: 60,
+          lastUpdate: "2024-01-01",
+        },
         firstTaskCreated: true,
         firstTaskDeleted: false,
         firstTaskEdited: true,

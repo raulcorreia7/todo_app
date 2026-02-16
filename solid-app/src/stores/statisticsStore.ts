@@ -23,7 +23,9 @@ function persist() {
 
 export function completionRate(): number {
   if (statisticsState.totalTasks === 0) return 0;
-  return Math.round((statisticsState.completedTasks / statisticsState.totalTasks) * 100);
+  return Math.round(
+    (statisticsState.completedTasks / statisticsState.totalTasks) * 100
+  );
 }
 
 export function updateFromTasks(tasks: Task[]): void {
@@ -33,7 +35,7 @@ export function updateFromTasks(tasks: Task[]): void {
       state.totalTasks = tasks.length;
       state.completedTasks = completed;
       state.lastActivity = new Date().toISOString();
-    }),
+    })
   );
   persist();
 }
@@ -46,7 +48,7 @@ export function incrementStreak(): void {
         state.longestStreak = state.currentStreak;
       }
       state.lastActivity = new Date().toISOString();
-    }),
+    })
   );
   persist();
 }
@@ -56,7 +58,7 @@ export function resetStreak(): void {
     produce((state) => {
       state.currentStreak = 0;
       state.lastActivity = new Date().toISOString();
-    }),
+    })
   );
   persist();
 }

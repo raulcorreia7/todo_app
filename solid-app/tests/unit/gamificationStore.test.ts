@@ -106,7 +106,12 @@ describe("gamificationStore", () => {
 
   describe("unlockAchievement", () => {
     it("adds achievement", () => {
-      const achievement = { id: "first-task", title: "First Task", description: "Create your first task", icon: "star" };
+      const achievement = {
+        id: "first-task",
+        title: "First Task",
+        description: "Create your first task",
+        icon: "star",
+      };
       unlockAchievement(achievement);
       expect(gamificationState.achievements).toHaveLength(1);
       expect(gamificationState.achievements[0].id).toBe("first-task");
@@ -114,21 +119,46 @@ describe("gamificationStore", () => {
     });
 
     it("does not add duplicate achievement", () => {
-      const achievement = { id: "first-task", title: "First Task", description: "Create your first task", icon: "star" };
+      const achievement = {
+        id: "first-task",
+        title: "First Task",
+        description: "Create your first task",
+        icon: "star",
+      };
       unlockAchievement(achievement);
       unlockAchievement(achievement);
       expect(gamificationState.achievements).toHaveLength(1);
     });
 
     it("adds multiple different achievements", () => {
-      unlockAchievement({ id: "first-task", title: "First Task", description: "Desc", icon: "star" });
-      unlockAchievement({ id: "ten-tasks", title: "Ten Tasks", description: "Desc", icon: "trophy" });
-      unlockAchievement({ id: "streak-7", title: "7 Day Streak", description: "Desc", icon: "fire" });
+      unlockAchievement({
+        id: "first-task",
+        title: "First Task",
+        description: "Desc",
+        icon: "star",
+      });
+      unlockAchievement({
+        id: "ten-tasks",
+        title: "Ten Tasks",
+        description: "Desc",
+        icon: "trophy",
+      });
+      unlockAchievement({
+        id: "streak-7",
+        title: "7 Day Streak",
+        description: "Desc",
+        icon: "fire",
+      });
       expect(gamificationState.achievements).toHaveLength(3);
     });
 
     it("persists changes", () => {
-      unlockAchievement({ id: "test", title: "Test", description: "Test", icon: "test" });
+      unlockAchievement({
+        id: "test",
+        title: "Test",
+        description: "Test",
+        icon: "test",
+      });
       expect(mockLocalStorage.setItem).toHaveBeenCalled();
     });
   });
@@ -139,12 +169,22 @@ describe("gamificationStore", () => {
     });
 
     it("returns true when achievement exists", () => {
-      unlockAchievement({ id: "first-task", title: "First Task", description: "Desc", icon: "star" });
+      unlockAchievement({
+        id: "first-task",
+        title: "First Task",
+        description: "Desc",
+        icon: "star",
+      });
       expect(hasAchievement("first-task")).toBe(true);
     });
 
     it("returns false when achievement does not exist", () => {
-      unlockAchievement({ id: "first-task", title: "First Task", description: "Desc", icon: "star" });
+      unlockAchievement({
+        id: "first-task",
+        title: "First Task",
+        description: "Desc",
+        icon: "star",
+      });
       expect(hasAchievement("other-achievement")).toBe(false);
     });
   });
@@ -207,7 +247,12 @@ describe("gamificationStore", () => {
       vi.setSystemTime(new Date("2024-01-15T12:00:00"));
       vi.resetModules();
       const module1 = await import("@/stores/gamificationStore");
-      module1.unlockAchievement({ id: "test", title: "Test", description: "Test", icon: "star" });
+      module1.unlockAchievement({
+        id: "test",
+        title: "Test",
+        description: "Test",
+        icon: "star",
+      });
       expect(module1.gamificationState.achievements).toHaveLength(1);
 
       vi.setSystemTime(new Date("2024-01-16T12:00:00"));
@@ -220,7 +265,12 @@ describe("gamificationStore", () => {
   describe("resetStats", () => {
     it("resets all state to defaults", async () => {
       addKarma(100);
-      unlockAchievement({ id: "test", title: "Test", description: "Test", icon: "star" });
+      unlockAchievement({
+        id: "test",
+        title: "Test",
+        description: "Test",
+        icon: "star",
+      });
       recordTaskCompletion();
       resetStats();
       mockLocalStorage.clear();

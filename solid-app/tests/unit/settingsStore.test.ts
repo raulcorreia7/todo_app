@@ -92,6 +92,27 @@ describe("settingsStore", () => {
         document.documentElement.style.getPropertyValue("--color-text-muted")
       ).toBe("rgba(73, 80, 87, 0.72)");
     });
+
+    it("uses readable accent color for low-contrast dark themes", () => {
+      settingsActions.setTheme("midnight");
+      expect(
+        document.documentElement.style.getPropertyValue("--accent-color")
+      ).toBe("#60a5fa");
+    });
+
+    it("uses readable accent color for low-contrast light themes", () => {
+      settingsActions.setTheme("ivory");
+      expect(
+        document.documentElement.style.getPropertyValue("--accent-color")
+      ).toBe("#6c757d");
+    });
+
+    it("preserves original accent when contrast is already strong", () => {
+      settingsActions.setTheme("champagne");
+      expect(
+        document.documentElement.style.getPropertyValue("--accent-color")
+      ).toBe("#daa520");
+    });
   });
 
   describe("setDarkMode", () => {

@@ -40,7 +40,9 @@
   max-width: 300px;
   opacity: 0;
   transform: translateX(30px) scale(0.96);
-  transition: transform var(--motion-normal) var(--ease-smooth), opacity var(--motion-normal) var(--ease-smooth);
+  transition:
+    transform var(--motion-normal) var(--ease-smooth),
+    opacity var(--motion-normal) var(--ease-smooth);
   box-shadow: 0 4px 16px var(--color-shadow);
   pointer-events: none;
   overflow: hidden;
@@ -100,7 +102,8 @@
 }
 
 @keyframes etherealFloat {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1);
     filter: drop-shadow(0 0 3px var(--color-glow));
   }
@@ -111,7 +114,7 @@
 }
 
 .zen-achievement-notification::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -1px;
   border-radius: 12px;
@@ -127,7 +130,7 @@
 }
 
 .zen-achievement-notification::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -138,7 +141,10 @@
   transform: translate(-50%, -50%);
   opacity: 0;
   z-index: 1;
-  transition: width 1s ease, height 1s ease, opacity 1s ease;
+  transition:
+    width 1s ease,
+    height 1s ease,
+    opacity 1s ease;
 }
 
 .zen-achievement-notification.show::after {
@@ -148,7 +154,8 @@
 }
 
 @keyframes zenGlow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
   }
   50% {
@@ -201,7 +208,9 @@
   box-shadow: var(--shadow-lg);
   transform: translateX(calc(100% + var(--spacing-lg)));
   opacity: 0;
-  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.3s ease-out;
   z-index: var(--z-toast);
 }
 
@@ -249,7 +258,9 @@
 .achievement-card {
   position: relative;
   overflow: visible;
-  transition: transform var(--motion-fast) var(--ease-smooth), box-shadow var(--motion-fast) var(--ease-smooth);
+  transition:
+    transform var(--motion-fast) var(--ease-smooth),
+    box-shadow var(--motion-fast) var(--ease-smooth);
   background: var(--glass-bg);
   backdrop-filter: blur(10px);
   border: 1px solid var(--glass-border-color);
@@ -270,7 +281,8 @@
 .achievement-card:focus-visible {
   outline: 2px solid color-mix(in oklab, var(--accent-color) 35%, transparent);
   outline-offset: 3px;
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent-color) 20%, transparent);
+  box-shadow: 0 0 0 4px
+    color-mix(in oklab, var(--accent-color) 20%, transparent);
 }
 
 .achievement-card--locked {
@@ -292,7 +304,7 @@
 }
 
 .achievement-card.unlocked::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -333,9 +345,15 @@
 }
 
 @keyframes iconSpring {
-  0% { transform: translateZ(0) scale(0.985) rotate(0deg); }
-  60% { transform: translateZ(0) scale(1.02) rotate(1deg); }
-  100% { transform: translateZ(0) scale(1) rotate(0deg); }
+  0% {
+    transform: translateZ(0) scale(0.985) rotate(0deg);
+  }
+  60% {
+    transform: translateZ(0) scale(1.02) rotate(1deg);
+  }
+  100% {
+    transform: translateZ(0) scale(1) rotate(0deg);
+  }
 }
 
 .achievement-card__icon {
@@ -422,21 +440,34 @@
 }
 
 .achievement-badge.badge-glint::after {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -100%;
   width: 80%;
   height: 200%;
-  background: linear-gradient(60deg, transparent, var(--shimmer-medium), transparent);
+  background: linear-gradient(
+    60deg,
+    transparent,
+    var(--shimmer-medium),
+    transparent
+  );
   transform: rotate(20deg);
   animation: badgeGlint var(--motion-normal) var(--ease-smooth);
 }
 
 @keyframes badgeGlint {
-  0% { left: -100%; opacity: 0; }
-  15% { opacity: 1; }
-  100% { left: 120%; opacity: 0; }
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    left: 120%;
+    opacity: 0;
+  }
 }
 
 .achievement-info {
@@ -482,7 +513,7 @@
 }
 
 .progress-fill::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -499,14 +530,34 @@
 }
 
 .progress-fill.complete {
-  mask-image: linear-gradient(110deg, transparent 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.15) 55%, transparent 100%);
-  -webkit-mask-image: linear-gradient(110deg, transparent 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.15) 55%, transparent 100%);
+  mask-image: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 45%,
+    rgba(0, 0, 0, 0.45) 50%,
+    rgba(0, 0, 0, 0.15) 55%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 45%,
+    rgba(0, 0, 0, 0.45) 50%,
+    rgba(0, 0, 0, 0.15) 55%,
+    transparent 100%
+  );
   animation: shimmerSweep 0.8s var(--ease-smooth);
 }
 
 @keyframes shimmerSweep {
-  0% { mask-position: -200px 0; -webkit-mask-position: -200px 0; }
-  100% { mask-position: 200px 0; -webkit-mask-position: 200px 0; }
+  0% {
+    mask-position: -200px 0;
+    -webkit-mask-position: -200px 0;
+  }
+  100% {
+    mask-position: 200px 0;
+    -webkit-mask-position: 200px 0;
+  }
 }
 
 @keyframes completionSparkle {
@@ -514,7 +565,9 @@
     box-shadow: 0 0 5px var(--color-glow);
   }
   50% {
-    box-shadow: 0 0 20px var(--color-glow), 0 0 30px var(--color-glow);
+    box-shadow:
+      0 0 20px var(--color-glow),
+      0 0 30px var(--color-glow);
   }
   100% {
     box-shadow: 0 0 5px var(--color-glow);

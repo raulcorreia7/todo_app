@@ -4,8 +4,10 @@
 */
 
 /* Container and groups (minimal structure hooks) */
-.center-action-bar {}
-.center-action-bar .action-group {}
+.center-action-bar {
+}
+.center-action-bar .action-group {
+}
 .center-action-bar .action-subgroup {
   display: inline-flex;
   align-items: center;
@@ -16,7 +18,7 @@
 .center-action-bar .vertical-separator {
   height: 20px;
   width: 1px;
-  background: var(--color-border, rgba(255,255,255,0.22));
+  background: var(--color-border, rgba(255, 255, 255, 0.22));
   opacity: 0.9;
   margin: 0 6px;
   align-self: center;
@@ -25,8 +27,12 @@
 /* Buttons: adopt glass look consistent with the design system */
 .center-action-bar .btn--floating-action {
   color: var(--color-text, #e8f8f5) !important;
-  background: color-mix(in oklab, var(--color-glass, rgba(0,0,0,0.35)) 85%, transparent);
-  border: 1px solid var(--color-border, rgba(255,255,255,0.22));
+  background: color-mix(
+    in oklab,
+    var(--color-glass, rgba(0, 0, 0, 0.35)) 85%,
+    transparent
+  );
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.22));
   position: relative;
   z-index: 1;
   border-radius: 50%;
@@ -44,7 +50,13 @@
   flex-shrink: 0;
   flex-grow: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  will-change: transform;
 }
 
 /* Floating action buttons for mobile (40x40) */
@@ -89,7 +101,11 @@
 }
 
 .center-action-bar .btn--floating-action:hover {
-  background: color-mix(in oklab, var(--color-glass, rgba(0,0,0,0.35)) 90%, transparent);
+  background: color-mix(
+    in oklab,
+    var(--color-glass, rgba(0, 0, 0, 0.35)) 90%,
+    transparent
+  );
   transform: scale(1.05);
 }
 
@@ -163,21 +179,17 @@
 
 /* Music button states: playing/buffering/paused */
 .center-action-bar #cabMusic {
-  animation:
-    cabMusicSpin 6s linear infinite,
-    cabMusicBreath 2.4s ease-in-out infinite,
-    cabMusicAura 3.2s ease-in-out infinite;
+  animation: cabMusicBreath 2.4s ease-in-out infinite;
   animation-play-state: paused;
   transform-origin: center;
   position: relative;
   isolation: isolate;
-  will-change: transform, box-shadow;
+  will-change: transform;
 }
 .center-action-bar #cabMusic .lucide-icon {
   animation: cabIconSpin 6s linear infinite;
   animation-play-state: paused;
   transform-origin: center;
-  will-change: transform;
 }
 
 /* When playing, only resume the timelines instead of re-attaching them */
@@ -186,25 +198,33 @@
 }
 .center-action-bar #cabMusic.is-playing .lucide-icon {
   animation-play-state: running !important;
+  will-change: transform;
 }
 
 .center-action-bar #cabMusic.is-playing::before {
-  content: '';
+  content: "";
   position: absolute;
-  inset: -4px;
+  inset: -6px;
   border-radius: 9999px;
-  box-shadow: 0 0 0 0 var(--ai-accent-glow);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--ai-accent-glow) 55%, transparent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transform: scale(0.92);
   pointer-events: none;
-  animation: cabMusicAura 3.2s ease-in-out infinite;
+  animation: cabMusicAura 2.8s ease-in-out infinite;
   animation-play-state: running !important;
   z-index: -1;
+  will-change: opacity, transform;
 }
 .center-action-bar #cabMusic.buffering {
   position: relative;
   isolation: isolate;
 }
 .center-action-bar #cabMusic.buffering::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
   border-radius: 9999px;
@@ -221,23 +241,34 @@
 }
 
 @keyframes cabMusicBreath {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 transparent; }
-  50%      { transform: scale(1.03); box-shadow: 0 6px 16px -8px var(--ai-accent-glow); }
-}
-@keyframes cabMusicSpin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
 }
 @keyframes cabIconSpin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Subtle premium aura pulsing around the button while playing */
 @keyframes cabMusicAura {
-  0%   { box-shadow: 0 0 0 0 var(--ai-accent-glow); }
-  50%  { box-shadow: 0 0 18px 4px var(--ai-accent-glow); }
-  100% { box-shadow: 0 0 0 0 var(--ai-accent-glow); }
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.38;
+    transform: scale(1.08);
+  }
 }
 
 @keyframes ripple-wave {
@@ -256,9 +287,18 @@
   animation: cabOpenPulse 0.5s ease-out;
 }
 @keyframes cabOpenPulse {
-  0%   { transform: scale(1); box-shadow: 0 0 0 0 var(--ai-accent-glow); }
-  70%  { transform: scale(1.06); box-shadow: 0 0 0 10px transparent; }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 var(--ai-accent-glow);
+  }
+  70% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
 }
 
 /* Test button sparkle hook */
@@ -266,9 +306,18 @@
   animation: cabTestSpark 0.5s ease-out;
 }
 @keyframes cabTestSpark {
-  0%   { box-shadow: 0 0 0 0 var(--success-accent-glow); transform: scale(1); }
-  70%  { box-shadow: 0 0 0 12px transparent; transform: scale(1.04); }
-  100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+  0% {
+    box-shadow: 0 0 0 0 var(--success-accent-glow);
+    transform: scale(1);
+  }
+  70% {
+    box-shadow: 0 0 0 12px transparent;
+    transform: scale(1.04);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
+  }
 }
 
 /* Clear micro-sweep effect */
@@ -276,10 +325,18 @@
   animation: cabBroomSweep 0.45s ease-out;
 }
 @keyframes cabBroomSweep {
-  0%   { transform: rotate(0deg); }
-  40%  { transform: rotate(-12deg); }
-  80%  { transform: rotate(6deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-12deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 /* Delete danger shake */
@@ -310,16 +367,18 @@
 
 /* Hint state used by music manager when autoplay blocked */
 .center-action-bar #cabMusic.hint {
-  box-shadow: 0 0 0 0 var(--ai-accent-glow);
-  animation: aiRefactorPulse 1.6s ease-in-out infinite;
+  animation: aiRefactorPulse 0.9s ease-out 2;
 }
 
 @keyframes aiRefactorPulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 var(--ai-accent-glow);
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
   50% {
-    box-shadow: 0 0 0 8px var(--ai-accent-glow);
+    transform: scale(1.06);
+    opacity: 0.85;
   }
 }
 
@@ -371,7 +430,9 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: var(--z-floating-actions, 100);
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .center-action-bar.floating-actions.is-hidden {

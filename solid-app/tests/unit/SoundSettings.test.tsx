@@ -81,7 +81,9 @@ describe("SoundSettings", () => {
     it("changes volume when slider is moved", async () => {
       settingsActions.setVolume(50);
       const { container } = render(() => <SoundSettings />);
-      const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+      const slider = container.querySelector(
+        'input[type="range"]'
+      ) as HTMLInputElement;
       slider.value = "80";
       slider.dispatchEvent(new Event("input", { bubbles: true }));
       expect(settingsStore.volume).toBe(80);
@@ -90,7 +92,9 @@ describe("SoundSettings", () => {
     it("calls setVolume with new value on input", async () => {
       const spy = vi.spyOn(settingsActions, "setVolume");
       const { container } = render(() => <SoundSettings />);
-      const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+      const slider = container.querySelector(
+        'input[type="range"]'
+      ) as HTMLInputElement;
       slider.value = "30";
       slider.dispatchEvent(new Event("input", { bubbles: true }));
       expect(spy).toHaveBeenCalledWith(30);
@@ -98,7 +102,9 @@ describe("SoundSettings", () => {
 
     it("updates slider min and max attributes", () => {
       const { container } = render(() => <SoundSettings />);
-      const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+      const slider = container.querySelector(
+        'input[type="range"]'
+      ) as HTMLInputElement;
       expect(slider.min).toBe("0");
       expect(slider.max).toBe("100");
     });

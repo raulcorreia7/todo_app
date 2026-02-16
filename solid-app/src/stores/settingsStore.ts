@@ -9,6 +9,7 @@ import {
   getThemeGlassBlur,
   getThemeStatIconColor,
   getThemeTone,
+  getThemeUiAccentColor,
 } from "@/config/themes";
 import { settingsStorage } from "@/services/storage";
 
@@ -43,12 +44,13 @@ function applyTheme(theme: ThemeId): void {
   const selectedTheme = THEMES[theme];
   const root = document.documentElement;
   const tone = getThemeTone(theme);
+  const uiAccent = getThemeUiAccentColor(theme);
   const aiGlowShadows = getThemeAIGlowShadows(theme);
   const dangerGlow = selectedTheme.dangerGlow;
 
   root.style.setProperty("--primary-color", selectedTheme.primary);
   root.style.setProperty("--secondary-color", selectedTheme.secondary);
-  root.style.setProperty("--accent-color", selectedTheme.accent);
+  root.style.setProperty("--accent-color", uiAccent);
   root.style.setProperty("--glow-color", selectedTheme.glow);
   root.style.setProperty("--glow-primary", selectedTheme.glowPrimary);
   root.style.setProperty("--glow-secondary", selectedTheme.glowSecondary);

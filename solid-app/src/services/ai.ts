@@ -18,7 +18,9 @@ export function isConfigured(): boolean {
   return typeof key === "string" && key.length > 0;
 }
 
-function buildRefactorMessages(task: Task): Array<{ role: string; content: string }> {
+function buildRefactorMessages(
+  task: Task
+): Array<{ role: string; content: string }> {
   const systemContent = [
     "You are a precision noise removal specialist and clarity enhancer.",
     "Task: Convert an input JSON object representing a todo item into a JSON object with exactly the keys: id, title, description.",
@@ -75,7 +77,8 @@ function parseModelJSON(content: string): RefactorResult | null {
     }
 
     if (!obj || typeof obj !== "object") return null;
-    if (!("id" in obj) || !("title" in obj) || !("description" in obj)) return null;
+    if (!("id" in obj) || !("title" in obj) || !("description" in obj))
+      return null;
 
     const title = String(obj.title ?? "");
     const description = String(obj.description ?? "");
@@ -111,14 +114,17 @@ export async function refactorTask(task: Task): Promise<RefactorResult | null> {
       let bodyText = "";
       try {
         bodyText = await res.text();
-      } catch (e) { void e }
-      console.error(`AI API error: ${res?.status || "unknown"} ${res?.statusText || ""} ${bodyText ? "- " + bodyText : ""}`);
+      } catch (e) {
+        void e;
+      }
+      console.error(
+        `AI API error: ${res?.status || "unknown"} ${res?.statusText || ""} ${bodyText ? "- " + bodyText : ""}`
+      );
       return null;
     }
 
     const data = await res.json();
-    const content: string | null =
-      data?.choices?.[0]?.message?.content ?? null;
+    const content: string | null = data?.choices?.[0]?.message?.content ?? null;
 
     if (!content) {
       console.error("AI: missing content in response");
@@ -131,7 +137,10 @@ export async function refactorTask(task: Task): Promise<RefactorResult | null> {
       const parsedObj = JSON.parse(content);
       const parsedId = parsedObj?.id;
       if (JSON.stringify(parsedId) !== JSON.stringify(task.id)) {
-        console.warn("AI: parsed id does not match input id", { inputId: task.id, parsedId });
+        console.warn("AI: parsed id does not match input id", {
+          inputId: task.id,
+          parsedId,
+        });
         return null;
       }
     }
@@ -143,7 +152,9 @@ export async function refactorTask(task: Task): Promise<RefactorResult | null> {
   }
 }
 
-function buildSubtaskMessages(task: Task): Array<{ role: string; content: string }> {
+function buildSubtaskMessages(
+  task: Task
+): Array<{ role: string; content: string }> {
   const systemContent = [
     "You are a task breakdown specialist.",
     "Given a task, suggest 3-5 logical subtasks that would help complete it.",
@@ -153,7 +164,12 @@ function buildSubtaskMessages(task: Task): Array<{ role: string; content: string
 
   return [
     { role: "system", content: systemContent },
-    { role: "user", content: JSON.stringify({ task: { title: task.title, description: task.description } }) },
+    {
+      role: "user",
+      content: JSON.stringify({
+        task: { title: task.title, description: task.description },
+      }),
+    },
   ];
 }
 
@@ -183,8 +199,7 @@ export async function suggestSubtasks(task: Task): Promise<string[] | null> {
     }
 
     const data = await res.json();
-    const content: string | null =
-      data?.choices?.[0]?.message?.content ?? null;
+    const content: string | null = data?.choices?.[0]?.message?.content ?? null;
 
     if (!content) {
       console.error("AI: missing content in response");

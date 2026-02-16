@@ -34,7 +34,9 @@ describe("Checkbox", () => {
   describe("onChange fires when clicked", () => {
     it("fires onChange with true when unchecked checkbox is clicked", async () => {
       const handleChange = vi.fn();
-      const { getByRole } = render(() => <Checkbox checked={false} onChange={handleChange} />);
+      const { getByRole } = render(() => (
+        <Checkbox checked={false} onChange={handleChange} />
+      ));
       const checkbox = getByRole("checkbox");
       await fireEvent.click(checkbox);
       expect(handleChange).toHaveBeenCalledWith(true);
@@ -42,7 +44,9 @@ describe("Checkbox", () => {
 
     it("fires onChange with false when checked checkbox is clicked", async () => {
       const handleChange = vi.fn();
-      const { getByRole } = render(() => <Checkbox checked={true} onChange={handleChange} />);
+      const { getByRole } = render(() => (
+        <Checkbox checked={true} onChange={handleChange} />
+      ));
       const checkbox = getByRole("checkbox");
       await fireEvent.click(checkbox);
       expect(handleChange).toHaveBeenCalledWith(false);
@@ -64,7 +68,9 @@ describe("Checkbox", () => {
 
     it("does not fire onChange when disabled and clicked", async () => {
       const handleChange = vi.fn();
-      const { getByRole } = render(() => <Checkbox disabled onChange={handleChange} />);
+      const { getByRole } = render(() => (
+        <Checkbox disabled onChange={handleChange} />
+      ));
       const checkbox = getByRole("checkbox");
       await fireEvent.click(checkbox);
       expect(handleChange).not.toHaveBeenCalled();
