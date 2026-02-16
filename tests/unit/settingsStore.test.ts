@@ -83,7 +83,7 @@ describe("settingsStore", () => {
       settingsActions.setTheme("midnight");
       expect(
         document.documentElement.style.getPropertyValue("--color-text-muted")
-      ).toBe("rgba(219, 234, 254, 0.64)");
+      ).toBe("rgba(241, 245, 249, 0.64)");
     });
 
     it("updates muted text color for light themes", () => {
@@ -93,11 +93,11 @@ describe("settingsStore", () => {
       ).toBe("rgba(73, 80, 87, 0.72)");
     });
 
-    it("uses readable accent color for low-contrast dark themes", () => {
+    it("uses improved accent color for midnight theme", () => {
       settingsActions.setTheme("midnight");
       expect(
         document.documentElement.style.getPropertyValue("--accent-color")
-      ).toBe("#60a5fa");
+      ).toBe("#38bdf8");
     });
 
     it("uses readable accent color for low-contrast light themes", () => {
