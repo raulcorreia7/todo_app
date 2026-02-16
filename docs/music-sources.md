@@ -3,12 +3,15 @@
 > Keep this spec current before altering media pipelines so tooling and configuration changes track with the documented contract.
 
 Goal
+
 - Allow external streaming tracks to be used by the minimal, premium music player.
 
 Shape (illustrative)
+
 - An ordered list of tracks; each with a URL and friendly title. Duration and cover are optional.
 
 Example (JSON)
+
 ```
 [
   { "url": "https://cdn.example.com/ambient/nocturne.mp3", "title": "Nocturne in Glass", "duration": 184 },
@@ -18,6 +21,7 @@ Example (JSON)
 ```
 
 Notes
+
 - Metadata is displayed when available (title, index/total, duration). If duration is unknown, the UI degrades gracefully.
 - Streaming should be progressive and resilient to network hiccups; the UI stays responsive.
 - The track list should be declarative/configurable (e.g., a JSON file or environment configuration) without code changes.

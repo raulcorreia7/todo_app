@@ -39,7 +39,9 @@ function Icon(props: IconProps) {
         <Show when={LucideIcon()} fallback={null}>
           {(ResolvedIcon) => {
             const IconComponent = ResolvedIcon();
-            return <IconComponent size={size()} class={local.class} iconNode={[]} />;
+            return (
+              <IconComponent size={size()} class={local.class} iconNode={[]} />
+            );
           }}
         </Show>
       }

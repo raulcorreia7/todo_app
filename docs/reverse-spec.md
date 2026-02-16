@@ -3,16 +3,19 @@
 > Maintain this spec as the authoritative reference; revise it first whenever scope or UX decisions evolve so downstream docs stay consistent.
 
 ## Ethos
+
 - Premium, calm, and delightful. Glass‑morphism visuals with soft glow accents, nebula background, and subtle grain.
 - Interactions feel snappy and intentional; motion is understated and performance‑friendly.
 - Accessible by default; works great on mobile and desktop.
 
 ## Top‑Level Experience
+
 - Single‑page app with a focused tasks flow and ambient enhancements (themes, sounds, music, quotes).
 - Offline‑friendly via local persistence; no server required.
 - Settings panel is the single place to adjust theme, font, and audio.
 
 ## Sensible Defaults & Additions
+
 - Task ordering: natural (newest on top or last added) with simple, predictable behavior; manual reorder is optional and can remain out of scope.
 - Quick search: lightweight filter-as-you-type for task titles/descriptions (optional but recommended).
 - Import/Export: simple JSON export/import for tasks and preferences to allow manual backup/restore.
@@ -24,6 +27,7 @@
   - Modules can listen for a global “app ready” signal to coordinate deferred work.
 
 ## Functional Requirements
+
 - Tasks
   - Create task with title (required) and optional description.
   - Inline edit with Save/Cancel; character counters for title/description (max ~500 chars each).
@@ -46,10 +50,11 @@
   - App modal (glass, glow) for destructive confirmations; keyboard and screen‑reader friendly.
 
 ## Information Architecture & Layout
+
 - Header: App title + daily quote.
 - Add Task: Title input (placeholder), optional description textarea, live character counter.
 - Stats: Three compact cards (Total, Done, Karma) with simple iconography.
- - Optional Progress view: a lightweight readout/panel summarizing daily/overall momentum without clutter.
+- Optional Progress view: a lightweight readout/panel summarizing daily/overall momentum without clutter.
 - Filters: All | Active | Completed.
 - Task List: Scrollable list of cards with hover affordances, checkbox/complete, edit, save/cancel, delete.
 - Empty State: Centered icon and message when no tasks.
@@ -60,12 +65,14 @@
 - Footer: Credits line with heart emoji and dynamic version string.
 
 ## Data & Privacy
+
 - Persistence via on‑device storage; no background sync by default.
 - Export/import as human‑readable JSON; user‑initiated only.
 - Clear “Reset to defaults” path that wipes local data and restores sensible defaults.
 - Any external content (e.g., streaming tracks) should be declarative/configurable and not store personal data.
 
 ## Achievements & Gamification (Behavioral Spec)
+
 - Spirit: celebrate mindful progress with subtle, zen‑toned rewards; avoid distraction.
 - Signals tracked (illustrative): karma points; daily completed and edited counts; “all created today completed”; first task created/edited/deleted; AI edit count; AI words refined.
 - Examples (non‑exhaustive): Mindful Beginning (1 karma), Gentle Progress (5/day), Mindful Refinement (3/day), Peaceful Presence (25 karma), Daily Harmony (all created today complete), First Creation/Refinement/Release, AI Editor Bronze/Silver/Gold (1/5/20), Luminous Expression (≥50 words refined).
@@ -74,19 +81,22 @@
 - Integration: updates respond to task actions and accepted AI edits; daily summary reflects completions.
 
 ## Theming & Visual Language
+
 - Tokens: Color, spacing, typography via CSS variables.
 - Themes: Curated set of 10–15 elegant themes (e.g., Midnight, Emerald, Graphite, Aurora, Amethyst, Burgundy, Ivory, Champagne, Sakura, Pearl, Mint, Coral, Frost, Lavender, Arctic Sky). Names and exact palettes are flexible as long as contrast and mood align with “premium, calm, inspiring”.
 - Effects: Soft glow accents, subtle shadows, glass translucency, optional nebula parallax; grain overlay for texture.
 - Typography: Provide at least one refined sans‑serif and one refined serif option (e.g., Inter, SF Pro; Playfair). The concrete font list is open‑ended; favor legible, premium faces.
 
 ## Interaction Patterns
+
 - Micro‑interactions: subtle, premium, and “zen” — each action should feel rewarding without being loud. Think gentle shimmer, light tactile cues, and tasteful celebratory moments.
 - Keyboard: convenient shortcuts for common actions (new task, filter changes, confirm/cancel edits) while avoiding conflicts with text entry.
 - Touch: comfortable targets and forgiving gestures that feel natural on mobile.
- - Optional swipe gestures on mobile for convenience (e.g., reveal actions); provide accessible alternatives.
+- Optional swipe gestures on mobile for convenience (e.g., reveal actions); provide accessible alternatives.
 - Motion: restrained and calming; animations should enhance clarity and never distract. Respect reduced‑motion preferences.
 
 ## Design & Behavior Directives (consolidated)
+
 - Visual language
   - Glass‑morphism surfaces (translucent layers, soft borders) with restrained glow accents informed by the active theme.
   - Gentle depth (diffused shadows), generous negative space, and harmonious palettes.
@@ -116,11 +126,13 @@
   - Feels instant, smooth, and dependable across modern devices and browsers.
 
 ## Behavior & Persistence
+
 - Persist across reloads: tasks, settings (theme, font, sound enabled, volume), simple stats/karma, achievements state, last music track/volume where applicable.
 - Immediate feedback on settings changes; no full reload required.
 - Music hint: if playback requires user gesture, surface a gentle visual nudge on the music button.
 
 ## Audio & Music — Behavioral Spec (high level)
+
 - Global semantics
   - One global sound toggle governs all SFX and music output; muting does not pause music playback.
   - Volume changes feel smooth and subtle across the whole app.
@@ -138,6 +150,7 @@
   - Respect user sensitivity and system preferences.
 
 ## Music Player & Visualizer — Behavioral Spec
+
 - Purpose and feel
   - A minimal, premium player that complements the app — subtle, calm, and rewarding to use.
   - Micro‑rewards on interactions (e.g., a brief visual lift on play/pause or next/prev) while staying understated.
@@ -168,29 +181,35 @@
   - Lightweight visuals and animations; remains fluid on common mobile hardware.
 
 ## Accessibility
+
 - Clear focus indicators and keyboard reachability for all interactive elements.
 - ARIA‑labeled modal dialog with focus trap; ESC closes (unless unsafe).
 - Color contrast meets AA; theme palettes chosen for legibility.
 
 ## Resilience & Error Handling
+
 - UI remains responsive under poor network conditions; streaming and quote fetches fail gracefully with neutral states.
 - Recoverable actions (e.g., delete all) always confirm through the app modal.
 - Missing metadata (e.g., track duration) degrades gracefully.
 
 ## Performance
+
 - Interactions should feel instant and smooth, with no jank or stalls.
 - Visual effects remain tasteful and light so the experience stays fluid on common mobile hardware.
 
 ## Energy & Background Behavior
+
 - Animations should be appealing yet frugal; favor approaches that keep devices cool and battery usage low.
 - When the app is not visible (e.g., tabbed out or in the background), suspend non‑essential dynamic effects (parallax, heavy visualizers, continuous animations) and resume gracefully on return.
 - Keep essential state updates intact while visuals are paused; the UI should pick up seamlessly when the app regains focus.
 
 ## Non‑Goals (For Now)
+
 - Accounts, sync, or multi‑device state.
 - Complex analytics; keep insights lightweight and local.
 
 ## Acceptance Criteria
+
 - Core flows (add/edit/complete/delete, filters) work flawlessly on mobile and desktop.
 - Settings apply instantly and persist; audio toggle affects all sounds; volume adjusts both SFX and music.
 - Theming and typography changes are immediate and consistent across UI.
@@ -198,6 +217,7 @@
 - No uncaught errors in steady state; graceful behavior without network access.
 
 ## Prompting Guidance (for regeneration)
+
 - Build a premium, single‑page todo app matching the IA and behaviors above.
 - Use a theme‑token system (CSS variables) with the curated palette; implement glass‑morphism and soft glows tastefully.
 - Implement a floating center action bar with grouped controls (Settings, Music, Sound; Test, Clear, Delete).
@@ -207,6 +227,7 @@
 - Ensure accessibility, mobile ergonomics, and performance budgets are respected.
 
 ## Open‑Ended Parameters
+
 - Fonts: Provide a small, high‑quality set of at least two families (one serif, one sans‑serif). Exact families are flexible as long as they feel premium and legible.
 - Themes: Provide a curated set of 10–15 themes. Exact names and palettes are flexible; ensure strong contrast, harmonious accents, and a calm/luxury mood.
 
@@ -227,7 +248,9 @@
 - Music Player: Minimal, premium UI with Play/Pause, Prev/Next, Volume, optional Pin. Streams external track URLs; handles buffering/errors gracefully. Displays current track name, index/total, and duration/current time when available. Gentle fades on start/stop/switch; occasional brief silence gaps. Subtle, non‑distracting visualizer. Remembers last track and volume. No auto‑start; may hint gently after user gesture.
 
 - Accessibility & Performance: Keyboard reachable, clear labels, AA contrast, honors reduced motion. Interactions feel instant and smooth; visuals stay tasteful and light.
+
 ## Task Action Rewards (Godly‑Feeling, High‑Priority Feedback)
+
 - Philosophy
   - All task actions are main actions and should feel special: premium, luxurious, subtle — a brief sense of “godly” satisfaction without breaking the zen tone.
 - Add Task

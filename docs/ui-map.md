@@ -16,6 +16,7 @@
 - Footer: credits with heart emoji and dynamic version string.
 
 States to cover
+
 - Empty vs. populated list; editing mode; validation messages.
 - Settings open/closed; theme and font changes live.
 - Music playing/paused/buffering; pinned/unpinned popover.
