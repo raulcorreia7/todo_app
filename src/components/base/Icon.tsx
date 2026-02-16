@@ -37,9 +37,10 @@ function Icon(props: IconProps) {
       when={isEmojiIcon()}
       fallback={
         <Show when={LucideIcon()} fallback={null}>
-          {(ResolvedIcon) => (
-            <ResolvedIcon size={size()} class={local.class} iconNode={[]} />
-          )}
+          {(ResolvedIcon) => {
+            const IconComponent = ResolvedIcon();
+            return <IconComponent size={size()} class={local.class} iconNode={[]} />;
+          }}
         </Show>
       }
     >
