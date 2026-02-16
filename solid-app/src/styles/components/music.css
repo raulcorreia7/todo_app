@@ -19,11 +19,11 @@
   z-index: var(--z-modal);
   min-width: 280px;
   max-width: 360px;
-  box-shadow: 
+  box-shadow:
     0 10px 30px var(--color-shadow),
     0 0 20px var(--color-glow);
   opacity: 0;
-  transition: 
+  transition:
     opacity var(--transition-normal),
     transform var(--transition-normal);
 }
@@ -87,6 +87,69 @@
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
+}
+
+.music-player__state {
+  margin-top: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.music-player__state-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--glass-primary-hover);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.music-player__state-chip--playing {
+  color: var(--color-text);
+  border-color: color-mix(in oklab, var(--color-glow) 45%, var(--color-border));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-glow) 25%, transparent);
+}
+
+.music-player__state-chip--paused {
+  color: var(--color-text-muted);
+}
+
+.music-player__state-chip--buffering {
+  color: var(--color-glow);
+  border-color: color-mix(in oklab, var(--color-glow) 60%, var(--color-border));
+  animation: music-buffering-pulse 1s ease-in-out infinite;
+}
+
+.music-player__state-chip--muted {
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+  background: color-mix(
+    in oklab,
+    var(--danger-glass) 70%,
+    var(--glass-primary)
+  );
+}
+
+@keyframes music-buffering-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-glow) 30%, transparent);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 5px
+      color-mix(in oklab, var(--color-glow) 15%, transparent);
+  }
 }
 
 .music-player__controls {
@@ -233,14 +296,20 @@
     max-width: 90vw;
     padding: var(--space-md);
   }
-  
+
   .music-player__button {
     width: 40px;
     height: 40px;
   }
-  
+
   .music-player__button--play {
     width: 48px;
     height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-player__state-chip--buffering {
+    animation: none;
   }
 }

@@ -127,7 +127,8 @@
 }
 
 @keyframes softBreathingGlowDanger {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 25px 50px -12px var(--overlay-backdrop),
       0 0 0 1px var(--glass-border-color),
@@ -142,7 +143,8 @@
 }
 
 @keyframes softBreathingGlow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 25px 50px -12px var(--overlay-backdrop),
       0 0 0 1px var(--glass-border-color),
@@ -177,13 +179,18 @@
 }
 
 .modal-header::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-glow), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-glow),
+    transparent
+  );
   opacity: 0.3;
 }
 
@@ -274,13 +281,18 @@
 }
 
 .modal-footer::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -1px;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-glow), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-glow),
+    transparent
+  );
   opacity: 0.3;
 }
 
@@ -322,7 +334,11 @@
 }
 
 .modal-footer .btn--danger-hybrid:hover {
-  background: linear-gradient(135deg, var(--danger-text), var(--danger-highlight));
+  background: linear-gradient(
+    135deg,
+    var(--danger-text),
+    var(--danger-highlight)
+  );
   color: var(--color-text-on-accent);
   border-color: var(--danger-text);
   box-shadow:
@@ -335,13 +351,18 @@
 }
 
 .modal-footer .btn--danger-hybrid::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--shimmer-medium), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-medium),
+    transparent
+  );
   transition: none;
 }
 
@@ -372,13 +393,17 @@
 }
 
 .modal.deleting::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, var(--danger-glass, rgba(239, 68, 68, 0.1)), transparent);
+  background: radial-gradient(
+    circle,
+    var(--danger-glass, rgba(239, 68, 68, 0.1)),
+    transparent
+  );
   opacity: 0;
   z-index: 9999;
   pointer-events: none;
@@ -433,7 +458,8 @@
   }
   50% {
     opacity: 0.8;
-    transform: translate(calc(var(--tx) * 0.5), calc(var(--ty) * 0.5)) scale(0.7);
+    transform: translate(calc(var(--tx) * 0.5), calc(var(--ty) * 0.5))
+      scale(0.7);
     box-shadow: 0 0 15px var(--danger-glow-color, rgba(239, 68, 68, 0.5));
   }
   100% {
@@ -465,11 +491,13 @@
   }
   20% {
     opacity: 0.4;
-    transform: translate(calc(var(--tx) * 0.2), calc(var(--ty) * 0.2)) scale(0.5);
+    transform: translate(calc(var(--tx) * 0.2), calc(var(--ty) * 0.2))
+      scale(0.5);
   }
   100% {
     opacity: 0;
-    transform: translate(calc(var(--tx) * 0.8), calc(var(--ty) * 0.8)) scale(0.2);
+    transform: translate(calc(var(--tx) * 0.8), calc(var(--ty) * 0.8))
+      scale(0.2);
   }
 }
 
@@ -495,7 +523,8 @@
 }
 
 @keyframes subtlePulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -511,12 +540,22 @@
 }
 
 .modal.delete-modal .modal-header::after {
-  background: linear-gradient(90deg, transparent, var(--danger-shadow-hover), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--danger-shadow-hover),
+    transparent
+  );
   opacity: 0.3;
 }
 
 .modal.delete-modal .modal-footer::before {
-  background: linear-gradient(90deg, transparent, var(--color-glow), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-glow),
+    transparent
+  );
   opacity: 0.3;
 }
 
@@ -615,7 +654,7 @@
     0 25px 50px -12px var(--overlay-backdrop),
     0 0 0 1px var(--danger-border),
     0 0 30px var(--danger-shadow);
-  animation: confirm-modal-enter 0.3s ease forwards, danger-pulse 2s ease-in-out infinite;
+  animation: confirm-modal-enter 0.3s ease forwards;
 }
 
 @keyframes confirm-modal-enter {
@@ -626,21 +665,6 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes danger-pulse {
-  0%, 100% {
-    box-shadow:
-      0 25px 50px -12px var(--overlay-backdrop),
-      0 0 0 1px var(--danger-border),
-      0 0 30px var(--danger-shadow);
-  }
-  50% {
-    box-shadow:
-      0 25px 50px -12px var(--overlay-backdrop),
-      0 0 0 1px var(--danger-border),
-      0 0 40px var(--danger-shadow-hover);
   }
 }
 
@@ -706,9 +730,9 @@
 }
 
 .confirm-modal__footer {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-lg);
   border-top: var(--glass-border);
@@ -720,11 +744,13 @@
   justify-content: center;
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-lg);
-  min-width: 100px;
-  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
   border-radius: var(--radius-lg);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   transition: all var(--effect-transition);
   border: 1px solid transparent;
@@ -744,13 +770,18 @@
 }
 
 .confirm-modal__btn--cancel::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--shimmer-light), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-light),
+    transparent
+  );
   transition: none;
 }
 
@@ -782,17 +813,24 @@
   color: var(--danger-text);
   position: relative;
   overflow: hidden;
-  animation: danger-btn-glow 2s ease-in-out infinite;
+  box-shadow:
+    0 4px 14px color-mix(in oklab, var(--danger-shadow) 70%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--danger-border) 75%, transparent);
 }
 
 .confirm-modal__btn--danger::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, var(--danger-highlight), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--danger-highlight),
+    transparent
+  );
   transition: none;
 }
 
@@ -801,29 +839,17 @@
 }
 
 .confirm-modal__btn--danger:hover {
-  background: linear-gradient(135deg, var(--danger-text), var(--danger-highlight));
+  background: linear-gradient(
+    135deg,
+    var(--danger-text),
+    var(--danger-highlight)
+  );
   color: var(--color-text-on-accent);
   border-color: var(--danger-text);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow:
-    0 8px 25px var(--danger-shadow-hover),
-    0 0 30px var(--danger-shadow),
-    0 0 50px var(--danger-glow-color, var(--danger-shadow));
-  animation: none;
-}
-
-@keyframes danger-btn-glow {
-  0%, 100% {
-    box-shadow:
-      0 4px 15px var(--danger-shadow),
-      0 0 20px var(--danger-glass-hover);
-  }
-  50% {
-    box-shadow:
-      0 4px 20px var(--danger-shadow-hover),
-      0 0 30px var(--danger-shadow),
-      0 0 40px var(--danger-glow-color, var(--danger-shadow));
-  }
+    0 6px 18px color-mix(in oklab, var(--danger-shadow-hover) 80%, transparent),
+    0 0 20px color-mix(in oklab, var(--danger-shadow) 55%, transparent);
 }
 
 @media (max-width: 480px) {
@@ -832,11 +858,10 @@
   }
 
   .confirm-modal__footer {
-    flex-direction: column-reverse;
+    grid-template-columns: 1fr;
   }
 
   .confirm-modal__btn {
     width: 100%;
   }
 }
-

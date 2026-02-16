@@ -1,4 +1,11 @@
-import { createSignal, onCleanup, onMount, For, Show } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  For,
+  Show,
+} from "solid-js";
 import { musicService, type Track } from "@/services/music";
 
 interface MusicPlayerProps {
@@ -8,24 +15,36 @@ interface MusicPlayerProps {
 
 function MusicPlayer(props: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = createSignal(musicService.isPlaying());
+  const [isBuffering, setIsBuffering] = createSignal(
+    musicService.isBuffering()
+  );
+  const [isMuted, setIsMuted] = createSignal(musicService.isGloballyMuted());
   const [currentTrack, setCurrentTrack] = createSignal(
     musicService.getCurrentTrack()
   );
   const [volume, setVolume] = createSignal(musicService.getVolume());
 
+  const playbackStatus = createMemo<"playing" | "paused" | "buffering">(() => {
+    if (isBuffering()) return "buffering";
+    return isPlaying() ? "playing" : "paused";
+  });
+
+  const playbackStatusLabel = createMemo(() => {
+    if (playbackStatus() === "buffering") return "Buffering";
+    if (playbackStatus() === "playing") return "Playing";
+    return "Paused";
+  });
+
   function handleToggle() {
     musicService.toggle();
-    setIsPlaying(musicService.isPlaying());
   }
 
   function handleNext() {
     musicService.next();
-    setCurrentTrack(musicService.getCurrentTrack());
   }
 
   function handlePrevious() {
     musicService.previous();
-    setCurrentTrack(musicService.getCurrentTrack());
   }
 
   function handleVolumeChange(e: Event) {
@@ -37,13 +56,13 @@ function MusicPlayer(props: MusicPlayerProps) {
 
   function handleTrackSelect(index: number) {
     musicService.selectTrack(index);
-    setCurrentTrack(musicService.getCurrentTrack());
-    setIsPlaying(musicService.isPlaying());
   }
 
   onMount(() => {
     const unsubscribe = musicService.subscribe((state) => {
       setIsPlaying(state.isPlaying);
+      setIsBuffering(state.isBuffering);
+      setIsMuted(state.isGloballyMuted);
       setCurrentTrack(state.currentTrack);
       setVolume(state.volume);
     });
@@ -88,6 +107,18 @@ function MusicPlayer(props: MusicPlayerProps) {
         <div class="music-player__body">
           <div class="music-player__current-track">
             <span class="music-player__track-name">{currentTrack().name}</span>
+            <div class="music-player__state" aria-live="polite">
+              <span
+                class={`music-player__state-chip music-player__state-chip--${playbackStatus()}`}
+              >
+                {playbackStatusLabel()}
+              </span>
+              <Show when={isMuted()}>
+                <span class="music-player__state-chip music-player__state-chip--muted">
+                  Muted
+                </span>
+              </Show>
+            </div>
           </div>
           <div class="music-player__controls">
             <button
