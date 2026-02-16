@@ -87,7 +87,9 @@ class MockAudioContext {
 }
 
 const originalAudioContext = global.AudioContext;
-const originalWebkitAudioContext = (global as any).webkitAudioContext;
+const originalWebkitAudioContext = (
+  global as unknown as { webkitAudioContext?: typeof AudioContext }
+).webkitAudioContext;
 
 vi.mock("@/stores/settingsStore", () => ({
   settingsStore: {
@@ -108,8 +110,10 @@ describe("AudioService", () => {
     mockLocalStorage.clear();
     MockAudioContext.instances = [];
 
-    global.AudioContext = MockAudioContext as any;
-    (global as any).webkitAudioContext = MockAudioContext;
+    global.AudioContext = MockAudioContext as unknown as typeof AudioContext;
+    (
+      global as unknown as { webkitAudioContext: typeof MockAudioContext }
+    ).webkitAudioContext = MockAudioContext;
 
     const module = await import("@/services/audio");
     audioService = module.audioService;
@@ -117,7 +121,9 @@ describe("AudioService", () => {
 
   afterEach(() => {
     global.AudioContext = originalAudioContext;
-    (global as any).webkitAudioContext = originalWebkitAudioContext;
+    (
+      global as unknown as { webkitAudioContext?: typeof AudioContext }
+    ).webkitAudioContext = originalWebkitAudioContext;
   });
 
   describe("sound types", () => {

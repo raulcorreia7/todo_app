@@ -69,7 +69,8 @@ test.describe("Task Persistence", () => {
     const stored = await getLocalStorageItem(page, "luxury-todos-v2");
     expect(stored).toBeTruthy();
 
-    const parsed = JSON.parse(stored!);
+    if (!stored) throw new Error("Expected stored to be truthy");
+    const parsed = JSON.parse(stored);
     expect(Array.isArray(parsed)).toBe(true);
     expect(
       parsed.some((t: { title: string }) => t.title === "LocalStorage Task")
@@ -159,7 +160,8 @@ test.describe("Settings Persistence", () => {
     const stored = await getLocalStorageItem(page, "luxury-todo-settings-v2");
     expect(stored).toBeTruthy();
 
-    const parsed = JSON.parse(stored!);
+    if (!stored) throw new Error("Expected stored to be truthy");
+    const parsed = JSON.parse(stored);
     expect(parsed.theme).toBe("sakura");
   });
 });

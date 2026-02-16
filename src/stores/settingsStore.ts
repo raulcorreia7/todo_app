@@ -138,8 +138,9 @@ function applyFont(font: FontId): void {
 
 const [state, setState] = createStore<Settings>(loadSettings());
 
-applyTheme(state.theme);
-applyFont(state.font);
+const initialSettings = loadSettings();
+applyTheme(initialSettings.theme);
+applyFont(initialSettings.font);
 
 function persistSettings() {
   settingsStorage.set(state);

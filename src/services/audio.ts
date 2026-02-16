@@ -54,7 +54,9 @@ class AudioService {
 
     try {
       this.audioContext = new (
-        window.AudioContext || (window as any).webkitAudioContext
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
       )();
       this.masterGain = this.audioContext.createGain();
       this.masterGain.connect(this.audioContext.destination);
@@ -119,24 +121,27 @@ class AudioService {
 
     let duration = SOUND_PLAYBACK_CONFIG.click.duration;
 
+    const masterGain = this.masterGain;
+    if (!masterGain) return;
+
     switch (sound) {
       case "add":
-        duration = this.playAdd(ctx, startTime);
+        duration = this.playAdd(ctx, masterGain, startTime);
         break;
       case "complete":
-        duration = this.playComplete(ctx, startTime);
+        duration = this.playComplete(ctx, masterGain, startTime);
         break;
       case "delete":
-        duration = this.playDelete(ctx, startTime);
+        duration = this.playDelete(ctx, masterGain, startTime);
         break;
       case "achievement":
-        duration = this.playAchievement(ctx, startTime);
+        duration = this.playAchievement(ctx, masterGain, startTime);
         break;
       case "victory":
-        duration = this.playVictory(ctx, startTime);
+        duration = this.playVictory(ctx, masterGain, startTime);
         break;
       case "click":
-        duration = this.playClick(ctx, startTime);
+        duration = this.playClick(ctx, masterGain, startTime);
         break;
     }
 
@@ -152,7 +157,11 @@ class AudioService {
     }
   }
 
-  private playAdd(ctx: AudioContext, startTime: number): number {
+  private playAdd(
+    ctx: AudioContext,
+    masterGain: GainNode,
+    startTime: number
+  ): number {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -165,7 +174,7 @@ class AudioService {
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
 
     osc.connect(gain);
-    gain.connect(this.masterGain!);
+    gain.connect(masterGain);
 
     osc.start(startTime);
     osc.stop(startTime + SOUND_PLAYBACK_CONFIG.add.duration);
@@ -173,7 +182,11 @@ class AudioService {
     return SOUND_PLAYBACK_CONFIG.add.duration;
   }
 
-  private playComplete(ctx: AudioContext, startTime: number): number {
+  private playComplete(
+    ctx: AudioContext,
+    masterGain: GainNode,
+    startTime: number
+  ): number {
     const baseFreq =
       this.pentatonicFreqs[this.soundStep % this.pentatonicFreqs.length] ??
       523.25;
@@ -193,7 +206,7 @@ class AudioService {
       gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.4);
 
       osc.connect(gain);
-      gain.connect(this.masterGain!);
+      gain.connect(masterGain);
 
       osc.start(noteStart);
       osc.stop(noteStart + 0.4);
@@ -202,7 +215,11 @@ class AudioService {
     return SOUND_PLAYBACK_CONFIG.complete.duration;
   }
 
-  private playDelete(ctx: AudioContext, startTime: number): number {
+  private playDelete(
+    ctx: AudioContext,
+    masterGain: GainNode,
+    startTime: number
+  ): number {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
@@ -221,7 +238,7 @@ class AudioService {
 
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(this.masterGain!);
+    gain.connect(masterGain);
 
     osc.start(startTime);
     osc.stop(startTime + SOUND_PLAYBACK_CONFIG.delete.duration);
@@ -229,7 +246,11 @@ class AudioService {
     return SOUND_PLAYBACK_CONFIG.delete.duration;
   }
 
-  private playAchievement(ctx: AudioContext, startTime: number): number {
+  private playAchievement(
+    ctx: AudioContext,
+    masterGain: GainNode,
+    startTime: number
+  ): number {
     const notes = [523, 659, 784, 1047];
 
     notes.forEach((freq, i) => {
@@ -245,7 +266,7 @@ class AudioService {
       gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.5);
 
       osc.connect(gain);
-      gain.connect(this.masterGain!);
+      gain.connect(masterGain);
 
       osc.start(noteStart);
       osc.stop(noteStart + 0.5);
@@ -254,7 +275,11 @@ class AudioService {
     return SOUND_PLAYBACK_CONFIG.achievement.duration;
   }
 
-  private playVictory(ctx: AudioContext, startTime: number): number {
+  private playVictory(
+    ctx: AudioContext,
+    masterGain: GainNode,
+    startTime: number
+  ): number {
     const melody = [
       { freq: 392, time: 0 },
       { freq: 523, time: 0.15 },
@@ -276,7 +301,7 @@ class AudioService {
       gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.35);
 
       osc.connect(gain);
-      gain.connect(this.masterGain!);
+      gain.connect(masterGain);
 
       osc.start(noteStart);
       osc.stop(noteStart + 0.35);
@@ -285,7 +310,11 @@ class AudioService {
     return SOUND_PLAYBACK_CONFIG.victory.duration;
   }
 
-  private playClick(ctx: AudioContext, startTime: number): number {
+  private playClick(
+    ctx: AudioContext,
+    masterGain: GainNode,
+    startTime: number
+  ): number {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -298,7 +327,7 @@ class AudioService {
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.05);
 
     osc.connect(gain);
-    gain.connect(this.masterGain!);
+    gain.connect(masterGain);
 
     osc.start(startTime);
     osc.stop(startTime + SOUND_PLAYBACK_CONFIG.click.duration);

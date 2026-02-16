@@ -41,15 +41,13 @@ export default defineConfig({
     },
   },
   build: {
-    target: "esnext",
+    target: "es2022",
     minify: "esbuild",
     cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          solid: ["solid-js"],
-          solidStore: ["solid-js/store"],
-          solidWeb: ["solid-js/web"],
+          solid: ["solid-js", "solid-js/store", "solid-js/web"],
         },
       },
     },

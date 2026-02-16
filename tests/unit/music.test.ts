@@ -58,7 +58,7 @@ describe("MusicService", () => {
     vi.resetModules();
     mockLocalStorage.clear();
 
-    global.Audio = MockAudio as any;
+    global.Audio = MockAudio as unknown as typeof Audio;
 
     const module = await import("@/services/music");
     musicService = module.musicService;

@@ -82,13 +82,13 @@ function MusicPlayer(props: MusicPlayerProps) {
 
   return (
     <Show when={props.isOpen}>
-      <div class="music-player-backdrop" onClick={props.onClose} />
+      <div class="music-player-backdrop" onClick={() => props.onClose()} />
       <div class="music-player music-player--open">
         <div class="music-player__header">
           <h2 class="music-player__title">Music</h2>
           <button
             class="music-player__close"
-            onClick={props.onClose}
+            onClick={() => props.onClose()}
             aria-label="Close music player"
           >
             <svg

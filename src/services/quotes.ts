@@ -71,11 +71,11 @@ function saveQuoteData(data: QuoteData): void {
 
 function getRandomQuote(current: string): string {
   if (QUOTES.length === 0) return "";
-  let newQuote: string;
+  let newQuote: string | undefined;
   do {
-    newQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)]!;
+    newQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
   } while (newQuote === current && QUOTES.length > 1);
-  return newQuote;
+  return newQuote ?? "";
 }
 
 export interface QuoteService {
@@ -85,7 +85,7 @@ export interface QuoteService {
 }
 
 export function createQuoteService(): QuoteService {
-  let currentQuote: string = QUOTES[0]!;
+  let currentQuote: string = QUOTES[0] ?? "";
   let lastQuoteDate: string = "";
 
   function init() {

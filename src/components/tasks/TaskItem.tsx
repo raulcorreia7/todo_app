@@ -191,7 +191,7 @@ export default function TaskItem(props: TaskItemProps) {
             checked={props.task.completed}
             onChange={handleToggle}
           />
-          <span class="checkmark"></span>
+          <span class="checkmark" />
         </label>
         <div class="task-text-content">
           <h3 class="task-title">{props.task.title}</h3>

@@ -79,7 +79,7 @@ function ModalContent(props: ModalProps) {
               </h2>
               <button
                 class="modal-close"
-                onClick={local.onClose}
+                onClick={() => local.onClose()}
                 aria-label="Close modal"
               >
                 <svg

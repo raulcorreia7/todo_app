@@ -1,3 +1,4 @@
+import { For } from "solid-js";
 import { taskStore, taskActions } from "@/stores/taskStore";
 import type { TaskFilter } from "@/types";
 
@@ -12,15 +13,17 @@ export default function TaskFilters() {
 
   return (
     <nav class="task-filters filter-group">
-      {filters.map((filter) => (
-        <button
-          class={`task-filters__btn ${currentFilter() === filter.value ? "task-filters__btn--active" : ""}`}
-          data-filter={filter.value}
-          onClick={() => taskActions.setFilter(filter.value)}
-        >
-          {filter.label}
-        </button>
-      ))}
+      <For each={filters}>
+        {(filter) => (
+          <button
+            class={`task-filters__btn ${currentFilter() === filter.value ? "task-filters__btn--active" : ""}`}
+            data-filter={filter.value}
+            onClick={() => taskActions.setFilter(filter.value)}
+          >
+            {filter.label}
+          </button>
+        )}
+      </For>
     </nav>
   );
 }

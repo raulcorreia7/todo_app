@@ -1,4 +1,5 @@
-import { Show, Portal } from "solid-js/web";
+import { Show } from "solid-js";
+import { Portal } from "solid-js/web";
 import { uiStore, uiActions } from "@/stores/uiStore";
 import { taskStore } from "@/stores/taskStore";
 import { gamificationState } from "@/stores/gamificationStore";

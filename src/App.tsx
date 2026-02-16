@@ -186,8 +186,8 @@ function App() {
   return (
     <>
       <div class="background-container">
-        <div class="nebula-bg"></div>
-        <div class="grain-overlay"></div>
+        <div class="nebula-bg" />
+        <div class="grain-overlay" />
       </div>
       <div onClick={initializeAudio}>
         <Header />

@@ -86,7 +86,8 @@ describe("SettingsPanel", () => {
         <SettingsPanel isOpen={true} onClose={onClose} />
       ));
       const backdrop = container.querySelector(".settings-backdrop");
-      await fireEvent.click(backdrop!);
+      if (!backdrop) throw new Error("Expected backdrop to exist");
+      await fireEvent.click(backdrop);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 

@@ -63,13 +63,13 @@ function SettingsPanel(props: SettingsPanelProps) {
 
   return (
     <Show when={props.isOpen}>
-      <div class="settings-backdrop" onClick={props.onClose} />
+      <div class="settings-backdrop" onClick={() => props.onClose()} />
       <div class="settings-panel settings-panel--open">
         <div class="settings-panel__header">
           <h2 class="settings-panel__title">Settings</h2>
           <button
             class="settings-panel__close"
-            onClick={props.onClose}
+            onClick={() => props.onClose()}
             aria-label="Close settings"
           >
             <svg

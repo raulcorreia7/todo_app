@@ -11,7 +11,7 @@ const defaultDailyStats: DailyStats = {
   edited: 0,
   deleted: 0,
   focusTime: 0,
-  lastUpdate: new Date().toISOString().split("T")[0]!,
+  lastUpdate: new Date().toISOString().split("T")[0] ?? "",
 };
 
 const defaultState: GamificationState = {
@@ -26,7 +26,7 @@ const defaultState: GamificationState = {
 };
 
 function checkDailyReset(state: GamificationState): GamificationState {
-  const today = new Date().toISOString().split("T")[0]!;
+  const today = new Date().toISOString().split("T")[0] ?? "";
   if (state.dailyStats.lastUpdate !== today) {
     return {
       ...state,
@@ -88,7 +88,7 @@ export function recordTaskCreation(): void {
 }
 
 export function recordTaskCompletion(): void {
-  const today = new Date().toISOString().split("T")[0]!;
+  const today = new Date().toISOString().split("T")[0] ?? "";
   setGamificationState(
     produce((state) => {
       if (state.dailyStats.lastUpdate !== today) {
@@ -112,7 +112,7 @@ export function recordTaskCompletion(): void {
 }
 
 export function recordTaskEdit(): void {
-  const today = new Date().toISOString().split("T")[0]!;
+  const today = new Date().toISOString().split("T")[0] ?? "";
   setGamificationState(
     produce((state) => {
       if (state.dailyStats.lastUpdate !== today) {
@@ -130,7 +130,7 @@ export function recordTaskEdit(): void {
 }
 
 export function recordTaskDelete(): void {
-  const today = new Date().toISOString().split("T")[0]!;
+  const today = new Date().toISOString().split("T")[0] ?? "";
   setGamificationState(
     produce((state) => {
       if (state.dailyStats.lastUpdate !== today) {

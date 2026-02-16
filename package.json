@@ -11,14 +11,15 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
+    "test:run": "vitest --run",
+    "test:coverage": "vitest --coverage --run",
     "test:e2e": "playwright test",
     "test:visual": "playwright test tests/e2e/visual.spec.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "fix": "eslint . --fix && prettier --write .",
+    "check": "tsc --noEmit && eslint . && vitest --run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

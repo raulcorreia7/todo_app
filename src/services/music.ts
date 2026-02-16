@@ -261,7 +261,10 @@ class MusicService {
   }
 
   getCurrentTrack(): Track {
-    return TRACKS[this.currentTrackIndex]!;
+    const track = TRACKS[this.currentTrackIndex];
+    if (!track)
+      throw new Error(`Track at index ${this.currentTrackIndex} not found`);
+    return track;
   }
 
   getAllTracks(): Track[] {
