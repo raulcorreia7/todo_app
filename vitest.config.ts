@@ -19,9 +19,17 @@ export default defineConfig({
       "tests/**/*.spec.ts",
       "src/**/*.test.ts",
     ],
-    exclude: ["tests/e2e/**", "node_modules/**"],
+    exclude: ["tests/e2e/**", "node_modules/**", "dist/**"],
     coverage: {
       provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "node_modules/**",
+        "tests/**",
+        "dist/**",
+        "**/*.d.ts",
+        "**/*.config.*",
+      ],
     },
   },
 });

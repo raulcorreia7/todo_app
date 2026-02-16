@@ -1,8 +1,11 @@
 {
   "name": "luxury-todo",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Premium todo app with gamification, themes, and AI features",
+  "author": "",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
