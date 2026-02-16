@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 
 const APP_VERSION = "1.0.0-solid";
 
@@ -6,16 +6,49 @@ export default function Footer() {
   const [visible, setVisible] = createSignal(false);
 
   onMount(() => {
-    const handleScroll = () => {
-      const scrolledToBottom =
-        window.innerHeight + window.scrollY >= document.body.scrollHeight - 100;
-      setVisible(scrolledToBottom);
+    const SHOW_DISTANCE = 220;
+    const HIDE_DISTANCE = 280;
+    let isVisible = false;
+    let rafId: number | null = null;
+
+    const updateVisibility = () => {
+      const scrollBottom = window.innerHeight + window.scrollY;
+      const distanceFromBottom = document.body.scrollHeight - scrollBottom;
+
+      if (!isVisible && distanceFromBottom <= SHOW_DISTANCE) {
+        isVisible = true;
+        setVisible(true);
+        return;
+      }
+
+      if (isVisible && distanceFromBottom > HIDE_DISTANCE) {
+        isVisible = false;
+        setVisible(false);
+      }
     };
 
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
+    const handleScroll = () => {
+      if (rafId !== null) {
+        return;
+      }
 
-    return () => window.removeEventListener("scroll", handleScroll);
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        updateVisibility();
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    updateVisibility();
+
+    onCleanup(() => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+    });
   });
 
   return (
