@@ -123,7 +123,7 @@ export function checkForAffirmation(todayCompleted: number): Affirmation | null 
 export function displayAffirmation(affirmation: Affirmation): void {
   const achievement = {
     id: `affirmation-${Date.now()}`,
-    name: affirmation.title,
+    title: affirmation.title,
     description: affirmation.message,
     icon: affirmation.icon,
     unlockedAt: new Date().toISOString(),

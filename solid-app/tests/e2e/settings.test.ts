@@ -153,12 +153,9 @@ test.describe('Reset to Defaults', () => {
     
     const resetBtn = page.locator('.settings-section__reset-btn');
     await resetBtn.waitFor({ state: 'visible' });
-    
-    await resetBtn.click({ 
-      force: true,
-      noWaitAfter: false,
-      timeout: 5000
-    });
+
+    await resetBtn.scrollIntoViewIfNeeded();
+    await resetBtn.click({ timeout: 5000 });
     
     await page.waitForTimeout(500);
     

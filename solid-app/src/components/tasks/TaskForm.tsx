@@ -48,11 +48,11 @@ export default function TaskForm(props?: TaskFormProps) {
   }
 
   return (
-    <form class="task-form" onSubmit={handleSubmit}>
-      <div class="task-form__input-container">
+    <form id="addTaskForm" class="task-form add-task-form" onSubmit={handleSubmit}>
+      <div class="task-form__input-container input-container">
         <input
           type="text"
-          class="task-form__title-input"
+          class="task-form__title-input task-input"
           value={title()}
           onInput={(e) => setTitle(e.currentTarget.value)}
           placeholder="Add a new task..."
@@ -62,7 +62,7 @@ export default function TaskForm(props?: TaskFormProps) {
         />
         <button
           type="submit"
-          class={`btn btn--primary task-form__add-btn ${confirmAnim() ? "task-form__add-btn--confirm" : ""}`}
+          class={`btn btn--primary task-form__add-btn add-task-btn ${confirmAnim() ? "task-form__add-btn--confirm" : ""}`}
           aria-label="Add task"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

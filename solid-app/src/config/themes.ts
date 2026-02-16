@@ -352,7 +352,8 @@ const STAT_ICON_COLORS: Partial<Record<ThemeId, string>> = {
 };
 
 export function getThemeTone(themeId: ThemeId): "light" | "dark" {
-  return THEMES[themeId].tags.includes("light") ? "light" : "dark";
+  const themeTags = THEMES[themeId].tags as readonly string[];
+  return themeTags.includes("light") ? "light" : "dark";
 }
 
 export function getThemeStatIconColor(themeId: ThemeId): string {

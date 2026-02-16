@@ -80,8 +80,11 @@ test.describe('Critical User Flows', () => {
     await expect(task).toHaveClass(/task-item--completed/);
     
     await task.locator('.task-delete-btn').click({ force: true });
-    await page.locator('.modal.active').waitFor({ state: 'visible' });
-    await page.locator('.modal.active .btn--danger-hybrid, .modal.active .btn--primary').click({ force: true });
+    await page.locator('.confirm-modal-backdrop, .modal.active').first().waitFor({ state: 'visible' });
+    await page
+      .locator('.confirm-modal__btn--danger, .confirm-modal__btn--confirm, .modal.active .btn--danger-hybrid, .modal.active .btn--primary')
+      .first()
+      .click({ force: true });
     await page.waitForTimeout(200);
     expect(await getTaskCount(page)).toBe(0);
   });

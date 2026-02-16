@@ -1,252 +1,62 @@
-# Component Inventory & Feature Map
+# Component Inventory and Parity Map
 
-This document maps the original JavaScript application modules to their SolidJS TypeScript equivalents, tracking implementation status and identifying gaps.
+This document maps the original root JavaScript modules to the SolidJS app and records the current parity status.
 
-## Module Mapping
+## Current Verification Status
 
-| Original Module | SolidJS Equivalent | Status | Notes |
-|-----------------|-------------------|--------|-------|
-| js/app.js | App.tsx + stores/taskStore.ts | ✅ DONE | Core app logic; state extracted to stores |
-| js/bus.js | N/A (not needed) | ✅ N/A | SolidJS uses signals/stores for reactivity |
-| js/storage.js | services/storage.ts | ✅ DONE | Full localStorage wrapper with typed storage |
-| js/themes.js | components/settings/ThemeSelector.tsx + types/theme.ts | ✅ DONE | 15 themes ported with full configuration |
-| js/settings.js | stores/settingsStore.ts + components/settings/* | ✅ DONE | Settings split into store and components |
-| js/audio.js | services/audio.ts | ✅ DONE | Web Audio API sounds; simpler than original |
-| js/music.js | services/music.ts | ✅ DONE | Background music with track management |
-| js/music-player.js | components/music/MusicPlayer.tsx | ✅ DONE | Music UI as lazy-loaded component |
-| js/animations.js | MISSING | ❌ MISSING | Canvas particle effects system |
-| js/gamification.js | stores/gamificationStore.ts | ✅ DONE | Karma, achievements, daily stats |
-| js/achievements.js | utils/achievements.ts | ✅ DONE | Achievement checking logic |
-| js/achievements-ui.js | components/gamification/AchievementsList.tsx | ✅ DONE | Achievement grid display |
-| js/ai-providers.js | services/ai.ts | ✅ DONE | LLM7 integration for task refactoring |
-| js/statistics.js | stores/statisticsStore.ts + components/statistics/* | ✅ DONE | Stats tracking and display |
-| js/modal-manager.js | components/base/ConfirmModal.tsx + Modal.tsx | ✅ DONE | Modal system with confirm dialogs |
-| js/center-bar.js | components/center-bar/CenterActionBar.tsx | ✅ DONE | Floating action bar with micro-interactions |
-| js/quotes.js | MISSING | ❌ MISSING | Daily motivational quotes system |
-| js/daily-summary.js | MISSING | ❌ MISSING | End-of-day glass stat card |
-| js/swipe-gestures.js | MISSING | ❌ MISSING | Mobile swipe-to-complete/delete |
-| js/validation.js | PARTIAL in components | ⚠️ PARTIAL | Char counters exist; validation helper missing |
-| js/tooltip-service.js | MISSING | ❌ MISSING | Tooltip positioning service |
-| js/nebula-parallax.js | MISSING | ❌ MISSING | Device tilt parallax effect |
-| js/affirmations.js | PARTIAL in gamificationStore | ⚠️ PARTIAL | Affirmations merged with achievements |
-| js/achievement-definitions.js | utils/achievements.ts | ⚠️ PARTIAL | Fewer achievements than original |
+- `pnpm run typecheck`: pass
+- `pnpm run build`: pass
+- `pnpm exec vitest run --reporter=dot --silent`: pass (17 files, 240 tests)
+- `pnpm run test:e2e`: pass (65 tests)
 
-## Feature Status Summary
+## Root Module Mapping
 
-### Fully Implemented (✅)
+| Root Module | Solid Equivalent | Status | Notes |
+| --- | --- | --- | --- |
+| `js/app.js` | `src/App.tsx`, `src/stores/taskStore.ts` | DONE | Core task orchestration and UI composition |
+| `js/storage.js` | `src/services/storage.ts` | DONE | Typed storage wrappers with same keys |
+| `js/themes.js` | `src/config/themes.ts`, `src/stores/settingsStore.ts`, `src/components/settings/ThemeSelector.tsx` | DONE | All 15 root themes mapped to a single source of truth |
+| `js/settings.js` | `src/stores/settingsStore.ts`, `src/components/settings/*` | DONE | Theme, font, sound, volume, reset flow |
+| `js/audio.js` | `src/services/audio.ts` | PARTIAL | Core sound effects and volume/settings are ported |
+| `js/music.js` | `src/services/music.ts` | PARTIAL | Core playback and persistence are ported |
+| `js/music-player.js` | `src/components/music/MusicPlayer.tsx` | DONE | Player UI and controls are present |
+| `js/animations.js` | `src/utils/particles.ts` | PARTIAL | Completion/celebration particle flows are ported |
+| `js/gamification.js` | `src/stores/gamificationStore.ts` | DONE | Karma, achievements, daily stats, unlock flow |
+| `js/achievement-definitions.js` | `src/utils/achievements.ts` | DONE | Achievement catalog and unlock conditions |
+| `js/achievements.js` | `src/utils/achievements.ts` + `src/stores/gamificationStore.ts` | DONE | Condition checks and unlock logic |
+| `js/achievements-ui.js` | `src/components/gamification/AchievementsList.tsx` + `src/components/gamification/AchievementNotification.tsx` | DONE | List and notifications are ported |
+| `js/statistics.js` | `src/stores/statisticsStore.ts`, `src/components/statistics/*` | DONE | Stats tracking and display |
+| `js/daily-summary.js` | `src/services/dailySummary.ts`, `src/components/statistics/DailySummary.tsx` | DONE | Summary modal and score/message logic |
+| `js/quotes.js` | `src/services/quotes.ts`, `src/components/layout/Header.tsx` | DONE | Daily quote persistence and rotation |
+| `js/affirmations.js` | `src/utils/affirmations.ts`, `src/stores/gamificationStore.ts` | DONE | Milestone affirmations integrated with notifications |
+| `js/swipe-gestures.js` | `src/hooks/useSwipeGesture.ts` + `src/components/tasks/TaskItem.tsx` | DONE | Swipe complete/delete and feedback |
+| `js/modal-manager.js` | `src/components/base/Modal.tsx`, `src/components/base/ConfirmModal.tsx` | DONE | Modal + confirm dialog paths |
+| `js/center-bar.js` | `src/components/center-bar/CenterActionBar.tsx`, `src/hooks/useCenterBarVisibility.ts` | DONE | Action bar controls and visibility behavior |
+| `js/ai-providers.js` | `src/services/ai.ts`, `src/components/ai/AIRefactorButton.tsx` | DONE | Refactor and subtask suggestions |
+| `js/validation.js` | `src/components/tasks/TaskForm.tsx`, `src/components/tasks/TaskItem.tsx` | PARTIAL | UI-level limits/counters present; no standalone utility module |
+| `js/tooltip-service.js` | N/A | PARTIAL | Native title/tooltips used; custom service not ported |
+| `js/nebula-parallax.js` | N/A | PARTIAL | Background visuals present; orientation-based parallax not ported |
+| `js/music-visualizer.js` | N/A | PARTIAL | Audio playback exists, visualizer not ported |
+| `js/progress.js` | N/A | PARTIAL | Equivalent behavior covered by stores/stats, no direct module |
+| `js/bus.js` | N/A | N/A | Solid reactivity removes event bus need |
+| `js/constants.js` | Inlined across `src/*` | N/A | Split by domain instead of central constants module |
+| `js/environment.js` | `import.meta.env` usage in `src/services/ai.ts` | DONE | Env-based configuration |
+| `js/settings-loader.js` | N/A | N/A | Settings bootstrapped by store initialization |
+| `js/version.js` | N/A | N/A | Build metadata not required by current UI |
 
-**Core Task Management**
-- Add, edit, delete tasks with title and description
-- Toggle task completion
-- Filter tasks (all/active/completed)
-- Task counts and statistics
-- Auto-save to localStorage
+## Functional Parity Score
 
-**Theme System**
-- 15 themes with full color configurations
-- Theme preview cards with gradients
-- Light/dark tone detection
-- Sorted by brightness and color temperature
+- Estimated parity: **~97%** for user-facing behavior
+- Remaining deltas are mostly non-critical polish and legacy extras:
+  - custom tooltip service
+  - nebula orientation parallax
+  - music visualizer and richer audio progression details
 
-**Settings**
-- Theme selection
-- Font selection (Inter, Playfair, SF Pro)
-- Sound enable/disable
-- Volume control
-- Reset to defaults
+## Notes on Test Compatibility
 
-**Audio**
-- Web Audio API sound effects (add, complete, delete, achievement, victory)
-- Volume control integration with settings
-
-**Music**
-- Background music player with 3 tracks
-- Play/pause, next/previous
-- Volume control
-- Track selection
-- Persisted state (volume, playing, current track)
-
-**Gamification**
-- Karma points system
-- 10 achievements with conditions
-- Achievement unlock notifications
-- Daily stats tracking
-- First task created/edited/deleted tracking
-
-**AI Integration**
-- LLM7 API integration for task refactoring
-- AI refactor button per task
-- Subtask suggestions API
-
-**UI Components**
-- Floating center action bar
-- Settings panel (lazy loaded)
-- Music player (lazy loaded)
-- Achievements list (lazy loaded)
-- Confirm modal with danger styling
-- Task form with char counters
-- Task item with edit mode
-
-**Statistics Display**
-- Total/completed tasks display
-- Completion rate calculation
-- Streak tracking (data structure ready)
-
-### Partially Implemented (⚠️)
-
-**Validation**
-- Char counters on title (100) and description (500) fields
-- Warning/error states for counters
-- Missing: standalone validation utility for reuse
-
-**Achievements**
-- 10 achievements ported vs ~12 in original
-- Missing AI-specific achievements (ai_editor_bronze/silver/gold, divine_editor)
-- Missing daily harmony achievement
-
-**Affirmations**
-- Basic achievement notifications exist
-- Missing: separate affirmation system for task milestones (1, 3, 7, 10, 15, 20 completions)
-
-### Missing (❌)
-
-**Animation System**
-- Canvas-based particle effects
-- Sparkle bursts on task completion
-- Mood bloom petals
-- Victory celebration effects
-- Divine blessing effects
-- Sacred geometry patterns
-- Theme transition effects
-- Loading shimmer effects
-
-**Daily Quotes**
-- 53 motivational quotes
-- 15-second rotation
-- Click-to-change functionality
-- Daily persistence
-
-**Daily Summary**
-- End-of-day glass stat card
-- Tasks completed/added stats
-- Karma earned display
-- Productivity score
-- Motivational messages
-
-**Swipe Gestures**
-- Mobile swipe-to-complete (right swipe)
-- Mobile swipe-to-delete (left swipe)
-- Visual feedback during swipe
-- Confirmation dialogs
-
-**Tooltip Service**
-- Desktop hover tooltips
-- Mobile touch tooltips
-- Viewport-aware positioning
-
-**Nebula Parallax**
-- Device orientation-based parallax
-- Reduced motion preference support
-- Permission request for iOS
-
-## Priority Gaps
-
-| Feature | Impact | Effort | Rationale |
-|---------|--------|--------|-----------|
-| Animation System | HIGH | HIGH | Core visual feedback; significant UX improvement |
-| Swipe Gestures | HIGH | MEDIUM | Essential for mobile usability |
-| Daily Summary | MEDIUM | LOW | Nice-to-have engagement feature |
-| Daily Quotes | MEDIUM | LOW | Simple to implement; adds polish |
-| AI Achievements | MEDIUM | LOW | Extends existing achievement system |
-| Tooltip Service | LOW | LOW | Minor UX enhancement |
-| Nebula Parallax | LOW | MEDIUM | Subtle visual enhancement; limited device support |
-| Validation Utility | LOW | LOW | Code quality improvement |
-
-## Component Hierarchy
-
-```
-App
-├── background-container
-│   ├── nebula-bg
-│   └── grain-overlay
-├── Header
-├── AppContainer
-│   ├── TaskForm
-│   ├── StatsDisplay
-│   ├── TaskFilters
-│   └── TaskList
-│       └── TaskItem (per task)
-│           ├── AIRefactorButton
-│           ├── Edit/Delete buttons
-│           └── Edit mode form
-├── CenterActionBar
-│   ├── Settings button
-│   ├── Music button
-│   ├── Sound toggle
-│   ├── Test button
-│   ├── Clear button
-│   └── Delete button
-├── SettingsPanel (lazy)
-│   ├── ThemeSelector
-│   ├── FontSelector
-│   ├── SoundSettings
-│   └── Reset button
-├── AchievementsList (lazy)
-│   └── AchievementCard (per achievement)
-├── MusicPlayer (lazy)
-│   ├── Track display
-│   ├── Transport controls
-│   ├── Volume slider
-│   └── Track list
-├── AchievementNotification
-├── Footer
-└── ConfirmModal
-```
-
-## Store Architecture
-
-```
-stores/
-├── taskStore.ts       - Task CRUD, filtering, counts
-├── settingsStore.ts   - Theme, font, sound, volume, animations
-├── gamificationStore.ts - Karma, achievements, daily stats, AI edits
-├── statisticsStore.ts - Streaks, completion rates
-└── uiStore.ts         - Panel open/close states
-```
-
-## Service Architecture
-
-```
-services/
-├── storage.ts    - localStorage abstraction
-├── audio.ts      - Web Audio API sounds
-├── music.ts      - Background music playback
-└── ai.ts         - LLM7 integration
-```
-
-## Type Definitions
-
-```
-types/
-├── task.ts         - Task, TaskInput, TaskFilter
-├── theme.ts        - ThemeId, Theme configuration
-├── settings.ts     - Settings, FontId
-├── gamification.ts - Achievement, DailyStats, GamificationState
-└── statistics.ts   - Statistics
-```
-
-## Comparison Summary
-
-| Aspect | Original JS | SolidJS Port |
-|--------|-------------|--------------|
-| Total Modules | 24 | 35+ (stores, services, components) |
-| Lines of Code | ~9,500 | ~3,200 (core) |
-| Architecture | Global singletons | Reactive stores + services |
-| State Management | Manual + EventBus | SolidJS signals/stores |
-| Component Count | 0 (imperative DOM) | 25+ components |
-| TypeScript | No | Yes |
-| Test Coverage | None | Unit + E2E |
+- Legacy selector compatibility was restored where useful (`.add-task-form`, `.filter-group`) to keep parity with root naming and existing E2E coverage.
+- Visual tests were made deterministic by seeding localStorage quote/settings state before capture.
 
 ---
 
-*Last updated: 2026-02-14*
+Last updated: 2026-02-16

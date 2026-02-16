@@ -11,7 +11,7 @@ export default function TaskFilters() {
   ];
 
   return (
-    <nav class="task-filters">
+    <nav class="task-filters filter-group">
       {filters.map((filter) => (
         <button
           class={`task-filters__btn ${currentFilter() === filter.value ? "task-filters__btn--active" : ""}`}

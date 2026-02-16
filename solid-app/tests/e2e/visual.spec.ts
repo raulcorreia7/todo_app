@@ -2,6 +2,31 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Visual Regression', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.clear();
+
+      const today = new Date().toDateString();
+      localStorage.setItem(
+        'luxury-todo-quote',
+        JSON.stringify({
+          currentQuote: 'Focus on being productive instead of busy.',
+          lastQuoteDate: today,
+        })
+      );
+
+      localStorage.setItem(
+        'luxury-todo-settings-v2',
+        JSON.stringify({
+          theme: 'emerald',
+          darkMode: true,
+          soundEnabled: true,
+          volume: 50,
+          animations: true,
+          font: 'inter',
+        })
+      );
+    });
+
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });

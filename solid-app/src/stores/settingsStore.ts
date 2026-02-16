@@ -23,7 +23,7 @@ const defaultSettings: Settings = {
 
 function loadSettings(): Settings {
   const stored = settingsStorage.get();
-  return stored ? { ...defaultSettings, ...stored } : defaultSettings;
+  return stored ? { ...defaultSettings, ...stored } : { ...defaultSettings };
 }
 
 function hexToRgba(hexColor: string, alpha: number): string {
@@ -147,12 +147,19 @@ function setAnimations(enabled: boolean): void {
 
 function setFont(font: FontId): void {
   setState("font", font);
+  applyFont(font);
   persistSettings();
 }
 
 function resetToDefaults(): void {
-  setState(defaultSettings);
+  setState("theme", defaultSettings.theme);
+  setState("darkMode", defaultSettings.darkMode);
+  setState("soundEnabled", defaultSettings.soundEnabled);
+  setState("volume", defaultSettings.volume);
+  setState("animations", defaultSettings.animations);
+  setState("font", defaultSettings.font);
   applyTheme(defaultSettings.theme);
+  applyFont(defaultSettings.font);
   persistSettings();
 }
 

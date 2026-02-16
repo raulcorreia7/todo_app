@@ -44,6 +44,10 @@ export function useCenterBarVisibility(options: CenterBarVisibilityOptions = {})
   }
 
   function isMobile(): boolean {
+    if (typeof window.matchMedia !== "function") {
+      return false;
+    }
+
     return window.matchMedia("(max-width: 768px)").matches;
   }
 

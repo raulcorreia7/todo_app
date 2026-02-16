@@ -1,16 +1,16 @@
 import type { Page, Locator } from '@playwright/test';
 
 export async function addTask(page: Page, title: string, description?: string): Promise<void> {
-  const titleInput = page.locator('.add-task-form input[type="text"]');
+  const titleInput = page.locator('.task-form__title-input, .add-task-form input[type="text"]').first();
   await titleInput.waitFor({ state: 'visible' });
   await titleInput.fill(title);
   
   if (description) {
-    const descriptionInput = page.locator('.add-task-form textarea');
+    const descriptionInput = page.locator('.task-form__textarea, .add-task-form textarea').first();
     await descriptionInput.fill(description);
   }
   
-  await page.locator('.add-task-form button[type="submit"]').click({ force: true });
+  await page.locator('.task-form__add-btn, .add-task-form button[type="submit"]').first().click({ force: true });
   await page.waitForTimeout(100);
 }
 
@@ -51,26 +51,40 @@ export async function completeTask(page: Page, taskTitle: string): Promise<void>
 export async function deleteTask(page: Page, taskTitle: string): Promise<void> {
   const task = await getTaskByTitle(page, taskTitle);
   await task.locator('.task-delete-btn').click({ force: true });
-  await page.locator('.modal.active').waitFor({ state: 'visible' });
-  await page.locator('.modal.active .btn--danger-hybrid, .modal.active .btn--primary').click({ force: true });
+  await page.locator('.confirm-modal-backdrop, .modal.active').first().waitFor({ state: 'visible' });
+  await page
+    .locator('.confirm-modal__btn--danger, .confirm-modal__btn--confirm, .modal.active .btn--danger-hybrid, .modal.active .btn--primary')
+    .first()
+    .click({ force: true });
   await page.waitForTimeout(200);
 }
 
 export async function setFilter(page: Page, filter: 'all' | 'active' | 'completed'): Promise<void> {
-  await page.locator('.filter-group button', { hasText: filter.charAt(0).toUpperCase() + filter.slice(1) }).click({ force: true });
+  await page
+    .locator('.filter-group button, .task-filters button', {
+      hasText: filter.charAt(0).toUpperCase() + filter.slice(1),
+    })
+    .first()
+    .click({ force: true });
 }
 
 export async function clearCompletedTasks(page: Page): Promise<void> {
   await page.locator('.center-action-bar button[data-action="clear"]').click({ force: true });
-  await page.locator('.modal.active').waitFor({ state: 'visible' });
-  await page.locator('.modal.active .btn--danger-hybrid, .modal.active .btn--primary').click({ force: true });
+  await page.locator('.confirm-modal-backdrop, .modal.active').first().waitFor({ state: 'visible' });
+  await page
+    .locator('.confirm-modal__btn--danger, .confirm-modal__btn--confirm, .modal.active .btn--danger-hybrid, .modal.active .btn--primary')
+    .first()
+    .click({ force: true });
   await page.waitForTimeout(300);
 }
 
 export async function deleteAllTasks(page: Page): Promise<void> {
   await page.locator('.center-action-bar button[data-action="delete"]').click({ force: true });
-  await page.locator('.modal.active').waitFor({ state: 'visible' });
-  await page.locator('.modal.active .btn--danger-hybrid, .modal.active .btn--primary').click({ force: true });
+  await page.locator('.confirm-modal-backdrop, .modal.active').first().waitFor({ state: 'visible' });
+  await page
+    .locator('.confirm-modal__btn--danger, .confirm-modal__btn--confirm, .modal.active .btn--danger-hybrid, .modal.active .btn--primary')
+    .first()
+    .click({ force: true });
   await page.waitForTimeout(300);
 }
 

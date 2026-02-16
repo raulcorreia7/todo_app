@@ -93,17 +93,11 @@ class AnimationManager {
     }
   }
 
-  private getComputedColor(cssVar: string): string {
-    if (typeof window === "undefined") return "#ffffff";
-    const style = getComputedStyle(document.documentElement);
-    return style.getPropertyValue(cssVar).trim() || "#ffffff";
-  }
-
   private getThemeColors(): { primary: string; secondary: string; accent: string; glow: string } {
     const style = getComputedStyle(document.documentElement);
     const glow = style.getPropertyValue("--color-glow").trim() || "#6366f1";
     const accent = style.getPropertyValue("--color-accent").trim() || "#8b5cf6";
-    
+
     return {
       primary: glow,
       secondary: accent,
@@ -198,7 +192,7 @@ class AnimationManager {
       "#fb7185",
       "#38bdf8",
     ];
-    return colors[Math.floor(Math.random() * colors.length)];
+    return colors[Math.floor(Math.random() * colors.length)] ?? "#fbbf24";
   }
 
   private startAnimationLoop(): void {
@@ -217,6 +211,9 @@ class AnimationManager {
 
     for (let e = this.activeEffects.length - 1; e >= 0; e--) {
       const effect = this.activeEffects[e];
+      if (!effect) {
+        continue;
+      }
       let activeCount = 0;
 
       for (const particle of effect.particles) {
@@ -244,9 +241,10 @@ class AnimationManager {
     }
 
     if (this.activeEffects.length > 0) {
-      requestAnimationFrame(() => this.animate());
+      this.animationId = requestAnimationFrame(() => this.animate());
     } else {
       this.isAnimating = false;
+      this.animationId = null;
       this.hideCanvas();
     }
   }
@@ -458,6 +456,7 @@ class AnimationManager {
   destroy(): void {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
+      this.animationId = null;
     }
     if (this.canvas) {
       this.canvas.remove();
