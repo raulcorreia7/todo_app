@@ -1,0 +1,28 @@
+/* CSS Import Order: tokens → themes → base → components → utilities → compatibility */
+
+/* Design tokens - foundational variables */
+@import "./tokens.css";
+
+/* Theme system - theme-specific overrides */
+@import "./theme-system.css";
+
+/* Base styles - reset and foundation */
+@import "./base.css";
+
+/* Animation keyframes - global animations */
+@import "./animations.css";
+
+/* Interaction states */
+@import "./interactions.css";
+
+/* Component styles */
+@import "./components/index.css";
+
+/* Utility classes */
+@import "./utilities.css";
+
+/* Compatibility layer - bridges original to port */
+@import "./compatibility.css";
+
+/* Responsive overrides - must come last */
+@import "./responsive.css";

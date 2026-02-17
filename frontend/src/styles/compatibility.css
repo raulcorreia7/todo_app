@@ -1,0 +1,410 @@
+/**
+ * CSS Compatibility Layer
+ * Bridges original todo_app CSS with solid-app port
+ * Contains variable aliases and missing styles
+ */
+
+@layer utilities {
+  /* ==================== Variable Aliases ==================== */
+  /* Map legacy variable names to new naming convention */
+
+  :root {
+    /* Legacy aliases for backward compatibility */
+    --primary-color: var(--color-primary);
+    --secondary-color: var(--color-secondary);
+    --accent-color: var(--color-accent);
+    --glow-color: var(--color-glow);
+    --shadow-color: var(--color-shadow);
+    --glass-blur: blur(20px);
+    --glass-border: 1px solid var(--color-border);
+    --glass-border-color: var(--color-border);
+    --glass-bg: var(--color-glass);
+
+    /* Additional legacy mappings */
+    --transition-normal: var(--effect-transition, 300ms ease);
+    --font-family-base: var(--font-inter);
+    --font-family-inter: var(--font-inter);
+
+    /* Text shadow utility */
+    --text-shadow-glow: rgba(0, 0, 0, 0.08);
+
+    /* Focus ring */
+    --focus-ring-glow: color-mix(in oklab, var(--color-glow) 15%, transparent);
+
+    /* Shimmer effects */
+    --shimmer-light: rgba(255, 255, 255, 0.1);
+    --shimmer-medium: rgba(255, 255, 255, 0.2);
+    --shimmer-subtle: rgba(255, 255, 255, 0.05);
+
+    /* Stat icon variables */
+    --stat-icon-border-glow-opacity: 0.2;
+    --stat-icon-glow-color: var(--color-glow);
+    --stat-icon-hover-glow-color: var(--color-glow);
+    --stat-card-hover-shadow:
+      0 12px 28px var(--color-shadow),
+      0 0 25px color-mix(in oklab, var(--color-glow) 25%, transparent);
+
+    /* Inset shadows */
+    --inset-shadow-light: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --inset-shadow-dark: inset 0 1px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  /* ==================== Lucide Icons ==================== */
+
+  .lucide-icon {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    transition:
+      stroke 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .btn:hover .lucide-icon {
+    stroke: var(--accent-color);
+    transform: scale(1.05);
+  }
+
+  .icon--danger .lucide-icon {
+    stroke: var(--danger-text, #dc143c);
+  }
+
+  /* ==================== Typography Scale ==================== */
+
+  :root {
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-4xl: 2.25rem;
+  }
+
+  /* ==================== Button Base Enhancements ==================== */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md) var(--space-lg);
+    border: 1px solid transparent;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-decoration: none;
+    background: transparent;
+    color: var(--color-text);
+    backdrop-filter: blur(8px);
+    min-height: 48px;
+    height: 48px;
+    letter-spacing: 0.025em;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transition: none;
+  }
+
+  .btn:hover::before {
+    animation: wave 2s linear infinite;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--shadow-color);
+  }
+
+  .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--glow-color);
+  }
+
+  /* ==================== Filter Buttons ==================== */
+
+  .filter-group {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+    margin: var(--space-sm) 0;
+  }
+
+  .filter-btn {
+    padding: var(--space-md) var(--space-xl);
+    background: var(--color-glass);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    backdrop-filter: var(--glass-blur);
+    min-height: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .filter-btn:hover,
+  .filter-btn.active {
+    background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
+    color: white;
+    border-color: var(--accent-color);
+    box-shadow:
+      0 6px 20px var(--shadow-color),
+      0 0 15px var(--glow-color);
+    transform: translateY(-1px);
+  }
+
+  /* ==================== Button Variants ==================== */
+
+  .btn--primary {
+    background: var(--color-glass);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 15px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-normal);
+  }
+
+  .btn--primary:hover {
+    background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
+    color: white;
+    border-color: var(--accent-color);
+    box-shadow: 0 8px 30px var(--shadow-color);
+    transform: translateY(-2px);
+  }
+
+  .btn--secondary {
+    background: var(--color-glass);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    backdrop-filter: var(--glass-blur);
+  }
+
+  .btn--secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px var(--glow-color);
+  }
+
+  .btn--ghost {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    backdrop-filter: blur(20px);
+    transition: all var(--transition-normal);
+  }
+
+  .btn--ghost:hover {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px var(--glow-color);
+  }
+
+  .btn--ghost.active {
+    background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
+    color: white;
+    border-color: var(--accent-color);
+    box-shadow:
+      0 6px 20px var(--shadow-color),
+      0 0 15px var(--glow-color);
+    transform: translateY(-1px);
+  }
+
+  .btn--small {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-xs);
+    min-height: 40px;
+    border-radius: var(--radius-md);
+  }
+
+  .btn--floating {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    padding: 0;
+    background: var(--color-glass);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 6px 20px var(--shadow-color);
+    font-size: var(--font-size-lg);
+  }
+
+  .btn--floating:hover {
+    background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
+    color: white;
+    transform: translateY(-3px);
+    box-shadow:
+      0 10px 30px var(--shadow-color),
+      0 0 15px var(--glow-color);
+  }
+
+  /* ==================== Danger Button Variant ==================== */
+
+  .btn--danger-hybrid {
+    background: var(--color-glass);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--accent-color);
+    color: var(--color-text);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 15px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-normal);
+  }
+
+  .btn--danger-hybrid:hover {
+    background: linear-gradient(135deg, var(--accent-color), var(--glow-color));
+    color: white;
+    border-color: var(--accent-color);
+    box-shadow:
+      0 8px 25px var(--shadow-color),
+      0 0 30px var(--glow-color);
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  /* ==================== Utility Classes ==================== */
+
+  .hover-lift {
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .hover-scale {
+    transition: transform 0.2s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  .hover-bright {
+    transition: filter 0.2s ease;
+  }
+
+  .hover-bright:hover {
+    filter: brightness(1.1);
+  }
+
+  /* ==================== Animations ==================== */
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes wave {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease forwards;
+  }
+
+  /* ==================== Icon Sizes ==================== */
+
+  .icon--primary {
+    width: var(--icon-size-primary, 20px);
+    height: var(--icon-size-primary, 20px);
+  }
+
+  .icon--secondary {
+    width: var(--icon-size-secondary, 18px);
+    height: var(--icon-size-secondary, 18px);
+  }
+
+  .icon--floating {
+    width: var(--icon-size-floating, 24px);
+    height: var(--icon-size-floating, 24px);
+  }
+
+  /* ==================== Action Button Sizing ==================== */
+
+  .btn--action {
+    width: var(--btn-size-secondary, 36px);
+    height: var(--btn-size-secondary, 36px);
+    border-radius: 8px;
+    padding: 0;
+    background: var(--color-glass);
+    border: 1px solid var(--color-border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn--action svg {
+    width: var(--icon-size-secondary, 18px);
+    height: var(--icon-size-secondary, 18px);
+  }
+
+  /* ==================== Subtle Button ==================== */
+
+  .btn--subtle {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+    opacity: 0.6;
+    font-size: var(--font-size-sm);
+    padding: var(--space-sm) var(--space-md);
+    min-height: 44px;
+    backdrop-filter: var(--glass-blur);
+    transition: all var(--transition-normal);
+  }
+
+  .btn--subtle:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+}

@@ -1,0 +1,34 @@
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.task-list--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl) var(--space-lg);
+  text-align: center;
+}
+
+.task-list__empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+  opacity: 0.3;
+}
+
+.task-list__empty-text {
+  font-family: var(--font-inter);
+  font-size: 1rem;
+  color: color-mix(in oklab, var(--color-text) 60%, transparent);
+}
+
+.task-list__empty-subtext {
+  font-family: var(--font-inter);
+  font-size: 0.875rem;
+  color: color-mix(in oklab, var(--color-text) 40%, transparent);
+  margin-top: var(--space-xs);
+}

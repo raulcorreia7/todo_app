@@ -1,0 +1,19 @@
+.ai-btn {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  min-width: 32px;
+  padding: var(--space-xs) var(--space-xs);
+}
+
+.ai-btn:hover:not(:disabled) {
+  color: var(--color-accent, #8b5cf6);
+  background: var(--glass-primary);
+}
+
+.ai-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

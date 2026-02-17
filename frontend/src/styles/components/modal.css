@@ -1,0 +1,890 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-backdrop);
+  backdrop-filter: blur(8px);
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  opacity: 0;
+  animation: backdrop-enter 0.3s ease forwards;
+}
+
+@keyframes backdrop-enter {
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-backdrop.closing {
+  animation: backdrop-exit 0.2s ease forwards;
+}
+
+@keyframes backdrop-exit {
+  to {
+    opacity: 0;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--overlay-backdrop-light);
+  backdrop-filter: blur(8px);
+  z-index: var(--z-modal-backdrop);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-modal);
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+  animation: modal-enter 0.3s ease forwards;
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--glass-border-color);
+}
+
+@keyframes modal-enter {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-backdrop.closing .modal {
+  animation: modal-exit 0.2s ease forwards;
+}
+
+@keyframes modal-exit {
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+}
+
+.modal-content {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-color);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--glass-border-color);
+  max-width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+  animation: modalAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  position: relative;
+  contain: layout paint;
+}
+
+.modal.active .modal-content {
+  transform: scale(1);
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--glass-border-color),
+    0 0 14px color-mix(in oklab, var(--color-glow) 50%, transparent);
+  animation: modalSurfaceBreath 4s ease-in-out infinite;
+}
+
+.modal.danger.active .modal-content {
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--glass-border-color),
+    0 0 14px color-mix(in oklab, var(--danger-shadow-hover) 50%, transparent);
+}
+
+.modal-content::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-glow) 35%, transparent) 0%,
+    transparent 72%
+  );
+  opacity: 0;
+  transform: scale(0.96);
+  z-index: -1;
+}
+
+.modal.active .modal-content::before {
+  animation: modalAuraBreath 4s ease-in-out infinite;
+}
+
+.modal.danger.active .modal-content::before {
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--danger-shadow-hover) 42%, transparent) 0%,
+    transparent 72%
+  );
+}
+
+@keyframes modalSurfaceBreath {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.004);
+  }
+}
+
+@keyframes modalAuraBreath {
+  0%,
+  100% {
+    opacity: 0.09;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.22;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes modalAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--glass-border);
+  position: relative;
+}
+
+.modal-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-glow),
+    transparent
+  );
+  opacity: 0.3;
+}
+
+.modal-header__title {
+  font-family: var(--font-inter);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.modal.delete-modal .modal-title {
+  color: var(--color-text);
+}
+
+.modal-close,
+.modal-header__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--effect-transition);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.modal-close__icon,
+.modal-close svg,
+.modal-header__close svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  cursor: pointer;
+  color: var(--color-text);
+  opacity: 0.7;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.modal-close:hover,
+.modal-header__close:hover,
+.close-btn:hover {
+  background: var(--shimmer-light);
+  opacity: 1;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px var(--color-glow);
+}
+
+.modal-close:focus-visible,
+.modal-header__close:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent-color) 40%, transparent);
+  outline-offset: 2px;
+}
+
+.modal-body {
+  padding: var(--space-lg);
+  overflow-y: auto;
+  color: var(--color-text);
+  opacity: 0.9;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.modal.delete-modal .modal-body p {
+  color: var(--color-text);
+  opacity: 0.9;
+  font-weight: normal;
+  text-align: left;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-top: var(--glass-border);
+  position: relative;
+}
+
+.modal-footer::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-glow),
+    transparent
+  );
+  opacity: 0.3;
+}
+
+.modal-footer .btn--danger-hybrid {
+  background: var(--danger-glass, rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--danger-border, rgba(239, 68, 68, 0.3));
+  color: var(--danger-text, #ef4444);
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 4px 15px var(--danger-shadow, rgba(239, 68, 68, 0.2)),
+    0 0 0 1px var(--danger-border, rgba(239, 68, 68, 0.3)),
+    0 0 20px var(--danger-shadow, rgba(239, 68, 68, 0.2));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: dangerBreathGpu 2.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes dangerBreathGpu {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-0.5px) scale(1.012);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-footer .btn--danger-hybrid:hover {
+  background: linear-gradient(
+    135deg,
+    var(--danger-text),
+    var(--danger-highlight)
+  );
+  color: var(--color-text-on-accent);
+  border-color: var(--danger-text);
+  box-shadow:
+    0 8px 25px var(--danger-shadow-hover, rgba(239, 68, 68, 0.3)),
+    0 0 0 1px var(--danger-border, rgba(239, 68, 68, 0.3)),
+    0 0 30px var(--danger-shadow-hover, rgba(239, 68, 68, 0.3)),
+    0 0 50px var(--danger-shadow-hover, rgba(239, 68, 68, 0.3));
+  transform: translateY(-2px) scale(1.02);
+  animation: none;
+}
+
+.modal-footer .btn--danger-hybrid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-medium),
+    transparent
+  );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
+  transition: none;
+}
+
+.modal-footer .btn--danger-hybrid:hover::before {
+  animation: modal-shimmer 1.5s ease-in-out infinite;
+}
+
+.modal.deleting .modal-content {
+  animation: deleteConfirm 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+@keyframes deleteConfirm {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(0.95) rotate(-1deg);
+  }
+  50% {
+    transform: scale(0.98) rotate(1deg);
+  }
+  75% {
+    transform: scale(0.96) rotate(-0.5deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.modal.deleting::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle,
+    var(--danger-glass, rgba(239, 68, 68, 0.1)),
+    transparent
+  );
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: none;
+  animation: deleteFlash 0.6s ease-out;
+}
+
+@keyframes deleteFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+.modal .particle-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.modal .particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--danger-text, #ef4444);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 10px var(--danger-glow-color, rgba(239, 68, 68, 0.5));
+}
+
+.modal.deleting .particle {
+  animation: particleFly 1.5s ease-out forwards;
+}
+
+@keyframes particleFly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    box-shadow: 0 0 10px var(--danger-glow-color, rgba(239, 68, 68, 0.5));
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(calc(var(--tx) * 0.5), calc(var(--ty) * 0.5))
+      scale(0.7);
+    box-shadow: 0 0 15px var(--danger-glow-color, rgba(239, 68, 68, 0.5));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0);
+    box-shadow: 0 0 5px var(--danger-glow-color, rgba(239, 68, 68, 0.5));
+  }
+}
+
+.modal .ambient-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--danger-text, #ef4444);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 5px var(--danger-glow-color, rgba(239, 68, 68, 0.5));
+}
+
+.modal.deleting .ambient-particle {
+  animation: ambientParticleFloat 3s ease-out forwards;
+}
+
+@keyframes ambientParticleFloat {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(calc(var(--tx) * 0.2), calc(var(--ty) * 0.2))
+      scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--tx) * 0.8), calc(var(--ty) * 0.8))
+      scale(0.2);
+  }
+}
+
+.modal.deleting .modal-content {
+  position: relative;
+  z-index: 1;
+  border-color: var(--accent-color);
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--accent-color),
+    0 0 24px color-mix(in oklab, var(--danger-shadow-hover) 72%, transparent);
+}
+
+.modal {
+  box-shadow:
+    0 0 30px var(--color-glow),
+    0 0 60px var(--color-shadow),
+    inset 0 0 20px var(--shimmer-subtle);
+}
+
+.modal.delete-modal.active .modal-content {
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--danger-border),
+    0 0 20px var(--danger-shadow-hover);
+}
+
+.modal.delete-modal .modal-header::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--danger-shadow-hover),
+    transparent
+  );
+  opacity: 0.3;
+}
+
+.modal.delete-modal .modal-footer::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-glow),
+    transparent
+  );
+  opacity: 0.3;
+}
+
+.modal.deleting {
+  position: relative;
+  animation: deletingContainerPulse 1.2s ease-out forwards;
+}
+
+.modal.deleting::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--danger-text) 35%, transparent) 0%,
+    color-mix(in oklab, var(--danger-shadow-hover) 20%, transparent) 45%,
+    transparent 75%
+  );
+  opacity: 0;
+  transform: scale(0.92);
+  will-change: transform, opacity;
+  animation: deletingAuraPulse 1.2s ease-out forwards;
+}
+
+@keyframes deletingContainerPulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes deletingAuraPulse {
+  0% {
+    opacity: 0.15;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 0.42;
+    transform: scale(1.06);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.16);
+  }
+}
+
+@keyframes modal-shimmer {
+  0% {
+    transform: translate3d(-120%, 0, 0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(120%, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* ==================== Confirm Modal ==================== */
+
+.confirm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-backdrop);
+  backdrop-filter: blur(8px);
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  animation: backdrop-enter 0.3s ease forwards;
+}
+
+.confirm-modal {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  animation: confirm-modal-enter 0.3s ease forwards;
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--glass-border-color),
+    0 0 30px var(--color-glow);
+}
+
+.confirm-modal--danger {
+  box-shadow:
+    0 25px 50px -12px var(--overlay-backdrop),
+    0 0 0 1px var(--danger-border),
+    0 0 30px var(--danger-shadow);
+  animation: confirm-modal-enter 0.3s ease forwards;
+}
+
+@keyframes confirm-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.confirm-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg);
+  border-bottom: var(--glass-border);
+}
+
+.confirm-modal__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.confirm-modal__icon {
+  color: var(--danger-text);
+  flex-shrink: 0;
+}
+
+.confirm-modal__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.confirm-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--effect-transition);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.confirm-modal__close:hover {
+  background: var(--shimmer-light);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.confirm-modal__body {
+  padding: var(--space-lg);
+  color: var(--color-text);
+  opacity: 0.9;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.confirm-modal__body p {
+  margin: 0;
+}
+
+.confirm-modal__footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-top: var(--glass-border);
+}
+
+.confirm-modal__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--effect-transition);
+  border: 1px solid transparent;
+}
+
+.confirm-modal__btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.confirm-modal__btn--cancel {
+  background: var(--glass-primary);
+  border-color: var(--color-border);
+  color: var(--color-text);
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-modal__btn--cancel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-light),
+    transparent
+  );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
+  transition: none;
+}
+
+.confirm-modal__btn--cancel:hover::before {
+  animation: modal-shimmer 1.5s ease-in-out infinite;
+}
+
+.confirm-modal__btn--cancel:hover {
+  background: var(--glass-primary-hover);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-shadow);
+}
+
+.confirm-modal__btn--confirm {
+  background: linear-gradient(135deg, var(--accent-color), var(--color-glow));
+  border-color: var(--accent-color);
+  color: var(--color-text-on-accent);
+}
+
+.confirm-modal__btn--confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px var(--color-shadow);
+}
+
+.confirm-modal__btn--danger {
+  background: var(--danger-glass);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 4px 14px color-mix(in oklab, var(--danger-shadow) 70%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--danger-border) 75%, transparent);
+}
+
+.confirm-modal__btn--danger::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--danger-highlight),
+    transparent
+  );
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
+  transition: none;
+}
+
+.confirm-modal__btn--danger:hover::before {
+  animation: modal-shimmer 1.5s ease-in-out infinite;
+}
+
+.confirm-modal__btn--danger:hover {
+  background: linear-gradient(
+    135deg,
+    var(--danger-text),
+    var(--danger-highlight)
+  );
+  color: var(--color-text-on-accent);
+  border-color: var(--danger-text);
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 18px color-mix(in oklab, var(--danger-shadow-hover) 80%, transparent),
+    0 0 20px color-mix(in oklab, var(--danger-shadow) 55%, transparent);
+}
+
+@media (max-width: 480px) {
+  .confirm-modal {
+    max-width: calc(100vw - var(--space-xl) * 2);
+  }
+
+  .confirm-modal__footer {
+    grid-template-columns: 1fr;
+  }
+
+  .confirm-modal__btn {
+    width: 100%;
+  }
+}

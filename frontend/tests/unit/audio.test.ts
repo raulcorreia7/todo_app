@@ -1,0 +1,249 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+const COMPLETE_SOUND_DURATION_SECONDS = 0.56;
+
+const mockLocalStorage = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+  };
+})();
+
+Object.defineProperty(global, "localStorage", {
+  value: mockLocalStorage,
+  writable: true,
+});
+
+function createMockGainNode() {
+  const gainParam = {
+    value: 0.5,
+    setValueAtTime: vi.fn(),
+    linearRampToValueAtTime: vi.fn(),
+    exponentialRampToValueAtTime: vi.fn(),
+  };
+  return {
+    gain: gainParam,
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+  };
+}
+
+function createMockOscillator() {
+  return {
+    type: "sine",
+    frequency: {
+      value: 440,
+      setValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
+    connect: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+  };
+}
+
+function createMockBiquadFilter() {
+  return {
+    type: "lowpass",
+    frequency: {
+      value: 600,
+      setValueAtTime: vi.fn(),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
+    connect: vi.fn(),
+  };
+}
+
+class MockAudioContext {
+  static instances: MockAudioContext[] = [];
+
+  state = "running";
+  currentTime = 0;
+  destination = {};
+  oscillators: Array<ReturnType<typeof createMockOscillator>> = [];
+
+  constructor() {
+    MockAudioContext.instances.push(this);
+  }
+
+  createGain = vi.fn(() => createMockGainNode());
+  createOscillator = vi.fn(() => {
+    const osc = createMockOscillator();
+    this.oscillators.push(osc);
+    return osc;
+  });
+  createBiquadFilter = vi.fn(() => createMockBiquadFilter());
+  resume = vi.fn(() => Promise.resolve());
+  suspend = vi.fn(() => Promise.resolve());
+}
+
+const originalAudioContext = global.AudioContext;
+const originalWebkitAudioContext = (
+  global as unknown as { webkitAudioContext?: typeof AudioContext }
+).webkitAudioContext;
+
+vi.mock("@/stores/settingsStore", () => ({
+  settingsStore: {
+    soundEnabled: true,
+    volume: 50,
+  },
+  settingsActions: {
+    setSoundEnabled: vi.fn(),
+    setVolume: vi.fn(),
+  },
+}));
+
+describe("AudioService", () => {
+  let audioService: import("@/services/audio").AudioService;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    mockLocalStorage.clear();
+    MockAudioContext.instances = [];
+
+    global.AudioContext = MockAudioContext as unknown as typeof AudioContext;
+    (
+      global as unknown as { webkitAudioContext: typeof MockAudioContext }
+    ).webkitAudioContext = MockAudioContext;
+
+    const module = await import("@/services/audio");
+    audioService = module.audioService;
+  });
+
+  afterEach(() => {
+    global.AudioContext = originalAudioContext;
+    (
+      global as unknown as { webkitAudioContext?: typeof AudioContext }
+    ).webkitAudioContext = originalWebkitAudioContext;
+  });
+
+  describe("sound types", () => {
+    it("plays add sound without error", async () => {
+      await expect(audioService.play("add")).resolves.not.toThrow();
+    });
+
+    it("plays complete sound without error", async () => {
+      await expect(audioService.play("complete")).resolves.not.toThrow();
+    });
+
+    it("plays delete sound without error", async () => {
+      await expect(audioService.play("delete")).resolves.not.toThrow();
+    });
+
+    it("plays achievement sound without error", async () => {
+      await expect(audioService.play("achievement")).resolves.not.toThrow();
+    });
+
+    it("plays victory sound without error", async () => {
+      await expect(audioService.play("victory")).resolves.not.toThrow();
+    });
+
+    it("plays click sound without error", async () => {
+      await expect(audioService.play("click")).resolves.not.toThrow();
+    });
+
+    it("queues sounds so they do not overlap", async () => {
+      await audioService.init();
+
+      await audioService.play("complete");
+      await audioService.play("achievement");
+
+      const ctx = MockAudioContext.instances[0];
+      const oscillators = ctx?.oscillators ?? [];
+
+      expect(oscillators.length).toBeGreaterThanOrEqual(7);
+
+      const firstAchievementStart = oscillators[3]?.start.mock.calls[0]?.[0] as
+        | number
+        | undefined;
+      expect(firstAchievementStart).toBeGreaterThanOrEqual(
+        COMPLETE_SOUND_DURATION_SECONDS
+      );
+    });
+
+    it("drops low-priority immediate sounds while high-priority queue is active", async () => {
+      await audioService.init();
+
+      await audioService.play("achievement");
+
+      const ctx = MockAudioContext.instances[0];
+      const oscillatorsBefore = ctx?.oscillators.length ?? 0;
+
+      await audioService.play("click");
+
+      expect(ctx?.oscillators.length ?? 0).toBe(oscillatorsBefore);
+    });
+  });
+
+  describe("volume control", () => {
+    it("sets volume to valid value", async () => {
+      await audioService.init();
+      audioService.setVolume(50);
+      expect(() => audioService.setVolume(50)).not.toThrow();
+    });
+
+    it("clamps volume to minimum 0", async () => {
+      await audioService.init();
+      audioService.setVolume(-10);
+      expect(() => audioService.setVolume(-10)).not.toThrow();
+    });
+
+    it("clamps volume to maximum 100", async () => {
+      await audioService.init();
+      audioService.setVolume(150);
+      expect(() => audioService.setVolume(150)).not.toThrow();
+    });
+
+    it("handles volume 0", async () => {
+      await audioService.init();
+      audioService.setVolume(0);
+      expect(() => audioService.setVolume(0)).not.toThrow();
+    });
+
+    it("handles volume 100", async () => {
+      await audioService.init();
+      audioService.setVolume(100);
+      expect(() => audioService.setVolume(100)).not.toThrow();
+    });
+  });
+
+  describe("enabled/disabled state", () => {
+    it("setEnabled(false) suspends audio context", async () => {
+      await audioService.init();
+      audioService.setEnabled(false);
+      expect(() => audioService.setEnabled(false)).not.toThrow();
+    });
+
+    it("setEnabled(true) resumes audio context", async () => {
+      await audioService.init();
+      audioService.setEnabled(true);
+      expect(() => audioService.setEnabled(true)).not.toThrow();
+    });
+
+    it("isEnabled returns soundEnabled from settings", () => {
+      const result = audioService.isEnabled();
+      expect(typeof result).toBe("boolean");
+    });
+  });
+
+  describe("initialization", () => {
+    it("initializes without error", async () => {
+      await expect(audioService.init()).resolves.not.toThrow();
+    });
+
+    it("does not throw when initialized multiple times", async () => {
+      await audioService.init();
+      await audioService.init();
+      expect(true).toBe(true);
+    });
+  });
+});

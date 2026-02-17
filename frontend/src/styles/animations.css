@@ -1,0 +1,617 @@
+/**
+ * Animation System - Unified Design Language
+ * 
+ * Easing curves:
+ * - --ease-smooth: Natural motion for UI elements
+ * - --ease-bounce: Playful feedback for interactions
+ * - --ease-swift: Quick, snappy transitions
+ */
+
+:root {
+  /* Core Easing Curves */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-swift: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-velvet: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Animation Durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-slower: 600ms;
+
+  /* Shadows */
+  --color-shadow: rgba(0, 0, 0, 0.25);
+  --glow-color: var(--color-glow);
+}
+
+/* ==================== Entry Animations ==================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ==================== Exit Animations ==================== */
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* ==================== Task Animations ==================== */
+
+@keyframes taskEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes taskComplete {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px var(--color-shadow);
+  }
+  30% {
+    transform: scale(0.98);
+    box-shadow:
+      0 0 30px var(--color-glow),
+      0 0 60px var(--color-glow);
+  }
+  60% {
+    transform: scale(1.01);
+    box-shadow: 0 0 20px var(--color-glow);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px var(--color-shadow);
+  }
+}
+
+@keyframes taskUncomplete {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes taskEditEnter {
+  0% {
+    transform: translateY(4px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes taskEditExit {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(2px);
+  }
+}
+
+/* Legacy alias */
+@keyframes luxuryTaskEntry {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes completeTask {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes uncompleteTask {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ==================== Button Animations ==================== */
+
+@keyframes buttonPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes addConfirmPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes wave {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ==================== Icon Animations ==================== */
+
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes iconWiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-8deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes gearRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes shakeX {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* ==================== Glow & Pulse Effects ==================== */
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 15px var(--color-glow);
+  }
+  50% {
+    box-shadow: 0 0 25px var(--color-glow);
+  }
+}
+
+@keyframes dangerPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 15px var(--danger-shadow),
+      0 0 20px var(--danger-shadow);
+  }
+  50% {
+    box-shadow:
+      0 4px 20px var(--danger-shadow-hover),
+      0 0 30px var(--danger-shadow),
+      0 0 40px var(--danger-shadow);
+  }
+}
+
+@keyframes gentlePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.01);
+    opacity: 0.95;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* ==================== Particle Effects ==================== */
+
+@keyframes particleBurst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0);
+  }
+}
+
+@keyframes particleCelebration {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes rippleWave {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+/* ==================== Particle Classes ==================== */
+
+.particle {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 50%;
+  z-index: 9999;
+  animation: particleBurst 500ms var(--ease-smooth) forwards;
+}
+
+.particle--celebration {
+  animation-name: particleCelebration;
+  animation-duration: 700ms;
+}
+
+/* ==================== Animation Utility Classes ==================== */
+
+.animate-fadeIn {
+  animation: fadeIn var(--duration-normal) var(--ease-smooth) forwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp var(--duration-slow) var(--ease-swift) forwards;
+}
+
+.animate-fadeInScale {
+  animation: fadeInScale var(--duration-slow) var(--ease-smooth) forwards;
+}
+
+.animate-fadeOut {
+  animation: fadeOut var(--duration-fast) var(--ease-smooth) forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight var(--duration-slow) var(--ease-swift) forwards;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft var(--duration-slow) var(--ease-swift) forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--shimmer-light, rgba(255, 255, 255, 0.1)),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-pulse {
+  animation: gentlePulse 3s var(--ease-smooth) infinite;
+}
+
+.animate-float {
+  animation: float 3s var(--ease-smooth) infinite;
+}
+
+.animate-breathe {
+  animation: breathe 4s var(--ease-smooth) infinite;
+}
+
+.animate-glow {
+  animation: glowPulse 2.5s var(--ease-smooth) infinite;
+}
+
+/* ==================== Task Animation Classes ==================== */
+
+.task-item.new:not(.use-zen-enter) {
+  animation: taskEnter var(--duration-slow) var(--ease-swift) forwards;
+}
+
+.task-item.completing {
+  animation: taskComplete var(--duration-normal) var(--ease-smooth);
+}
+
+.task-item.uncompleting {
+  animation: taskUncomplete var(--duration-normal) var(--ease-smooth);
+}
+
+/* ==================== Button Animation Classes ==================== */
+
+.btn--add-confirm {
+  animation: addConfirmPop 400ms var(--ease-bounce);
+}
+
+.btn--micro-interaction {
+  transition: transform var(--duration-fast) var(--ease-smooth);
+}
+
+.btn--micro-interaction:active {
+  transform: scale(0.95);
+}
+
+.btn--add:active {
+  transform: scale(0.96);
+}
+
+/* ==================== Hover Effects ==================== */
+
+.hover-lift {
+  transition:
+    transform var(--duration-normal) var(--ease-smooth),
+    box-shadow var(--duration-normal) var(--ease-smooth);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--color-shadow);
+}
+
+.hover-scale {
+  transition: transform var(--duration-normal) var(--ease-smooth);
+}
+
+.hover-scale:hover {
+  transform: scale(1.03);
+}
+
+.hover-glow {
+  transition: box-shadow var(--duration-slow) var(--ease-smooth);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px var(--glow-color);
+}
+
+.hover-bright {
+  transition: filter var(--duration-normal) var(--ease-smooth);
+}
+
+.hover-bright:hover {
+  filter: brightness(1.08);
+}
+
+/* ==================== Transition Utilities ==================== */
+
+.transition-fast {
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+.transition-normal {
+  transition: all var(--duration-normal) var(--ease-smooth);
+}
+
+.transition-slow {
+  transition: all var(--duration-slow) var(--ease-smooth);
+}
+
+/* ==================== Element-Specific Animations ==================== */
+
+#cabSettings:hover svg {
+  animation: gearRotate 500ms var(--ease-smooth);
+  transform-origin: center;
+}
+
+#cabDelete:active {
+  animation: shakeX 300ms var(--ease-smooth);
+}
+
+.task-ai-refactor-btn:hover {
+  animation: glowPulse 1.5s var(--ease-smooth) infinite;
+}
+
+/* ==================== Reduced Motion ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .task-item.new:not(.use-zen-enter) {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .btn--add-confirm,
+  .center-action-bar {
+    animation: none !important;
+  }
+
+  #cabSettings:hover svg,
+  #cabDelete:active {
+    animation: none !important;
+  }
+
+  .hover-glow:hover,
+  .hover-lift:hover {
+    box-shadow: none;
+    transform: none;
+  }
+}
