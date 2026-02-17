@@ -2,94 +2,44 @@
 
 Premium todo app with gamification, themes, and AI features.
 
-## Tech Stack
+## Structure
 
-- **SolidJS** - Reactive UI framework
-- **TypeScript** - Type-safe JavaScript
-- **Vite** - Fast build tool and dev server
-- **pnpm** - Package manager
+```
+├── frontend/   # SolidJS app → Cloudflare Pages
+├── backend/    # Hono API → VPS (Docker)
+└── scripts/    # Deploy scripts
+```
 
-## Prerequisites
-
-- Node.js 20+
-- pnpm
-
-## Setup
+## Development
 
 ```bash
 pnpm install
-cp .env.example .env
-pnpm run dev
+pnpm dev           # Frontend only
+pnpm dev:backend   # Backend only
 ```
 
-Open [http://localhost:5173](http://localhost:5173) to view the app.
+## Commands
 
-## Available Scripts
+| Command            | Description               |
+| ------------------ | ------------------------- |
+| `pnpm dev`         | Start frontend dev server |
+| `pnpm dev:backend` | Start backend dev server  |
+| `pnpm build`       | Build all                 |
+| `pnpm check`       | Lint + typecheck + test   |
 
-| Command                  | Description              |
-| ------------------------ | ------------------------ |
-| `pnpm run dev`           | Start development server |
-| `pnpm run build`         | Build for production     |
-| `pnpm run preview`       | Preview production build |
-| `pnpm run test`          | Run unit tests           |
-| `pnpm run test:ui`       | Run tests with UI        |
-| `pnpm run test:coverage` | Run tests with coverage  |
-| `pnpm run test:e2e`      | Run end-to-end tests     |
-| `pnpm run lint`          | Lint code                |
-| `pnpm run lint:fix`      | Fix lint errors          |
-| `pnpm run format`        | Format code              |
-| `pnpm run format:check`  | Check formatting         |
-| `pnpm run typecheck`     | Type check               |
+## Deployment
 
-## Project Structure
+See [docs/deployment.md](docs/deployment.md)
 
-```
-src/
-├── components/       # UI components
-│   ├── ai/          # AI-related components
-│   ├── base/        # Base components (Button, Input, etc.)
-│   ├── center-bar/  # Center action bar
-│   ├── gamification/# Achievements, karma display
-│   ├── layout/      # App layout components
-│   ├── music/       # Music player
-│   ├── settings/    # Settings panel
-│   ├── statistics/  # Stats display
-│   └── tasks/       # Task components
-├── hooks/           # Custom Solid hooks
-├── services/        # Business logic (AI, audio, storage)
-├── stores/          # Solid stores for state management
-├── styles/          # CSS styles and themes
-├── types/           # TypeScript type definitions
-├── utils/           # Utility functions
-└── assets/          # Static assets
-tests/
-├── setup.ts         # Test setup
-└── unit/            # Unit tests
-```
+### Frontend
 
-## Environment Variables
+Cloudflare Pages (auto-deploys from GitHub)
 
-Create a `.env` file based on `.env.example`:
-
-```env
-VITE_LLM7_API_KEY=your_api_key_here
-```
-
-## Testing
+### Backend
 
 ```bash
-pnpm run test           # Run unit tests
-pnpm run test:coverage  # Run with coverage report
-pnpm run test:e2e       # Run Playwright e2e tests
+VPS_HOST=your-vps-ip ./scripts/deploy-backend.sh
 ```
-
-## Build
-
-```bash
-pnpm run build
-```
-
-Output goes to the `dist/` folder.
 
 ## License
 

@@ -8,6 +8,10 @@ dist
 dist-ssr
 *.local
 
+# Monorepo
+frontend/dist
+backend/dist
+
 # Logs
 logs
 *.log
